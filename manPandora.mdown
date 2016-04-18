@@ -1,3 +1,134 @@
+#Pandora
+
+Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo diseño está inspirado principalmente en los lenguajes Pascal y Ruby. Pandora es un lenguaje simplificado diseñado para los cursos de la cadena de Lenguajes de Programación de la USB.
+
+## Consideraciones lexicográficas.
+
+### Símbolos.
+
+*;* : Separador de instrucciones.
+*,* : Separador de argumentos o parámetros.
+*.* : Accede a los atributos.
+*:* : Declaración del tipo de una variable.
+*(* : Diversos usos.
+*)* : Diversos usos.
+*[* : Delimitador de arreglos.
+*]* : Delimitador de arreglos.
+*{* : Inicio de un bloque.
+*}* : Fin de un bloque.
+
+### Palabras reservadas.
+
+#### Instrucciones.
+
+* if : Inicio de la sentencia condicional.
+* else : Instrucción else de la sentencia condicional.
+* while : Inicio de la iteración indeterminada.
+* for : Inicio de la iteración determinada.
+* union : Declaración de uniones.
+* struct : Declaración de estructuras.
+* return : Retorna el valor de una función.
+* new : Creación de un apuntador.
+* begin : Inicio del programa principal.
+* end : Fin del programa principal.
+* def : Decalaración de funciones.
+* free : Liberación de un apuntador.
+* program: Inicio del archivo.
+* read : Lee del teclado y asigna a una variable.
+* write : Escribe en la salida estándar.
+* void : Tipo de datos vacío, retornado por los procedimientos.
+* and : Conjunción lógica.
+* or : Disyunción lógica.
+
+#### Valores.
+
+* True
+* False
+
+#### Tipos.
+
+* int : tipo de los números enteros.
+* bool : tipo booleano.
+* float : tipo de los números punto flotante.
+* char : tipo de los caracteres.
+* array : tipo de los arreglos.
+* null : tipo nulo.
+* struct y unions aqui???
+
+#### Otros.
+
+* var : Define el pasaje de parámetros por referencia.
+
+### Comentarios.
+
+* *--* : inicio de un comentario de línea.
+* *-\*-* : inicio y fin de un comentario multilínea.
+
+### Operadores.
+
+#### Binarios.
+
+* *=* : Asignación.
+* *==* : Equivalencia.
+* */=* : Inequivalencia.
+* *\** : Multiplicación algebraica.
+* *+* : Suma algebraica.
+* *-* : Resta algebraica.
+* */* : División algebraica.
+* *^* : Potencia.
+* *>* : Mayor que.
+* *>=* : Mayot o igual que.
+* *<* : Menor que.
+* *<=* : Menor o igual que.
+* *%* : Módulo.
+
+#### Unarios.
+
+* *!* : Negación lógica.
+* *-* : Menos unario.
+
+## Gramática.
+
+## Estructura del programa.
+
+Como estructura principal, Pandora se divide principalmente en dos secciones, en la primera se declaran todas las variables, constantes, tipos, funciones y procedimientos necesarios para la ejecución del programam principal, el cual corresponde a la segunda sección, delimitado por las palabras *begin* y *end* y que es llamado al iniciar la ejecución.
+
+## Alcance.
+
+El alcance es la región del código donde la declaración de un elemento está activa, en Pandora el alcance es estático permitiendo anidamiento de bloques y variables solapadas.
+
+## Tipos de datos.
+
+### Tipos Primitivos
+
+Son los tipos de datos incluidos en la implementación del lenguaje.
+
+* `int`
+* `float`
+* `bool`
+* `char`
+
+### Otros
+
+Los usuarios tienen la posibilidad de definir nuevos tipos de datos según les sea necesario.
+
+* `struct`  define las estructuras cuyos elementos pueden ser usados simultáneamente con el operador de acceso '*.*'
+
+* `union` define las estructuras llamadas uniones, cuyos elemntos no pueden ser utilizados de manera simultánea sino que únicamente se recuerda el elemento que ha sido asignado más recientemente.
+
+## Variables.
+
+Cualquier identificador declarado con cualquier tipo válido, bien sea primitivo o definido por el ususario, es considerado una variable. Las variables pueden ser locales o globales.
+
+* Variables locales: Son las variables declaradas en el cuerpo de una función y aquellas pasadas como parámetros.
+
+* Variables globales: Son las variables declaradas fuera de los alcances locales.
+
+Pandora permite variables solapadas, es decir, si un identificador ya es asignado dentro del cuerpo de una función, el mismo identificador puede ser asignado dentro de un bloque anidado y es esta última la que tiene validez dentro del bloque más interno ocultando la primera asignación hasta que el bloque termine para luego restaurarla.
+
+La noción de variables solapadas no aplica para los nombres de funciones ni tipos definidos por el usuario.
+
+
 #Arreglos
 
 Los arreglos en Pandora son multidimensionales de base 0, es decir, siempre 
