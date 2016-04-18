@@ -6,16 +6,16 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 
 ### Símbolos.
 
-*;* : Separador de instrucciones.
-*,* : Separador de argumentos o parámetros.
-*.* : Accede a los atributos.
-*:* : Declaración del tipo de una variable.
-*(* : Diversos usos.
-*)* : Diversos usos.
-*[* : Delimitador de arreglos.
-*]* : Delimitador de arreglos.
-*{* : Inicio de un bloque.
-*}* : Fin de un bloque.
+* *;* : Separador de instrucciones.
+* *,* : Separador de argumentos o parámetros.
+* *.* : Accede a los atributos.
+* *:* : Declaración del tipo de una variable.
+* *(* : Diversos usos.
+* *)* : Diversos usos.
+* *[* : Delimitador de arreglos.
+* *]* : Delimitador de arreglos.
+* *{* : Inicio de un bloque.
+* *}* : Fin de un bloque.
 
 ### Palabras reservadas.
 
@@ -88,6 +88,8 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 * *-* : Menos unario.
 
 ## Gramática.
+
+(*Por definir*)
 
 ## Estructura del programa.
 
