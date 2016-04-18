@@ -1,0 +1,208 @@
+#Arreglos
+
+Los arreglos en Pandora son multidimensionales de base 0, es decir, siempre 
+comienzan en 0 hasta el número indicado en su declaración, el arreglo puede 
+contener cualquiera de los tipos básicos definidos en Pandora.
+
+Ejemplo:
+
+        array int[21] foo; **(Es un ejemplo se puede cambiar)**
+
+Sintaxis:
+        
+        array <type>[<expr Int>] <variable>; **(Es un ejemplo se puede cambiar)**
+
+Donde su longitud sería 22 desde 0 hasta 21.
+
+Al pasarlos como parámetros de una función seran realizados por refencia 
+(Un apuntador al primer elemento) cambiando los valores del arreglo pasado como 
+parámetros **(Por Definir)**.
+
+#Strings
+
+El uso de Strings en Pandora es muy limitado, sólo se permiten usarlos para la 
+facilidad de imprimirlos con la palabra reservada para imprimir del leguaje. 
+Para tener un String, estos tendran que estar entre comillas dobles (\") en 
+una sola linea, permite el uso de los carácteres especiales '\\n' '\\t' para 
+poder representar los saltos de lineas y tabulaciones.
+
+Ejemplo:
+
+        print("Hola Mundo\n");
+
+#Funciones **(Por Definir)**
+
+Para la declaración de funciones se necesita usar la palabra reservada para la 
+misma *func* seguido del nombre de la función y entre paréntesis los parametros
+necesarios, seguido del bloque de ejecución que debe terminar en un end.
+
+Ejemplo: 
+
+    func foo(int a, char b)
+        print(a);
+        print(b);
+    end
+
+Sintaxis: **(Falta)**
+
+Para la invocación de funciones se necesita usar la variable asignada a la 
+función con el número correcto de argumentos, dichos argumentos pueden ser 
+de valor o de referencia. **(No se si se va a permitir funciones con argumentos 
+multiples)**.
+
+Ejemplo:
+
+        foo(a,b);
+
+Sintaxis: **(Falta)**
+
+##Funciones de segunda clase **(Por definir)**.
+
+#Procedimientos **(Por Definir)**
+
+#Asignación
+
+Para los tipos básicos del lenguaje se realiza una copia por valor, en el cual
+se copia el valor o resultado del lado derecho a la variable del lado 
+izquierdo. Dicha variable debe haber sido declarada previamente y ambos lados 
+de la asignación ser iguales.
+
+Ejemplo:
+
+        foo = 42;
+
+#Estructuras de Control
+
+##Condicional
+
+Viene dado por el conocido if then o if then else.
+
+Ejemplos:
+
+        if nothing then
+            a = something;
+        end
+
+        if baz == 42 then 
+            bar = something;
+        else
+            foo = something
+        end
+
+Sintaxis:  **(Falta)**
+
+**(Falta ver si se pondra elif entre las definiciones)**
+
+##Case **(Por definir)**
+
+##Iteración acotada (for).
+
+La iteración acotada viene dado por el uso de for seguido de una variable y el
+rango en el cual se quiera usar.
+
+Ejemplo:
+
+        for i in 0..21:
+            bar = bar + i;
+        end
+
+Sintaxis: **(Falta)**
+
+Nota: En el bloque del for no se puede usar la variable que se esta utilizando 
+para la iteración
+
+##Iteración indeterminada.
+
+Existen 2 tipos de iteraciones indeterminadas en Pandora, el while y el repeat,
+la primera evalúa una expresión booleana y de cumplirse ejecuta el bloque, 
+el repeat primero evalúa el bloque y después evalúa la expresión booleana.
+
+Ejemplo while:
+
+        while foo < 42:
+            foo = foo + 1;
+        end
+
+Ejemplo repeat:
+        
+        repeat
+            foo = foo + 1
+        until foo < 42;
+
+Sintaxis: **(Falta)**
+
+#Expresiones
+
+Las expresiones consisten de constantes numéricas(int, float), constantes 
+booleanas, variables y operadores, estos últimos contienen una precedencia el 
+cual indican el orden en el cual deben ser realizadas las operaciones, dicho 
+orden puede ser modificado con el uso de parentesis. Al usar varibles en una 
+operación estas deben ser inicializadas con las reglas de alcance ya explicadas.
+
+##Expresiones aritméticas
+
+Las expresiones aritméticas consisten de constantes numéricas, llamadas a 
+funciones, variables y operadores aritméticos. Los operadores aritméticos 
+definidos en Pandora son: los binarios dados por la suma (+), la resta (-), 
+la multiplicación (*), la división entera (/) y el módulo (%). El único operador
+unario viene dado por la negación (-). Los operadores binarios seran usados con
+anotación infija, mientras que el unario con anotación prefija.
+
+*   Precedencia de operadores (listados de menor a mayor):
+    
+    *   +, - *binario*
+    *   *, /, %
+    *   - *unario*
+
+Para los operadores aritméticos sus operandos deben ser del mismo tipo, y el 
+resultado sera del tipo de los operando, es decir, si sus operandos son *int* el 
+resultado sera *int*, igual manera si los operandos son *float*.
+
+##Expresiones booleanas
+
+Las expresiones booleanas consisten de constantes booleanas, llamadas a 
+funciones, variables y operadores booleanos. Los operadores booleanos definidos
+en Pandora son: los binarios dado por el *y* lógico (and) y el *o* lógico (or), 
+El único operador unario viene dado por la negación lógica (not), al igual que 
+los operadores atirméticos los binarios tienen anotación infija y el unario 
+anotació prefija.
+
+*   Precedencia de operadores (listados de menor a mayor):
+
+    *   or
+    *   and
+    *   not
+
+Los operandos de los operadores deben ser del tipo *bool* dando como resultado 
+un tipo *bool*.
+
+##Expresiones Relacionales **(No se me ocurre otro título)**
+
+Las expresiones relacionales consisten de constantes numéricas o booleanas
+**(A lo mejor char no estoy seguro)**, llamadas a funciones, variables y 
+operadores relaciones. Los operadores relacionales definidos en pandora son: 
+menor que (<), mayor que (>), igual (==), mayor o igual que (>=), menor o igual 
+que (<=) y desigual(/=). Cabe destacar que todos funcionan con los operandos de 
+tipos *int* y *float*, pero tanto el igual (==) como el desigual (/=) también 
+pueden trabajar con operandos del tipo *bool*.
+
+*   Precedencia de operadores (listados de menor a mayor):
+
+    *   <, >, <=, >=
+    *   ==, /=
+
+El resultado de las expresiones relacionales siempre son de tipo *bool*.
+
+**(Se podría colocar una especie de tabla con todas la precedencias y las asociaciones que tengan)**
+
+
+
+
+
+
+
+
+
+
+
+
