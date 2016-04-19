@@ -116,22 +116,10 @@ Ejemplos:
 Ejemplos:
 
     foo : int;
-    
     foo = 3^2;
-    
+    foo = -3;
 
-    struct persona has
-        nombre : string;
-        apellido : string;
-    end
-
-    union fecha like
-        enInt : int;
-        enFloat : float;
-        enString : string;
-    end
-
-
+ 
 ## Gramática. (Por definir)
 
 ## Estructura del programa. (Por definir)
@@ -166,6 +154,19 @@ Los usuarios tienen la posibilidad de definir nuevos tipos de datos según les s
 
 * `union` define las estructuras llamadas uniones, cuyos elemntos no pueden ser utilizados de manera simultánea sino que únicamente se recuerda el elemento que ha sido asignado más recientemente.
 
+Ejemplos: 
+
+	struct persona has
+        	nombre : string;
+        	apellido : string;
+    	end
+
+    	union fecha like
+        	enInt : int;
+        	enFloat : float;
+        	enString : string;
+    	end
+    
 ## Variables.
 
 Cualquier identificador declarado con cualquier tipo válido, bien sea primitivo o definido por el ususario, es considerado una variable. Las variables pueden ser locales o globales.
@@ -271,7 +272,7 @@ Ejemplo:
             bar = bar + i;
         end
 
-Sintaxis: **(Falta)**
+Sintaxis: `for (<identificador> ; <cota inferior>; <cota superior>) do <instrucciones> end`
 
 Nota: En el bloque del for no se puede usar la variable que se esta utilizando para la iteración
 
@@ -309,7 +310,7 @@ Las expresiones aritméticas consisten de constantes numéricas, llamadas a func
     *   *, /, %
     *   - *unario*
 
-Para los operadores aritméticos sus operandos deben ser del mismo tipo, y el resultado sera del tipo de los operando, es decir, si sus operandos son *int* el resultado sera *int*, igual manera si los operandos son *float*.
+Para los operadores aritméticos sus operandos deben ser del mismo tipo, y el resultado sera del tipo de los operando, es decir, si sus operandos son `int` el resultado sera `int`, igual manera si los operandos son `float`.
 
 ### Expresiones booleanas
 
@@ -369,7 +370,7 @@ Las existentes hasta el momento se enumeran a continuación:
 
     def merge(var a : array, p, q, r : int)
 	    i, j, k : int;
-    	b : array int[];
+    	b : array int[r];
 	    i = p;
 	    j = q+1;
 	    k = p;
