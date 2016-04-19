@@ -156,15 +156,15 @@ Los usuarios tienen la posibilidad de definir nuevos tipos de datos según les s
 
 Ejemplos: 
 
-	struct persona has
-        	nombre : string;
-        	apellido : string;
+    	struct persona has
+        	nombre : array char[];
+        	apellido : array char[];
     	end
 
     	union fecha like
         	enInt : int;
         	enFloat : float;
-        	enString : string;
+        	enString : array char[];
     	end
     
 ## Variables.
@@ -370,7 +370,7 @@ Las existentes hasta el momento se enumeran a continuación:
 
     def merge(var a : array, p, q, r : int)
 	    i, j, k : int;
-    	b : array int[r];
+    	b : array int[];
 	    i = p;
 	    j = q+1;
 	    k = p;
@@ -468,7 +468,7 @@ Las existentes hasta el momento se enumeran a continuación:
 
     def mcd(a, b : int)
         if (b == 0) then
-            return a;
+            return a;st
         end
         return mcd(b,a % b);
     end
