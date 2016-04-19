@@ -68,11 +68,10 @@ Cualquier cadena de caracteres que comience por una letra minúscula (`a-z`) o u
 
 Ejemplos:
 
-~~~ruby
+
     foo
     _bar
     bAz_
-~~~
 
 ### Comentarios.
 
@@ -82,11 +81,13 @@ Ejemplos:
 Ejemplos:
 
 ` -- Esto es un comentario de línea`
-`
-    -*- Esto es
-     un comentario
-     multilínea -*-
-`
+
+    -*- 
+        esto es
+        un comentario
+        multilínea 
+    -*-
+
 
 ### Operadores.
 
@@ -113,8 +114,8 @@ Ejemplos:
 
 Ejemplos:
 
-`
     foo : int;
+    
     foo = 3^2;
     
 
@@ -128,7 +129,7 @@ Ejemplos:
         enFloat : float;
         enString : string;
     end
-`
+
 
 ## Gramática.
 
