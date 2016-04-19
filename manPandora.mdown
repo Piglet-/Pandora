@@ -135,13 +135,18 @@ Ejemplos:
 
 ## Estructura del programa. (Por definir)
 
+Un programa en Pandora tiene dos partes funtamentales:
+
+* El programa principal: es el llamado cuando se inicia la ejecución del programa. Esta función esta delimitada por las palabras `begin`y `end`.
+* Área de definiciones: en esta sección se definen todas las variables, estructuras y funciones que serán usadas por el programa principal.
+
 ## Alcance.
 
 El alcance es la región del código donde la declaración de un elemento está activa, en Pandora el alcance es estático permitiendo anidamiento de bloques y variables solapadas.
 
 ## Tipos de datos.
 
-### Tipos Primitivos
+### Tipos primitivos
 
 Son los tipos de datos incluidos en la implementación del lenguaje.
 
@@ -149,9 +154,12 @@ Son los tipos de datos incluidos en la implementación del lenguaje.
 * `float`
 * `bool`
 * `char`
+
+#### Tipos compuestos
+
 * `array`
 
-### Otros
+### Otros tipos
 
 Los usuarios tienen la posibilidad de definir nuevos tipos de datos según les sea necesario.
 
