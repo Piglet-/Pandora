@@ -24,6 +24,7 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 * `then` : Instrucción then de la sentencia condicional.
 * `else` : Instrucción else de la sentencia condicional.
 * `while` : Inicio de la iteración indeterminada.
+* `do` : Inicio del bloque de la iteración indeterminada.
 * `for` : Inicio de la iteración determinada.
 * `union` : Declaración de uniones.
 * `like` : Declaración de uniones.
@@ -173,13 +174,11 @@ La noción de variables solapadas no aplica para los nombres de funciones ni tip
 
 ## Arreglos
 
-Los arreglos en Pandora son multidimensionales de base 0, es decir, siempre 
-comienzan en 0 hasta el número indicado en su declaración, el arreglo puede 
-contener cualquiera de los tipos básicos definidos en Pandora.
+Los arreglos en Pandora son multidimensionales de base 0, es decir, siempre comienzan en 0 hasta el número indicado en su declaración, el arreglo puede contener cualquiera de los tipos básicos definidos en Pandora.
 
 Ejemplo:
 
-        array int[21] foo; **(Es un ejemplo se puede cambiar)**
+        foo : array int[21][42]; **(Es un ejemplo se puede cambiar)**
 
 Sintaxis:
         
@@ -188,40 +187,30 @@ Sintaxis:
 Donde su longitud sería 22 desde 0 hasta 21.
 
 Al pasarlos como parámetros de una función seran realizados por refencia 
-(Un apuntador al primer elemento) cambiando los valores del arreglo pasado como 
-parámetros **(Por Definir)**.
+(Un apuntador al primer elemento) cambiando los valores del arreglo pasado como parámetros **(Por Definir)**.
 
 ## Strings
 
-El uso de Strings en Pandora es muy limitado, sólo se permiten usarlos para la 
-facilidad de imprimirlos con la palabra reservada para imprimir del leguaje. 
-Para tener un String, estos tendran que estar entre comillas dobles (\") en 
-una sola linea, permite el uso de los carácteres especiales '\\n' '\\t' para 
-poder representar los saltos de lineas y tabulaciones.
+El uso de Strings en Pandora es muy limitado, sólo se permiten usarlos para la facilidad de imprimirlos con la palabra reservada para imprimir del leguaje. Para tener un String, estos tendran que estar entre comillas dobles (\") en una sola linea, permite el uso de los carácteres especiales '\\n' '\\t' para poder representar los saltos de lineas y tabulaciones.
 
 Ejemplo:
 
-        print("Hola Mundo\n");
+        write "Hola Mundo\n";
 
 ## Funciones **(Por Definir)**
 
-Para la declaración de funciones se necesita usar la palabra reservada para la 
-misma *func* seguido del nombre de la función y entre paréntesis los parametros
-necesarios, seguido del bloque de ejecución que debe terminar en un end.
+Para la declaración de funciones se necesita usar la palabra reservada para la misma *def* seguido del nombre de la función y entre paréntesis los parametros necesarios, seguido del bloque de ejecución que debe terminar en un end.
 
 Ejemplo: 
 
-    func foo(int a, char b)
+    def foo(a : int, b : int)
         print(a);
         print(b);
     end
 
 Sintaxis: **(Falta)**
 
-Para la invocación de funciones se necesita usar la variable asignada a la 
-función con el número correcto de argumentos, dichos argumentos pueden ser 
-de valor o de referencia. **(No se si se va a permitir funciones con argumentos 
-multiples)**.
+Para la invocación de funciones se necesita usar la variable asignada a la función con el número correcto de argumentos, dichos argumentos pueden ser de valor o de referencia. **(No se si se va a permitir funciones con argumentos multiples)**.
 
 Ejemplo:
 
@@ -235,10 +224,7 @@ Sintaxis: **(Falta)**
 
 ## Asignación
 
-Para los tipos básicos del lenguaje se realiza una copia por valor, en el cual
-se copia el valor o resultado del lado derecho a la variable del lado 
-izquierdo. Dicha variable debe haber sido declarada previamente y ambos lados 
-de la asignación ser iguales.
+Para los tipos básicos del lenguaje se realiza una copia por valor, en el cual se copia el valor o resultado del lado derecho a la variable del lado izquierdo. Dicha variable debe haber sido declarada previamente y ambos lados de la asignación deben tener el mismo tipo.
 
 Ejemplo:
 
@@ -270,19 +256,17 @@ Sintaxis:  **(Falta)**
 
 ### Iteración acotada (for).
 
-La iteración acotada viene dado por el uso de for seguido de una variable y el
-rango en el cual se quiera usar.
+La iteración acotada viene dado por el uso de for seguido de una variable y el rango en el cual se quiera usar.
 
 Ejemplo:
 
-        for i in 0..21:
+        for (i ; 0 ; 12):
             bar = bar + i;
         end
 
 Sintaxis: **(Falta)**
 
-Nota: En el bloque del for no se puede usar la variable que se esta utilizando 
-para la iteración
+Nota: En el bloque del for no se puede usar la variable que se esta utilizando para la iteración
 
 ### Iteración indeterminada.
 
@@ -292,34 +276,25 @@ el repeat primero evalúa el bloque y después evalúa la expresión booleana.
 
 Ejemplo while:
 
-        while foo < 42:
+        while foo < 42 do
             foo = foo + 1;
         end
 
 Ejemplo repeat:
         
         repeat
-            foo = foo + 1
+            foo = foo + 1;
         until foo < 42;
 
 Sintaxis: **(Falta)**
 
 ## Expresiones
 
-Las expresiones consisten de constantes numéricas(int, float), constantes 
-booleanas, variables y operadores, estos últimos contienen una precedencia el 
-cual indican el orden en el cual deben ser realizadas las operaciones, dicho 
-orden puede ser modificado con el uso de parentesis. Al usar varibles en una 
-operación estas deben ser inicializadas con las reglas de alcance ya explicadas.
+Las expresiones consisten de constantes numéricas(int, float), constantes booleanas, variables y operadores, estos últimos contienen una precedencia el cual indican el orden en el cual deben ser realizadas las operaciones, dicho orden puede ser modificado con el uso de parentesis. Al usar varibles en una operación estas deben ser inicializadas con las reglas de alcance ya explicadas.
 
 ### Expresiones aritméticas
 
-Las expresiones aritméticas consisten de constantes numéricas, llamadas a 
-funciones, variables y operadores aritméticos. Los operadores aritméticos 
-definidos en Pandora son: los binarios dados por la suma (+), la resta (-), 
-la multiplicación (*), la división entera (/) y el módulo (%). El único operador
-unario viene dado por la negación (-). Los operadores binarios seran usados con
-anotación infija, mientras que el unario con anotación prefija.
+Las expresiones aritméticas consisten de constantes numéricas, llamadas a funciones, variables y operadores aritméticos. Los operadores aritméticos definidos en Pandora son: los binarios dados por la suma (+), la resta (-), la multiplicación (*), la división entera (/) y el módulo (%). El único operador unario viene dado por la negación (-). Los operadores binarios seran usados con anotación infija, mientras que el unario con anotación prefija.
 
 *   Precedencia de operadores (listados de menor a mayor):
     
@@ -327,18 +302,11 @@ anotación infija, mientras que el unario con anotación prefija.
     *   *, /, %
     *   - *unario*
 
-Para los operadores aritméticos sus operandos deben ser del mismo tipo, y el 
-resultado sera del tipo de los operando, es decir, si sus operandos son *int* el 
-resultado sera *int*, igual manera si los operandos son *float*.
+Para los operadores aritméticos sus operandos deben ser del mismo tipo, y el resultado sera del tipo de los operando, es decir, si sus operandos son *int* el resultado sera *int*, igual manera si los operandos son *float*.
 
 ### Expresiones booleanas
 
-Las expresiones booleanas consisten de constantes booleanas, llamadas a 
-funciones, variables y operadores booleanos. Los operadores booleanos definidos
-en Pandora son: los binarios dado por el *y* lógico (and) y el *o* lógico (or), 
-El único operador unario viene dado por la negación lógica (not), al igual que 
-los operadores atirméticos los binarios tienen anotación infija y el unario 
-anotació prefija.
+Las expresiones booleanas consisten de constantes booleanas, llamadas a funciones, variables y operadores booleanos. Los operadores booleanos definidos en Pandora son: los binarios dado por el *y* lógico (and) y el *o* lógico (or). El único operador unario viene dado por la negación lógica (not), al igual que los operadores atirméticos los binarios tienen anotación infija y el unario anotación prefija.
 
 *   Precedencia de operadores (listados de menor a mayor):
 
@@ -346,18 +314,11 @@ anotació prefija.
     *   and
     *   not
 
-Los operandos de los operadores deben ser del tipo *bool* dando como resultado 
-un tipo *bool*.
+Los operandos de los operadores deben ser del tipo *bool* dando como resultado un tipo *bool*.
 
 ### Expresiones Relacionales **(No se me ocurre otro título)**
 
-Las expresiones relacionales consisten de constantes numéricas o booleanas
-**(A lo mejor char no estoy seguro)**, llamadas a funciones, variables y 
-operadores relaciones. Los operadores relacionales definidos en pandora son: 
-menor que (<), mayor que (>), igual (==), mayor o igual que (>=), menor o igual 
-que (<=) y desigual(/=). Cabe destacar que todos funcionan con los operandos de 
-tipos *int* y *float*, pero tanto el igual (==) como el desigual (/=) también 
-pueden trabajar con operandos del tipo *bool*.
+Las expresiones relacionales consisten de constantes numéricas, booleanas o carácteres, llamadas a funciones, variables y operadores relaciones. Los operadores relacionales definidos en pandora son: menor que (<), mayor que (>), igual (==), mayor o igual que (>=), menor o igual que (<=) y desigual(/=). Cabe destacar que todos funcionan con los operandos de tipos *int*, *float* y *char*, estos últimos se compararan por su valor en la tabla ASCII, pero tanto el igual (==) como el desigual (/=) también pueden trabajar con operandos del tipo *bool* y *array*, para la comparación de arreglos se usa su valro de refencia. 
 
 *   Precedencia de operadores (listados de menor a mayor):
 
@@ -366,5 +327,15 @@ pueden trabajar con operandos del tipo *bool*.
 
 El resultado de las expresiones relacionales siempre son de tipo *bool*.
 
-**(Se podría colocar una especie de tabla con todas la precedencias y las asociaciones que tengan)**
+**(Falta colocar la tabla con todas la precedencias y las asociaciones que tengan)**
 
+## Chequeos a tiempo de ejecución
+
+Se espera que sea el menor número de verificaciones posibles.
+
+Las existentes hasta el momento se enumeran a continuación:
+
+*   Comprobación del índice de un arreglo.
+*   Acceso correcto al campo de un union.
+*   División entre 0.
+*   Overflow.
