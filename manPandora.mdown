@@ -1,95 +1,142 @@
-#Pandora
+# Pandora
 
-Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo diseño está inspirado principalmente en los lenguajes Pascal y Ruby. Pandora es un lenguaje simplificado diseñado para los cursos de la cadena de Lenguajes de Programación de la USB.
+Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo diseño está inspirado principalmente en los lenguajes Pascal y Ruby. Pandora es un lenguaje simplificado diseñado para los cursos de la cadena de Lenguajes de Programación de la USB, cuenta con recursión, iteración determinada e indeterminada, uniones, estructuras y bloques anidados.
 
 ## Consideraciones lexicográficas.
 
 ### Símbolos.
 
-* *;* : Separador de instrucciones.
-* *,* : Separador de argumentos o parámetros.
-* *.* : Accede a los atributos.
-* *:* : Declaración del tipo de una variable.
-* *(* : Diversos usos.
-* *)* : Diversos usos.
-* *[* : Delimitador de arreglos.
-* *]* : Delimitador de arreglos.
-* *{* : Inicio de un bloque.
-* *}* : Fin de un bloque.
+* `;` : Separador de instrucciones.
+* `,` : Separador de argumentos o parámetros.
+* `.` : Accede a los atributos.
+* `:` : Declaración del tipo de una variable.
+* `(` : Diversos usos.
+* `)` : Diversos usos.
+* `[` : Delimitador de arreglos.
+* `]` : Delimitador de arreglos.
+* `{` : Inicio de un bloque.
+* `}` : Fin de un bloque.
+
 
 ### Palabras reservadas.
 
 #### Instrucciones.
 
-* if : Inicio de la sentencia condicional.
-* else : Instrucción else de la sentencia condicional.
-* while : Inicio de la iteración indeterminada.
-* for : Inicio de la iteración determinada.
-* union : Declaración de uniones.
-* struct : Declaración de estructuras.
-* return : Retorna el valor de una función.
-* new : Creación de un apuntador.
-* begin : Inicio del programa principal.
-* end : Fin del programa principal.
-* def : Decalaración de funciones.
-* free : Liberación de un apuntador.
-* program: Inicio del archivo.
-* read : Lee del teclado y asigna a una variable.
-* write : Escribe en la salida estándar.
-* void : Tipo de datos vacío, retornado por los procedimientos.
-* and : Conjunción lógica.
-* or : Disyunción lógica.
+* `if` : Inicio de la sentencia condicional.
+* `then` : Instrucción then de la sentencia condicional.
+* `else` : Instrucción else de la sentencia condicional.
+* `while` : Inicio de la iteración indeterminada.
+* `for` : Inicio de la iteración determinada.
+* `union` : Declaración de uniones.
+* `as` : Declaración de uniones.
+* `struct` : Declaración de estructuras.
+* `has` : Declaración de estructuras.
+* `return` : Retorna el valor de una función.
+* `new` : Creación de un apuntador.
+* `begin` : Inicio del programa principal.
+* `end` : Fin del programa principal y de las estructuras.
+* `def` : Decalaración de funciones.
+* `free` : Liberación de un apuntador.
+* `program`: Inicio del archivo.
+* `read` : Lee del teclado y asigna a una variable.
+* `write` : Escribe en la salida estándar.
+* `and` : Conjunción lógica.
+* `or` : Disyunción lógica.
 
 #### Valores.
 
-* True
-* False
+* `true`
+* `false`
 
 #### Tipos.
 
-* int : tipo de los números enteros.
-* bool : tipo booleano.
-* float : tipo de los números punto flotante.
-* char : tipo de los caracteres.
-* array : tipo de los arreglos.
-* null : tipo nulo.
-* struct y unions aqui???
+* `int` : tipo de los números enteros.
+* `bool` : tipo booleano.
+* `float` : tipo de los números punto flotante.
+* `char` : tipo de los caracteres.
+* `array` : tipo de los arreglos.
+* `void` : Tipo de datos vacío, retornado por los procedimientos.
+* struct , null y unions aqui???
 
 #### Otros.
 
-* var : Define el pasaje de parámetros por referencia.
+* `var` : Define el pasaje de parámetros por referencia.
+
+### Identificadores.
+
+Cualquier cadena de caracteres que comience por una letra minúscula (`a-z`) o un guión bajo (`_`) y es seguido por digítos (`0-9`), letras mayúsculas o minúsculas (`a-z,A-Z`) o un guión bajo (`_`), es considerado un identificador.
+
+Ejemplos:
+
+~~~ruby
+    foo
+    _bar
+    bAz_
+~~~
 
 ### Comentarios.
 
-* *--* : inicio de un comentario de línea.
-* *-\*-* : inicio y fin de un comentario multilínea.
+* `--`: inicio de un comentario de línea.
+* `-*-` : inicio y fin de un comentario multilínea.
+
+Ejemplos:
+
+` -- Esto es un comentario de línea`
+~~~ruby
+    -*- Esto es
+     un comentario
+     multilínea -*-
+~~~
 
 ### Operadores.
 
 #### Binarios.
 
-* *=* : Asignación.
-* *==* : Equivalencia.
-* */=* : Inequivalencia.
-* *\** : Multiplicación algebraica.
-* *+* : Suma algebraica.
-* *-* : Resta algebraica.
-* */* : División algebraica.
-* *^* : Potencia.
-* *>* : Mayor que.
-* *>=* : Mayot o igual que.
-* *<* : Menor que.
-* *<=* : Menor o igual que.
-* *%* : Módulo.
+* `=` : Asignación.
+* `==` : Equivalencia.
+* `/=` : Inequivalencia.
+* `*` : Multiplicación algebraica.
+* `+` : Suma algebraica.
+* `-` : Resta algebraica.
+* `/` : División algebraica.
+* `^` : Potencia.
+* `>` : Mayor que.
+* `>=` : Mayot o igual que.
+* `<` : Menor que.
+* `<=` : Menor o igual que.
+* `%` : Módulo.
 
 #### Unarios.
 
-* *!* : Negación lógica.
-* *-* : Menos unario.
+* `!` : Negación lógica.
+* `-` : Menos unario.
+
+Ejemplos:
+
+~~~ruby
+    foo : int;
+    foo = 3^2;
+    
+
+    struct persona has
+        nombre : string;
+        apellido : string;
+    end
+
+    union fecha as
+        enInt : int;
+        enFloat : float;
+        enString : string;
+    end
+
+    if (a >= b or b >= c) then
+        write "hola mundo";
+    else
+        write "chao mundo";
+    end
+~~~
 
 ## Gramática.
-
-(*Por definir*)
 
 ## Estructura del programa.
 
@@ -109,6 +156,8 @@ Son los tipos de datos incluidos en la implementación del lenguaje.
 * `float`
 * `bool`
 * `char`
+
+* arreglos y strings??
 
 ### Otros
 
