@@ -14,8 +14,6 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 * `)` : Diversos usos.
 * `[` : Delimitador de arreglos.
 * `]` : Delimitador de arreglos.
-* `{` : Inicio de un bloque.
-* `}` : Fin de un bloque.
 
 
 ### Palabras reservadas.
@@ -28,7 +26,7 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 * `while` : Inicio de la iteración indeterminada.
 * `for` : Inicio de la iteración determinada.
 * `union` : Declaración de uniones.
-* `as` : Declaración de uniones.
+* `like` : Declaración de uniones.
 * `struct` : Declaración de estructuras.
 * `has` : Declaración de estructuras.
 * `return` : Retorna el valor de una función.
@@ -37,16 +35,15 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 * `end` : Fin del programa principal y de las estructuras.
 * `def` : Decalaración de funciones.
 * `free` : Liberación de un apuntador.
-* `program`: Inicio del archivo.
+* `repeat`: Inicio de la iteración indeterminada.
 * `read` : Lee del teclado y asigna a una variable.
 * `write` : Escribe en la salida estándar.
-* `and` : Conjunción lógica.
-* `or` : Disyunción lógica.
 
 #### Valores.
 
-* `true`
-* `false`
+* `true` : Valor booleano.
+* `false`: Valor booleano.
+* `null` : Valor nulo.
 
 #### Tipos.
 
@@ -56,7 +53,8 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 * `char` : tipo de los caracteres.
 * `array` : tipo de los arreglos.
 * `void` : Tipo de datos vacío, retornado por los procedimientos.
-* struct , null y unions aqui???
+* `struct` : Tipo de las estructuras.
+* `union`: Tipo de las uniones.
 
 #### Otros.
 
@@ -67,7 +65,6 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 Cualquier cadena de caracteres que comience por una letra minúscula (`a-z`) o un guión bajo (`_`) y es seguido por digítos (`0-9`), letras mayúsculas o minúsculas (`a-z,A-Z`) o un guión bajo (`_`), es considerado un identificador.
 
 Ejemplos:
-
 
     foo
     _bar
@@ -102,14 +99,16 @@ Ejemplos:
 * `/` : División algebraica.
 * `^` : Potencia.
 * `>` : Mayor que.
-* `>=` : Mayot o igual que.
+* `>=` : Mayor o igual que.
 * `<` : Menor que.
 * `<=` : Menor o igual que.
 * `%` : Módulo.
+* `and`: Conjunción lógica.
+* `or`: Disyunción lógica.
 
 #### Unarios.
 
-* `!` : Negación lógica.
+* `not` : Negación lógica.
 * `-` : Menos unario.
 
 Ejemplos:
@@ -124,14 +123,14 @@ Ejemplos:
         apellido : string;
     end
 
-    union fecha as
+    union fecha like
         enInt : int;
         enFloat : float;
         enString : string;
     end
 
 
-## Gramática.
+## Gramática. (Por definir)
 
 ## Estructura del programa. (Por definir)
 
@@ -149,8 +148,7 @@ Son los tipos de datos incluidos en la implementación del lenguaje.
 * `float`
 * `bool`
 * `char`
-
-* arreglos y strings??
+* `array`
 
 ### Otros
 
@@ -173,7 +171,7 @@ Pandora permite variables solapadas, es decir, si un identificador ya es asignad
 La noción de variables solapadas no aplica para los nombres de funciones ni tipos definidos por el usuario.
 
 
-#Arreglos
+## Arreglos
 
 Los arreglos en Pandora son multidimensionales de base 0, es decir, siempre 
 comienzan en 0 hasta el número indicado en su declaración, el arreglo puede 
@@ -193,7 +191,7 @@ Al pasarlos como parámetros de una función seran realizados por refencia
 (Un apuntador al primer elemento) cambiando los valores del arreglo pasado como 
 parámetros **(Por Definir)**.
 
-#Strings
+## Strings
 
 El uso de Strings en Pandora es muy limitado, sólo se permiten usarlos para la 
 facilidad de imprimirlos con la palabra reservada para imprimir del leguaje. 
@@ -205,7 +203,7 @@ Ejemplo:
 
         print("Hola Mundo\n");
 
-#Funciones **(Por Definir)**
+## Funciones **(Por Definir)**
 
 Para la declaración de funciones se necesita usar la palabra reservada para la 
 misma *func* seguido del nombre de la función y entre paréntesis los parametros
@@ -231,11 +229,11 @@ Ejemplo:
 
 Sintaxis: **(Falta)**
 
-##Funciones de segunda clase **(Por definir)**.
+### Funciones de segunda clase **(Por definir)**.
 
-#Procedimientos **(Por Definir)**
+## Procedimientos **(Por Definir)**
 
-#Asignación
+## Asignación
 
 Para los tipos básicos del lenguaje se realiza una copia por valor, en el cual
 se copia el valor o resultado del lado derecho a la variable del lado 
@@ -246,9 +244,9 @@ Ejemplo:
 
         foo = 42;
 
-#Estructuras de Control
+## Estructuras de Control
 
-##Condicional
+### Condicional
 
 Viene dado por el conocido if then o if then else.
 
@@ -268,9 +266,9 @@ Sintaxis:  **(Falta)**
 
 **(Falta ver si se pondra elif entre las definiciones)**
 
-##Case **(Por definir)**
+### Case **(Por definir)**
 
-##Iteración acotada (for).
+### Iteración acotada (for).
 
 La iteración acotada viene dado por el uso de for seguido de una variable y el
 rango en el cual se quiera usar.
@@ -286,7 +284,7 @@ Sintaxis: **(Falta)**
 Nota: En el bloque del for no se puede usar la variable que se esta utilizando 
 para la iteración
 
-##Iteración indeterminada.
+### Iteración indeterminada.
 
 Existen 2 tipos de iteraciones indeterminadas en Pandora, el while y el repeat,
 la primera evalúa una expresión booleana y de cumplirse ejecuta el bloque, 
@@ -306,7 +304,7 @@ Ejemplo repeat:
 
 Sintaxis: **(Falta)**
 
-#Expresiones
+## Expresiones
 
 Las expresiones consisten de constantes numéricas(int, float), constantes 
 booleanas, variables y operadores, estos últimos contienen una precedencia el 
@@ -314,7 +312,7 @@ cual indican el orden en el cual deben ser realizadas las operaciones, dicho
 orden puede ser modificado con el uso de parentesis. Al usar varibles en una 
 operación estas deben ser inicializadas con las reglas de alcance ya explicadas.
 
-##Expresiones aritméticas
+### Expresiones aritméticas
 
 Las expresiones aritméticas consisten de constantes numéricas, llamadas a 
 funciones, variables y operadores aritméticos. Los operadores aritméticos 
@@ -333,7 +331,7 @@ Para los operadores aritméticos sus operandos deben ser del mismo tipo, y el
 resultado sera del tipo de los operando, es decir, si sus operandos son *int* el 
 resultado sera *int*, igual manera si los operandos son *float*.
 
-##Expresiones booleanas
+### Expresiones booleanas
 
 Las expresiones booleanas consisten de constantes booleanas, llamadas a 
 funciones, variables y operadores booleanos. Los operadores booleanos definidos
@@ -351,7 +349,7 @@ anotació prefija.
 Los operandos de los operadores deben ser del tipo *bool* dando como resultado 
 un tipo *bool*.
 
-##Expresiones Relacionales **(No se me ocurre otro título)**
+### Expresiones Relacionales **(No se me ocurre otro título)**
 
 Las expresiones relacionales consisten de constantes numéricas o booleanas
 **(A lo mejor char no estoy seguro)**, llamadas a funciones, variables y 
@@ -369,15 +367,4 @@ pueden trabajar con operandos del tipo *bool*.
 El resultado de las expresiones relacionales siempre son de tipo *bool*.
 
 **(Se podría colocar una especie de tabla con todas la precedencias y las asociaciones que tengan)**
-
-
-
-
-
-
-
-
-
-
-
 
