@@ -155,15 +155,13 @@ Son los tipos de datos incluidos en la implementación del lenguaje.
 * `bool`
 * `char`
 
-#### Tipos compuestos
+### Tipos compuestos
 
-* `array`
-
-### Otros tipos
+* `array` definen una asociación entre un tipo `int`y cualquiera de los tipos primitivos del lenguaje.
 
 Los usuarios tienen la posibilidad de definir nuevos tipos de datos según les sea necesario.
 
-* `struct`  define las estructuras cuyos elementos pueden ser usados simultáneamente con el operador de acceso '*.*'
+* `struct`  define las estructuras cuyos elementos pueden ser usados simultáneamente con el operador de acceso '.'
 
 * `union` define las estructuras llamadas uniones, cuyos elemntos no pueden ser utilizados de manera simultánea sino que únicamente se recuerda el elemento que ha sido asignado más recientemente.
 
@@ -186,11 +184,11 @@ Los arreglos en Pandora son multidimensionales de base 0, es decir, siempre comi
 
 Ejemplo:
 
-        foo : array int[21][42]; **(Es un ejemplo se puede cambiar)**
+        foo : array int[21][42]; 
 
 Sintaxis:
         
-        array <type>[<expr Int>] <variable>; **(Es un ejemplo se puede cambiar)**
+        array <type>[<expr Int>] <variable>; 
 
 Donde su longitud sería 22 desde 0 hasta 21.
 
@@ -207,7 +205,7 @@ Ejemplo:
 
 ## Funciones **(Por Definir)**
 
-Para la declaración de funciones se necesita usar la palabra reservada para la misma *def* seguido del nombre de la función y entre paréntesis los parametros necesarios, seguido del bloque de ejecución que debe terminar en un end.
+Para la declaración de funciones se necesita usar la palabra reservada para la misma `def` seguido del nombre de la función y entre paréntesis los parametros necesarios, seguido del bloque de ejecución que debe terminar en un end.
 
 Ejemplo: 
 
@@ -242,7 +240,7 @@ Ejemplo:
 
 ### Condicional
 
-Viene dado por el conocido if then o if then else.
+Viene dado por el conocido `if then` o `if then else`.
 
 Ejemplos:
 
@@ -278,9 +276,9 @@ Nota: En el bloque del for no se puede usar la variable que se esta utilizando p
 
 ### Iteración indeterminada.
 
-Existen 2 tipos de iteraciones indeterminadas en Pandora, el while y el repeat,
+Existen 2 tipos de iteraciones indeterminadas en Pandora, el `while` y el `repeat`,
 la primera evalúa una expresión booleana y de cumplirse ejecuta el bloque, 
-el repeat primero evalúa el bloque y después evalúa la expresión booleana.
+el `repeat` primero evalúa el bloque y después evalúa la expresión booleana.
 
 Ejemplo while:
 
@@ -322,7 +320,7 @@ Las expresiones booleanas consisten de constantes booleanas, llamadas a funcione
     *   and
     *   not
 
-Los operandos de los operadores deben ser del tipo *bool* dando como resultado un tipo *bool*.
+Los operandos de los operadores deben ser del tipo `bool` dando como resultado un tipo `bool`.
 
 ### Expresiones Relacionales **(No se me ocurre otro título)**
 
@@ -333,7 +331,7 @@ Las expresiones relacionales consisten de constantes numéricas, booleanas o car
     *   <, >, <=, >=
     *   ==, /=
 
-El resultado de las expresiones relacionales siempre son de tipo *bool*.
+El resultado de las expresiones relacionales siempre son de tipo `bool`.
 
 **(Falta colocar la tabla con todas la precedencias y las asociaciones que tengan)**
 
