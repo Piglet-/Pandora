@@ -397,3 +397,84 @@ Las existentes hasta el momento se enumeran a continuación:
 	    merge_sort(a,1,n);
     end
 
+### Factorial recursivo
+
+    def factorial(n : int)
+        if( n == 0 ) then 
+            return 1;
+        end
+        return n * factorial(n-1);
+    end
+
+    begin
+        int n;
+        read n;
+        write factorial(n) 
+    end
+
+### Factorial recursivo de cola
+
+    def factorial(n : int, a : int)
+        if( n == 0 ) then 
+            return a;
+        end
+        return factorial(n-1, n * a);
+    end
+
+    begin
+        int n;
+        read n;
+        write factorial(n,1); 
+    end
+
+### Factorial iterativo
+
+    def factorial(n : int)
+        f : int; 
+        f = 1;
+        for(i, 1, n) do 
+            f = f * i;
+        end
+        return f;
+        end
+    end
+
+    begin
+        n : int;
+        read n;
+        write factorial(n);
+    end
+
+### Fibonacci
+
+    def fibonacci(n : int)
+        if (n == 0) then
+            return 0;
+        end
+        if (n == 1) then 
+            return 1;
+        end
+        return fibonacci(n-1) + fibonacci(n-2);
+    end
+
+    begin
+        n : int;
+        read n;
+        write fibonacci(n);
+    end
+
+### Algoritmo de euclides
+
+    def mcd(a, b : int)
+        if (b == 0) then
+            return a;
+        end
+        return mcd(b,a % b);
+    end
+
+    begin
+        n, m : int;
+        read n;
+        read m;
+        write mcd(n,m);
+    end
