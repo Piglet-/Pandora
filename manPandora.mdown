@@ -82,11 +82,11 @@ Ejemplos:
 Ejemplos:
 
 ` -- Esto es un comentario de línea`
-~~~ruby
+`
     -*- Esto es
      un comentario
      multilínea -*-
-~~~
+`
 
 ### Operadores.
 
@@ -113,7 +113,7 @@ Ejemplos:
 
 Ejemplos:
 
-~~~ruby
+`
     foo : int;
     foo = 3^2;
     
@@ -128,19 +128,11 @@ Ejemplos:
         enFloat : float;
         enString : string;
     end
-
-    if (a >= b or b >= c) then
-        write "hola mundo";
-    else
-        write "chao mundo";
-    end
-~~~
+`
 
 ## Gramática.
 
-## Estructura del programa.
-
-Como estructura principal, Pandora se divide principalmente en dos secciones, en la primera se declaran todas las variables, constantes, tipos, funciones y procedimientos necesarios para la ejecución del programam principal, el cual corresponde a la segunda sección, delimitado por las palabras *begin* y *end* y que es llamado al iniciar la ejecución.
+## Estructura del programa. (Por definir)
 
 ## Alcance.
 
