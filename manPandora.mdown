@@ -24,8 +24,11 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 * `then` : Instrucción then de la sentencia condicional.
 * `else` : Instrucción else de la sentencia condicional.
 * `while` : Inicio de la iteración indeterminada.
-* `do` : Inicio del bloque de la iteración indeterminada.
+* `do` : Inicio de un bloque.
 * `for` : Inicio de la iteración determinada.
+* `from`: Declaracion de cota inferior en la iteración determinada.
+* `to` : Declaración de cota superior en la iteración determinada.
+* `step`: Declaración del paso de la iteración determinada.
 * `union` : Declaración de uniones.
 * `like` : Declaración de uniones.
 * `struct` : Declaración de estructuras.
@@ -67,7 +70,7 @@ Cualquier cadena de caracteres que comience por una letra minúscula (`a-z`) o u
 
 Ejemplos:
 
-    foo
+    foo2
     _bar
     bAz_
 
@@ -103,10 +106,10 @@ Ejemplos:
 * `>=` : Mayor o igual que.
 * `<` : Menor que.
 * `<=` : Menor o igual que.
-* `%` : Módulo.
 * `and`: Conjunción lógica.
 * `or`: Disyunción lógica.
 * `div`: Parte entera de la división.
+* `mod`: Módulo.
 
 #### Unarios.
 
@@ -157,14 +160,14 @@ Los usuarios tienen la posibilidad de definir nuevos tipos de datos según les s
 Ejemplos: 
 
     	struct persona has
-        	nombre : array char[];
-        	apellido : array char[];
+        	nombre : array of char[];
+        	apellido : array of char[];
     	end
 
     	union fecha like
         	enInt : int;
         	enFloat : float;
-        	enString : array char[];
+        	enString : array of char[];
     	end
     
 ## Variables.
@@ -186,11 +189,11 @@ Los arreglos en Pandora son multidimensionales de base 0, es decir, siempre comi
 
 Ejemplo:
 
-        foo : array int[21][42]; 
+        foo : array of int[21][42]; 
 
 Sintaxis:
         
-        array <type>[<expr Int>] <variable>; 
+        array of <type>[<expr Int>] <variable>; 
 
 Donde su longitud sería 22 desde 0 hasta 21.
 
@@ -267,12 +270,12 @@ Sintaxis:  **(Falta)**
 La iteración acotada viene dado por el uso de for seguido de una variable y el rango en el cual se quiera usar.
 
 Ejemplo:
-
-        for (i ; 0 ; 12) do
+ 
+        for (i from 0 to 12 step i+1) do
             bar = bar + i;
         end
 
-Sintaxis: `for (<identificador> ; <cota inferior>; <cota superior>) do <instrucciones> end`
+Sintaxis: `for (<identificador> from <cota inferior> to <cota superior> step <aumento de identificador>) do <instrucciones> end`
 
 Nota: En el bloque del for no se puede usar la variable que se esta utilizando para la iteración
 
@@ -284,7 +287,7 @@ el `repeat` primero evalúa el bloque y después evalúa la expresión booleana.
 
 Ejemplo while:
 
-        while foo < 42 do
+        while (foo < 42) do
             foo = foo + 1;
         end
 
@@ -370,7 +373,7 @@ Las existentes hasta el momento se enumeran a continuación:
 
     def merge(var a : array, p, q, r : int)
 	    i, j, k : int;
-    	b : array int[];
+    	b : array of int[];
 	    i = p;
 	    j = q+1;
 	    k = p;
@@ -384,7 +387,7 @@ Las existentes hasta el momento se enumeran a continuación:
 		    end
 		    k = k+1;
 	    end
-	    for (k; p; r) do
+	    for (k from  p to r step k+1) do
 		    a[k] = b[k];
 		    write a[k];
 	    end
@@ -393,7 +396,7 @@ Las existentes hasta el momento se enumeran a continuación:
     begin
 	    n : int;
 	    n = 6;
-	    a : array int[n];
+	    a : array of int[n];
 	    a = [1,3,9,6,5,2];
 	    merge_sort(a,1,n);
     end
@@ -433,7 +436,7 @@ Las existentes hasta el momento se enumeran a continuación:
     def factorial(n : int)
         f : int; 
         f = 1;
-        for(i, 1, n) do 
+        for(i from 1 to n step i+1) do 
             f = f * i;
         end
         return f;
