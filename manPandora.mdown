@@ -4,11 +4,11 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 
 ## Consideraciones lexicográficas.
 
-### Símbolos.
+### Puntuación.
 
 * `;` : Separador de instrucciones.
 * `,` : Separador de argumentos o parámetros.
-* `.` : Accede a los atributos.
+* `.` : Accede a los campos.
 * `:` : Declaración del tipo de una variable.
 * `(` : Diversos usos.
 * `)` : Diversos usos.
@@ -28,7 +28,7 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 * `for` : Inicio de la iteración determinada.
 * `from`: Declaracion de cota inferior en la iteración determinada.
 * `to` : Declaración de cota superior en la iteración determinada.
-* `step`: Declaración del paso de la iteración determinada.
+* `with`: Declaración del paso de la iteración determinada.
 * `union` : Declaración de uniones.
 * `like` : Declaración de uniones.
 * `struct` : Declaración de estructuras.
@@ -37,7 +37,8 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 * `new` : Creación de un apuntador.
 * `begin` : Inicio del programa principal.
 * `end` : Fin del programa principal y de las estructuras.
-* `def` : Decalaración de funciones.
+* `func` : Decalaración de funciones.
+* `proc` : Declaración de procedimientos. 
 * `free` : Liberación de un apuntador.
 * `repeat`: Inicio de la iteración indeterminada.
 * `read` : Lee del teclado y asigna a una variable.
@@ -95,8 +96,8 @@ Ejemplos:
 #### Binarios.
 
 * `=` : Asignación.
-* `==` : Equivalencia.
-* `/=` : Inequivalencia.
+* `==` : Igualdad.
+* `/=` : Desigualdad.
 * `*` : Multiplicación algebraica.
 * `+` : Suma algebraica.
 * `-` : Resta algebraica.
@@ -115,6 +116,7 @@ Ejemplos:
 
 * `not` : Negación lógica.
 * `-` : Menos unario.
+* `->` : Dirección de memoria.
 
 Ejemplos:
 
@@ -210,28 +212,59 @@ Ejemplo:
 
 ## Funciones **(Por Definir)**
 
-Para la declaración de funciones se necesita usar la palabra reservada para la misma `def` seguido del nombre de la función y entre paréntesis los parametros necesarios, seguido del bloque de ejecución que debe terminar en un end.
+Para la declaración de funciones se necesita usar la palabra reservada para la misma `func` seguido del nombre de la función y entre paréntesis los parametros necesarios, así como el tipo de retorno seguido del bloque de ejecución que debe terminar en un end.
 
 Ejemplo: 
 
-    def foo(a : int, b : int)
+    func foo(a : int, b : int) : int 
+    	c : int;
         print(a);
         print(b);
+        c = a+b;
+        return c;
     end
 
 Sintaxis: **(Falta)**
 
-Para la invocación de funciones se necesita usar la variable asignada a la función con el número correcto de argumentos, dichos argumentos pueden ser de valor o de referencia. **(No se si se va a permitir funciones con argumentos multiples)**.
+Para la invocación de funciones se necesita usar la variable asignada a la función con el número correcto de argumentos, dichos argumentos no pueden ser pasados como referencias. **(No se si se va a permitir funciones con argumentos multiples)**.
+Una función siempre debe retornar un valor, y este valor debe ser del tipo declarado en la definición de la función.
 
 Ejemplo:
-
-        foo(a,b);
+	a, b, c : int;
+	a = 3;
+	b = 32;
+        c = foo(a,b);
 
 Sintaxis: **(Falta)**
 
 ### Funciones de segunda clase **(Por definir)**.
 
 ## Procedimientos **(Por Definir)**
+
+Para la declaración de un procedimiento se necesita usar la palabra reservada para el mismo `proc` seguido del nombre del procedimiento y entre paréntesis los parametros necesarios, así como el tipo de retorno seguido del bloque de ejecución que debe terminar en un end.
+Cuado un parámetro es por referencia, se indica en la declaración haciendo uso de `var` seguido de la declaración del parámetro.
+
+Ejemplo: 
+
+    proc foo(var a : int, b : int) : int 
+        print(b);
+        a = a+b;
+        return a;
+    end
+    
+    Sintaxis: **(Falta)**
+
+Para la invocación de procedimientos se necesita usar la variable asignada al mismo con el número correcto de argumentos, dichos argumentos pueden ser de valor o de referencia. 
+un procedimiento siempre debe tener como última instrucción `return`.
+
+Ejemplo:
+	a, b : int;
+	a = 3;
+	b = 32;
+        b = foo(a,b);
+
+Sintaxis: **(Falta)**
+
 
 ## Asignación
 
@@ -249,11 +282,11 @@ Viene dado por el conocido `if then` o `if then else`.
 
 Ejemplos:
 
-        if nothing then
+        if (nothing) then
             a = something;
         end
 
-        if baz == 42 then 
+        if (baz == 42) then 
             bar = something;
         else
             foo = something
@@ -271,7 +304,7 @@ La iteración acotada viene dado por el uso de for seguido de una variable y el 
 
 Ejemplo:
  
-        for (i from 0 to 12 step i+1) do
+        for (i from 0 to 12 with i+1) do
             bar = bar + i;
         end
 
@@ -309,9 +342,9 @@ Las expresiones aritméticas consisten de constantes numéricas, llamadas a func
 
 *   Precedencia de operadores (listados de menor a mayor):
     
-    *   +, - *binario*
-    *   *, /, %
-    *   - *unario*
+    *   `+, - `binario
+    *   `*, /, %`
+    *   `-` unario
 
 Para los operadores aritméticos sus operandos deben ser del mismo tipo, y el resultado sera del tipo de los operando, es decir, si sus operandos son `int` el resultado sera `int`, igual manera si los operandos son `float`.
 
@@ -321,9 +354,9 @@ Las expresiones booleanas consisten de constantes booleanas, llamadas a funcione
 
 *   Precedencia de operadores (listados de menor a mayor):
 
-    *   or
-    *   and
-    *   not
+    *   `or`
+    *   `and`
+    *   `not`
 
 Los operandos de los operadores deben ser del tipo `bool` dando como resultado un tipo `bool`.
 
@@ -333,14 +366,22 @@ Las expresiones relacionales consisten de constantes numéricas, booleanas o car
 
 *   Precedencia de operadores (listados de menor a mayor):
 
-    *   <, >, <=, >=
-    *   ==, /=
+    *   `<, >, <=, >=`
+    *   `==, /=`
 
 El resultado de las expresiones relacionales siempre son de tipo `bool`.
 
 **(Falta colocar la tabla con todas la precedencias y las asociaciones que tengan)**
 
-## Chequeos a tiempo de ejecución
+## Conversión de tipos. (Por definir)
+
+Las conversiones de tipos se hacen de manera explícita haciendo uso de las funciones:
+
+* intToString(i:int) : convierte el entero i en su representación como string.
+* floatToString(f:float) : convierte el número flotante f en su representación como string.
+* intToFloat(i:int) : convierte el entero i en su representación en punto flotante.
+
+## Chequeos a tiempo de ejecución.
 
 Se espera que sea el menor número de verificaciones posibles.
 
@@ -387,7 +428,7 @@ Las existentes hasta el momento se enumeran a continuación:
 		    end
 		    k = k+1;
 	    end
-	    for (k from  p to r step k+1) do
+	    for (k from  p to r with k+1) do
 		    a[k] = b[k];
 		    write a[k];
 	    end
@@ -436,7 +477,7 @@ Las existentes hasta el momento se enumeran a continuación:
     def factorial(n : int)
         f : int; 
         f = 1;
-        for(i from 1 to n step i+1) do 
+        for(i from 1 to n with i+1) do 
             f = f * i;
         end
         return f;
