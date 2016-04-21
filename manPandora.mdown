@@ -216,13 +216,14 @@ Para la declaración de funciones se necesita usar la palabra reservada para la 
 
 Ejemplo: 
 
-    func foo(a : int, b : int) : int 
-    	c : int;
-        print(a);
-        print(b);
-        c = a+b;
-        return c;
-    end
+    	func foo(a : int, b : int) : int 
+    		c : int;
+        	print(a);
+        	print(b);
+        	c = a+b;
+        	return c;
+    	end
+
 
 Sintaxis: **(Falta)**
 
@@ -230,10 +231,11 @@ Para la invocación de funciones se necesita usar la variable asignada a la func
 Una función siempre debe retornar un valor, y este valor debe ser del tipo declarado en la definición de la función.
 
 Ejemplo:
+
 	a, b, c : int;
 	a = 3;
 	b = 32;
-        c = foo(a,b);
+	c = foo(a,b);
 
 Sintaxis: **(Falta)**
 
@@ -246,11 +248,11 @@ Cuado un parámetro es por referencia, se indica en la declaración haciendo uso
 
 Ejemplo: 
 
-    proc foo(var a : int, b : int) : int 
-        print(b);
-        a = a+b;
-        return a;
-    end
+	proc foo(var a : int, b : int) : int 
+		print(b);
+        	a = a+b;
+        	return a;
+    	end
     
     Sintaxis: **(Falta)**
 
@@ -258,10 +260,11 @@ Para la invocación de procedimientos se necesita usar la variable asignada al m
 un procedimiento siempre debe tener como última instrucción `return`.
 
 Ejemplo:
+
 	a, b : int;
 	a = 3;
 	b = 32;
-        b = foo(a,b);
+	b = foo(a,b);
 
 Sintaxis: **(Falta)**
 
