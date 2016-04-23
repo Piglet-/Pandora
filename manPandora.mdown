@@ -346,7 +346,7 @@ Las expresiones aritméticas consisten de constantes numéricas, llamadas a func
 *   Precedencia de operadores (listados de menor a mayor):
     
     *   `+, - `binario
-    *   `*, /, %`
+    *   `*, /, %, div, mod`
     *   `^`
     *   `-` unario
 
@@ -375,24 +375,19 @@ Las expresiones relacionales consisten de constantes numéricas, booleanas o car
 
 El resultado de las expresiones relacionales siempre son de tipo `bool`.
 
-\begin{table}[]
-\centering
-\caption{Operadores (menor a mayor)}
-\label{my-label}
-\begin{tabular}{|c|l|c|}
-\hline
-Operador                                           & \multicolumn{1}{c|}{Descripcion} & Asociatividad \\ \hline
-\textless, \textgreater, \textless=, \textgreater= & Expresiones Relacionales         & none          \\ \hline
-==, /=                                             & Expresiones Relacionales         & none          \\ \hline
-or                                                 & Disyunción lógica                & left          \\ \hline
-and                                                & Conjunción lógica                & left          \\ \hline
-not                                                & Negación lógica                  & right         \\ \hline
-+, -                                               & Suma y resta aritmética          & left          \\ \hline
-*, /, \%, div, mod                                 & Expresiones multiplicativas      & left          \\ \hline
-\textasciicircum                                   & Potencia aritmética              & left          \\ \hline
--                                                  & Negación aritmética              & right         \\ \hline
-\end{tabular}
-\end{table}
+Tabla de operadores con precedencia de menor a mayor y su asociatividad
+
+|      Operador     |         Descripcion         | Asociatividad |
+|:-----------------:|:---------------------------:|:-------------:|
+|    <, >, <=, >=   | Expresiones Relacionales    |      none     |
+|       ==, /=      | Expresiones Relacionales    |      none     |
+|         or        | Disyunción lógica           |      left     |
+|        and        | Conjunción lógica           |      left     |
+|        not        | Negación lógica             |     right     |
+|        +, -       | Suma y resta aritmética     |      left     |
+| *, /, %, div, mod | Expresiones multiplicativas |      left     |
+|         ^         | Potencia aritmética         |      left     |
+|         -         | Negación aritmética         |     right     |
 
 ## Conversión de tipos. (Por definir)
 
