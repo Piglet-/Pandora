@@ -347,6 +347,7 @@ Las expresiones aritméticas consisten de constantes numéricas, llamadas a func
     
     *   `+, - `binario
     *   `*, /, %`
+    *   `^`
     *   `-` unario
 
 Para los operadores aritméticos sus operandos deben ser del mismo tipo, y el resultado sera del tipo de los operando, es decir, si sus operandos son `int` el resultado sera `int`, igual manera si los operandos son `float`.
@@ -374,7 +375,24 @@ Las expresiones relacionales consisten de constantes numéricas, booleanas o car
 
 El resultado de las expresiones relacionales siempre son de tipo `bool`.
 
-**(Falta colocar la tabla con todas la precedencias y las asociaciones que tengan)**
+\begin{table}[]
+\centering
+\caption{Operadores (menor a mayor)}
+\label{my-label}
+\begin{tabular}{|c|l|c|}
+\hline
+Operador                                           & \multicolumn{1}{c|}{Descripcion} & Asociatividad \\ \hline
+\textless, \textgreater, \textless=, \textgreater= & Expresiones Relacionales         & none          \\ \hline
+==, /=                                             & Expresiones Relacionales         & none          \\ \hline
+or                                                 & Disyunción lógica                & left          \\ \hline
+and                                                & Conjunción lógica                & left          \\ \hline
+not                                                & Negación lógica                  & right         \\ \hline
++, -                                               & Suma y resta aritmética          & left          \\ \hline
+*, /, \%, div, mod                                 & Expresiones multiplicativas      & left          \\ \hline
+\textasciicircum                                   & Potencia aritmética              & left          \\ \hline
+-                                                  & Negación aritmética              & right         \\ \hline
+\end{tabular}
+\end{table}
 
 ## Conversión de tipos. (Por definir)
 
