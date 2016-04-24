@@ -11,6 +11,8 @@ import Error
 import Lexeme
 import Control.Monad
 import Data.Sequence (Seq, (|>), empty)
+import System.IO (readFile)
+import System.Environment (getArgs)
 }
 
 %wrapper "monadUserState"
@@ -91,7 +93,34 @@ unembedComment input len =
 state_initial :: Int
 state_initial = 0
 
+lexError str = do
+    (pos, _, _, input) <- alexGetInput
+    alexError $ showPosn pos ++ ": " ++ str ++
+        (if (not (null input))
+            then " before " ++ show (head input)
+            else " at end of file")
 
+scanner str = runAlex str $ do
+    let loop = do
+        lex@(Lexeme tok _) <- alexMonadScan
+        if tok == TokenEOF
+            then return [lex]
+            else do
+                lexs <- loop
+                return (lex:lexs)
+    loop
+
+showPosn (AlexPn _ line col) = show line ++ ':': show col
+-- runhaskell Lexer.hs
+-- al finalizar, hacer <ctrl+D>
+main = do
+    args <- getArgs
+    str <- if null args
+        then getContents
+        else readFile (head args)
+    case scanner str of
+        Right lexs -> mapM_ print lexs
+        Left error -> print error
 
 
 }
