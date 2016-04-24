@@ -1,192 +1,144 @@
 module Tokens
-( Pos(..)
-, Token(..)
-, isTokenError
-, printError
-, tp
+( Token(..)
 ) where
-
--- token's position --
-data Pos = Pos Int Int 
-        deriving Eq
-
--- show instance --        
-instance Show Pos where
-    show (Pos l c) = "(Line: " ++ show l ++ ", Column: " ++ show c ++ ")"
 
 -- tokens of Pandora --
 data Token
     -- punctuation --
     -- brackets --
-    = TokenBracketOpen Pos  | TokenBracketClose Pos
-    | TokenParenOpen Pos    | TokenParenClose Pos
+    = TokenBracketOpen   | TokenBracketClose 
+    | TokenParenOpen     | TokenParenClose 
 
     -- separators --
-    | TokenComma Pos | TokenSemicolon Pos
+    | TokenComma  | TokenSemicolon 
 
     -- access to fields --
-    | TokenPoint Pos
+    | TokenPoint 
 
     -- type declarations --
-    | TokenTwoPoints Pos
+    | TokenTwoPoints 
 
     -- instructions --
-    | TokenIf Pos       | TokenThen Pos     | TokenElse Pos     
-    | TokenWhile Pos    | TokenFor Pos      | TokenFrom  Pos 
-    | TokenTo Pos       | TokenWith Pos     | TokenDo Pos     
-    | TokenLike Pos     | TokenHas Pos      | TokenReturn Pos
-    | TokenNew Pos      | TokenBegin Pos    | TokenEnd Pos      
-    | TokenFunc Pos     | TokenProc Pos     | TokenFree Pos
-    | TokenRepeat Pos   | TokenUntil Pos    | TokenRead Pos     
-    | TokenWrite Pos    | TokenOf Pos
+    | TokenIf        | TokenThen      | TokenElse      
+    | TokenWhile     | TokenFor       | TokenFrom   
+    | TokenTo        | TokenWith      | TokenDo      
+    | TokenLike      | TokenHas       | TokenReturn 
+    | TokenNew       | TokenBegin     | TokenEnd       
+    | TokenFunc      | TokenProc      | TokenFree 
+    | TokenRepeat    | TokenUntil     | TokenRead      
+    | TokenWrite     | TokenOf 
 
     -- types --
-    | TokenIntT Pos     | TokenBool Pos     | TokenFloat Pos
-    | TokenChar Pos     | TokenStruct Pos   | TokenUnion Pos
-    | TokenVoid Pos     | TokenArray Pos
+    | TokenIntT      | TokenBoolT     | TokenFloatT 
+    | TokenCharT     | TokenStruct    | TokenUnion 
+    | TokenVoid      | TokenArray 
 
     -- boolean constants --
-    | TokenTrue Pos | TokenFalse Pos
+    | TokenTrue  | TokenFalse 
 
     -- null value --
-    | TokenNull Pos
+    | TokenNull 
 
    -- reference id --
-   | TokenVar Pos
+   | TokenVar 
 
     -- operators --
     -- binary --
-    | TokenAssign Pos   | TokenEq Pos       | TokenIneq Pos
-    | TokenPlus Pos     | TokenMinus Pos    | TokenAsterisk Pos
-    | TokenDivInt Pos   | TokenDivFloat Pos | TokenMod Pos
-    | TokenGT Pos       | TokenGE Pos       | TokenLT Pos 
-    | TokenLE Pos       | TokenCircum Pos   | TokenAnd Pos
-    | TokenOr Pos       
+    | TokenAssign    | TokenEq        | TokenIneq 
+    | TokenPlus      | TokenMinus     | TokenAsterisk 
+    | TokenDivInt    | TokenDivFloat  | TokenMod 
+    | TokenGT        | TokenGE        | TokenLT  
+    | TokenLE        | TokenCircum    | TokenAnd 
+    | TokenOr       
 
     -- unary --
-    | TokenNot Pos | TokenArrow Pos 
+    | TokenNot  | TokenArrow  
 
     -- variables --
-    | TokenInt    Int    Pos
-    | TokenString String Pos
-    | TokenIdent  String Pos
+    | TokenInt      Int   
+    | TokenFloat    Float 
+    | TokenBool     Bool
+    | TokenChar     Char 
+    | TokenString   String 
+    | TokenIdent    String 
 
     -- errors --
-    | TokenError    String Pos
-    | TokenIntError String Pos
-    | TokenEOF Pos
+    | TokenError    String 
+    | TokenIntError String 
+    | TokenEOF      String
     deriving Eq
 
 -- show instance --
--- instance Show Token where
-
--- TokenPosition function --
-tp :: Token -> Pos
-tp t = case t of
-    -- punctuation --
-     -- brackets --
-    (TokenBracketOpen p)  -> p
-    (TokenBracketClose p) -> p
-    (TokenParenOpen p)  -> p
-    (TokenParenClose p) -> p
-
-    -- separators --
-    (TokenComma p)      -> p
-    (TokenSemicolon p)  -> p
-
-    -- access to fields --
-    (TokenPoint p) -> p
-
-    -- type declarations --
-    (TokenTwoPoints p) -> p
-
-    -- instructions --
-    (TokenIf p)     -> p
-    (TokenThen p)   -> p
-    (TokenElse p)   -> p     
-    (TokenWhile p)  -> p
-    (TokenFor p)    -> p 
-    (TokenFrom p)   -> p
-    (TokenTo p)     -> p
-    (TokenWith p)   -> p 
-    (TokenDo p)     -> p     
-    (TokenLike p)   -> p
-    (TokenHas p)    -> p 
-    (TokenReturn p) -> p
-    (TokenNew p)    -> p 
-    (TokenBegin p)  -> p
-    (TokenEnd p)    -> p      
-    (TokenFunc p)   -> p  
-    (TokenProc p)   -> p
-    (TokenFree p)   -> p
-    (TokenRepeat p) -> p 
-    (TokenUntil p)  -> p  
-    (TokenRead p)   -> p     
-    (TokenWrite p)  -> p   
-    (TokenOf p)     -> p
-
-    -- types --
-    (TokenIntT p)   -> p     
-    (TokenBool p)   -> p   
-    (TokenFloat p)  -> p
-    (TokenChar p)   -> p    
-    (TokenStruct p) -> p   
-    (TokenUnion p)  -> p
-    (TokenVoid p)   -> p     
-    (TokenArray p)  -> p
-
-    -- boolean constants --
-    (TokenTrue p)   -> p 
-    (TokenFalse p)  -> p
-
-    -- null value --
-    (TokenNull p) -> p
-
-   -- reference id --
-    (TokenVar p) -> p
-
-   -- operators --
-    -- binary --
-    (TokenAssign p)     -> p   
-    (TokenEq p)         -> p       
-    (TokenIneq p)       -> p
-    (TokenPlus p)       -> p     
-    (TokenMinus p)      -> p    
-    (TokenAsterisk p)   -> p
-    (TokenDivInt p)     -> p   
-    (TokenDivFloat p)   -> p 
-    (TokenMod p)        -> p
-    (TokenGT p)         -> p       
-    (TokenGE p)         -> p       
-    (TokenLT p)         -> p 
-    (TokenLE p)         -> p       
-    (TokenCircum p)     -> p   
-    (TokenAnd p)        -> p
-    (TokenOr p)         -> p       
-
-    -- unary --
-    (TokenNot p)    -> p 
-    (TokenArrow p)  -> p
-
-    -- variables --
-    (TokenInt _ p)      -> p
-    (TokenString _ p)   -> p
-    (TokenIdent  _ p)   -> p
-
-    -- errors --
-    (TokenError _ p)    -> p
-    (TokenIntError _ p) -> p
-    (TokenEOF p)        -> p
-
-
-printError :: Token -> IO ()
-printError (TokenError s p) = do
-  putStrLn $ "Error: unexpected token \"" ++ s ++ "\" " ++ show p
-printError (TokenIntError s p) = do
-  putStrLn $ "Error: integer out of range (-2^31 .. 2^31-1) \"" ++ s ++
-    "\" " ++ show p
-
-isTokenError :: Token -> Bool
-isTokenError (TokenError    _ _) = True
-isTokenError (TokenIntError _ _) = True
-isTokenError _                   = False
+instance Show Token where
+    show = \case
+        TokenBracketOpen    -> "[" 
+        TokenBracketClose   -> "]"
+        TokenParenOpen      -> ")"
+        TokenParenClose     -> "(" 
+        TokenComma          -> ","  
+        TokenSemicolon      -> ";" 
+        TokenPoint          -> "."
+        TokenTwoPoints      -> ":"
+        TokenIf             -> "IF"
+        TokenThen           -> "THEN"
+        TokenElse           -> "ELSE"     
+        TokenWhile          -> "WHILE"   
+        TokenFor            -> "FOR"    
+        TokenFrom           -> "FROM"  
+        TokenTo             -> "TO" 
+        TokenWith           -> "WITH"
+        TokenDo             -> "DO"     
+        TokenLike           -> "LIKE"
+        TokenHas            -> "HAS"
+        TokenReturn         -> "RETURN"
+        TokenNew            -> "NEW"
+        TokenBegin          -> "BEGIN"
+        TokenEnd            -> "END"
+        TokenFunc           -> "FUNC"
+        TokenProc           -> "PROC"
+        TokenFree           -> "FREE"
+        TokenRepeat         -> "REPEAT" 
+        TokenUntil          -> "UNTIL"
+        TokenRead           -> "READ"
+        TokenWrite          -> "WRITE"
+        TokenOf             -> "OF"
+        TokenIntT           -> "INT"
+        TokenBoolT          -> "BOOL"
+        TokenFloatT         -> "FLOAT"
+        TokenCharT          -> "CHAR"
+        TokenStruct         -> "STRUCT"
+        TokenUnion          -> "UNION"
+        TokenVoid           -> "VOID"
+        TokenArray          -> "ARRAY"
+        TokenTrue           -> "TRUE"
+        TokenFalse          -> "FALSE"
+        TokenNull           -> "NULL"
+        TokenVar            -> "VAR"
+        TokenAssign         -> "ASSIGN"
+        TokenEq             -> "=="
+        TokenIneq           -> "/="
+        TokenPlus           -> "+"
+        TokenMinus          -> "-"
+        TokenAsterisk       -> "*"
+        TokenDivInt         -> "DIV"
+        TokenDivFloat       -> "/"
+        TokenMod            -> "MOD"
+        TokenGT             -> ">"
+        TokenGE             -> ">="
+        TokenLT             -> "<"
+        TokenLE             -> "<="
+        TokenCircum         -> "^"
+        TokenAnd            -> "AND"
+        TokenOr             -> "OR"
+        TokenNot            -> "NOT"
+        TokenArrow          -> "->"
+        TokenInt      v     -> show v 
+        TokenFloat    v     -> show v 
+        TokenBool     v     -> show v
+        TokenChar     v     -> show v
+        TokenString   v     -> show v
+        TokenIdent    v     -> show v 
+        TkEOF               -> "EOF"
+        TkError       e     -> show e 
+        TkStringError e     -> show e 
+    deriving Eq
