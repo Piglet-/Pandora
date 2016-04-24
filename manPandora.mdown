@@ -41,6 +41,7 @@ Pandora es un lenguaje imperativo de tipado fuerte y propósio general cuyo dise
 * `proc` : Declaración de procedimientos. 
 * `free` : Liberación de un apuntador.
 * `repeat`: Inicio de la iteración indeterminada.
+* `until`: Fin de la iteración indeterminada.
 * `read` : Lee del teclado y asigna a una variable.
 * `write` : Escribe en la salida estándar.
 
