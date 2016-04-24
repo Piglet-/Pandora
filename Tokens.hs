@@ -74,6 +74,7 @@ data Token
     -- errors --
     | TokenError    String Pos
     | TokenIntError String Pos
+    | TokenEOF Pos
     deriving Eq
 
 -- show instance --
@@ -84,8 +85,8 @@ tp :: Token -> Pos
 tp t = case t of
     -- punctuation --
      -- brackets --
-    (TokenCurlyOpen p)  -> p
-    (TokenCurlyClose p) -> p
+    (TokenBracketOpen p)  -> p
+    (TokenBracketClose p) -> p
     (TokenParenOpen p)  -> p
     (TokenParenClose p) -> p
 
@@ -142,7 +143,7 @@ tp t = case t of
     (TokenNull p) -> p
 
    -- reference id --
-   (TokenVar p) -> p
+    (TokenVar p) -> p
 
    -- operators --
     -- binary --
@@ -175,6 +176,7 @@ tp t = case t of
     -- errors --
     (TokenError _ p)    -> p
     (TokenIntError _ p) -> p
+    (TokenEOF p)        -> p
 
 
 printError :: Token -> IO ()
