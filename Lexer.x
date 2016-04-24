@@ -2,9 +2,13 @@
 module Lexer
     ( Alex(..)
     , Tokens(..)
+    , Lexeme(..)
+    , Error(..)
     ) where
 
 import Tokens
+import Error
+import Lexeme
 import Control.Monad
 import Data.Sequence (Seq, (|>), empty)
 }
@@ -59,14 +63,14 @@ setLexerCommentDepth :: Int -> Alex ()
 setLexerCommentDepth ss = 
     Alex $ \s -> Right (s{alex_ust=(alex_ust s){lexerCommentDepth=ss}}, ())
 
-toPosition :: AlexPosn -> Pos
-toPosition (AlexPn _ r c) = Pos r c
+toPosition :: AlexPosn -> Position
+toPosition (AlexPn _ r c) = Position r c
 
-alexEOF :: Alex ( Token )
+alexEOF :: Alex (Lexeme Token )
 alexEOF = liftM ( TokenEOF ) alexGetPosition
 
-tok :: (String -> Token) -> AlexAction ( Token )
-tok f (p,_,_,s) i = return $ (f $ take i s) (toPosition p)
+tok :: (String -> Token) -> AlexAction ( Lexeme Token )
+tok f (p,_,_,s) i = return $ Lexeme (f $ take i s) (toPosition p)
 
 alexGetPosition :: Alex Pos
 alexGetPosition = alexGetInput >>= \(p,_,_,_) -> return $ toPosition p

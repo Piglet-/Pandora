@@ -65,8 +65,8 @@ data Token
     -- errors --
     | TokenError    String 
     | TokenIntError String 
-    | TokenEOF      String
-    deriving Eq
+    | TokenEOF
+    deriving (Eq)
 
 -- show instance --
 instance Show Token where
@@ -141,4 +141,4 @@ instance Show Token where
         TkEOF               -> "EOF"
         TkError       e     -> show e 
         TkStringError e     -> show e 
-    deriving Eq
+    deriving (Eq)

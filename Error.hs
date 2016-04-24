@@ -1,12 +1,12 @@
 {-# LANGUAGE LambdaCase #-}
 
-Error
+module Error
     ( Error(..)
     , isError
     , LexerError(..)
     ) where
 
-import  Token
+import  Tokens
 import  Position
 import  Data.Function (on)
 
