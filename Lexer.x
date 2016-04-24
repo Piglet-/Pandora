@@ -1,7 +1,7 @@
 {
 module Lexer
     ( Alex(..)
-    , Tokens(..)
+    , Token(..)
     , Lexeme(..)
     , Error(..)
     ) where
@@ -35,13 +35,10 @@ tokens :-
     <n> \n      { skip }
 
     -- Identifier
-    <0> @ident  { tok (TokenIdent id) }
+    <0> @ident  { tok TokenIdent }
 
 {
     
-data Error
-    = Error Pos
-
 data AlexUserState = 
     AlexUST 
         { errors            :: Seq Error
@@ -64,15 +61,15 @@ setLexerCommentDepth ss =
     Alex $ \s -> Right (s{alex_ust=(alex_ust s){lexerCommentDepth=ss}}, ())
 
 toPosition :: AlexPosn -> Position
-toPosition (AlexPn _ r c) = Position r c
+toPosition (AlexPn _ r c) = Position (r, c)
 
 alexEOF :: Alex (Lexeme Token )
-alexEOF = liftM ( TokenEOF ) alexGetPosition
+alexEOF = liftM (Lexeme TokenEOF ) alexGetPosition
 
 tok :: (String -> Token) -> AlexAction ( Lexeme Token )
 tok f (p,_,_,s) i = return $ Lexeme (f $ take i s) (toPosition p)
 
-alexGetPosition :: Alex Pos
+alexGetPosition :: Alex Position
 alexGetPosition = alexGetInput >>= \(p,_,_,_) -> return $ toPosition p
 
 enterNewComment input len =

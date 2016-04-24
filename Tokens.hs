@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Tokens
 ( Token(..)
 ) where
@@ -138,7 +140,6 @@ instance Show Token where
         TokenChar     v     -> show v
         TokenString   v     -> show v
         TokenIdent    v     -> show v 
-        TkEOF               -> "EOF"
-        TkError       e     -> show e 
-        TkStringError e     -> show e 
-    deriving (Eq)
+        TokenEOF            -> "EOF"
+        TokenError    e     -> show e 
+

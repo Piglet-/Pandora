@@ -20,8 +20,8 @@ instance Show Error where
 instance Eq Error where
     (==) = (==) `on` errorPos
 
-instance Ord Error where
-    compare = compare `on` errorPos
+--instance Ord Error where
+--    compare = compare `on` errorPos
 
 isError :: Error -> Bool
 isError _ = True
@@ -39,3 +39,6 @@ instance Show LexerError where
         StringError str      -> "missing matching quotation mark for string " ++ show str
         TokenNotSupported tk -> show tk ++ " is not supported yet"
 
+errorPos :: Error -> Position
+errorPos = \case
+    LError p _ -> p
