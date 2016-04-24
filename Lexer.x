@@ -104,7 +104,10 @@ scanner str = runAlex str $ do
     let loop = do
         lex@(Lexeme tok _) <- alexMonadScan
         if tok == TokenEOF
-            then return [lex]
+            then do f1 <- getLexerCommentDepth
+                    if (f1 == 0)
+                        then return [lex]
+                        else alexError "Comment not closed at end of file"
             else do
                 lexs <- loop
                 return (lex:lexs)
