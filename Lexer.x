@@ -82,13 +82,9 @@ tokens :-
     <0> "array" { tok' TokenArray }
     <0> "struct" { tok' TokenStruct }
     <0> "union" { tok' TokenUnion }
-
-    -- TENGO PROBLEMAS AQUI
-   -- <0> @int    { tok TokenInt . read }
-   -- <0> @float  { tok TokenFloat . read }
-   -- <0> @char   { tok TokenChar . read }
-
-
+    <0> @int    { tok (TokenInt  . read) }
+    <0> @float  { tok (TokenFloat  . read) }
+    <0> @char   { tok (TokenChar  . read) }
     -- boolean constants
     <0> "true"  { tok' TokenTrue }
     <0> "false" { tok' TokenFalse }
