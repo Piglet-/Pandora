@@ -78,18 +78,25 @@ Ejemplos:
 
 ### Comentarios.
 
-* `--`: inicio de un comentario de línea.
-* `-*-` : inicio y fin de un comentario multilínea.
+* `--` : inicio de un comentario de línea.
+* `-*` : inicio de un comentario multilínea.
+* `*-` : fin de un comentario multilínea.
+
+Se permite anidamiento de comentarios.
 
 Ejemplos:
 
 ` -- Esto es un comentario de línea`
 
-    -*- 
+    -* 
         esto es
         un comentario
         multilínea 
-    -*-
+        -* esto es 
+            un comentario
+            anidado
+        *-
+    *-
 
 
 ### Operadores.
@@ -163,14 +170,14 @@ Los usuarios tienen la posibilidad de definir nuevos tipos de datos según les s
 Ejemplos: 
 
     	struct persona has
-        	nombre : array of char[];
-        	apellido : array of char[];
+        	nombre : array of char[10];
+        	apellido : array of char[10];
     	end
 
     	union fecha like
         	enInt : int;
         	enFloat : float;
-        	enString : array of char[];
+        	enString : array of char[10];
     	end
     
 ## Variables.
@@ -205,7 +212,7 @@ Al pasarlos como parámetros de una función seran realizados por refencia
 
 ## Strings
 
-El uso de Strings en Pandora es muy limitado, sólo se permiten usarlos para la facilidad de imprimirlos con la palabra reservada para imprimir del leguaje. Para tener un String, estos tendran que estar entre comillas dobles (\") en una sola linea, permite el uso de los carácteres especiales '\\n' '\\t' para poder representar los saltos de lineas y tabulaciones.
+El uso de Strings en Pandora es muy limitado, sólo se permiten usarlos para la facilidad de imprimirlos con la palabra reservada `write` del leguaje. Para tener un String, estos tendran que estar entre comillas dobles (\") en una sola linea, permite el uso de los carácteres especiales '\\n' '\\t' para poder representar los saltos de lineas y tabulaciones.
 
 Ejemplo:
 
@@ -219,8 +226,8 @@ Ejemplo:
 
     	func foo(a : int, b : int) : int 
     		c : int;
-        	print(a);
-        	print(b);
+        	write a;
+        	write b;
         	c = a+b;
         	return c;
     	end
@@ -250,7 +257,7 @@ Cuado un parámetro es por referencia, se indica en la declaración haciendo uso
 Ejemplo: 
 
 	proc foo(var a : int, b : int) : int 
-		print(b);
+		write b;
         	a = a+b;
         	return a;
     	end
@@ -365,7 +372,7 @@ Las expresiones booleanas consisten de constantes booleanas, llamadas a funcione
 
 Los operandos de los operadores deben ser del tipo `bool` dando como resultado un tipo `bool`.
 
-### Expresiones Relacionales **(No se me ocurre otro título)**
+### Expresiones Relacionales 
 
 Las expresiones relacionales consisten de constantes numéricas, booleanas o carácteres, llamadas a funciones, variables y operadores relaciones. Los operadores relacionales definidos en pandora son: menor que (<), mayor que (>), igual (==), mayor o igual que (>=), menor o igual que (<=) y desigual(/=). Cabe destacar que todos funcionan con los operandos de tipos *int*, *float* y *char*, estos últimos se compararan por su valor en la tabla ASCII, pero tanto el igual (==) como el desigual (/=) también pueden trabajar con operandos del tipo *bool* y *array*, para la comparación de arreglos se usa su valro de refencia. 
 
@@ -394,9 +401,9 @@ Tabla de operadores con precedencia de menor a mayor y su asociatividad
 
 Las conversiones de tipos se hacen de manera explícita haciendo uso de las funciones:
 
-* intToString(i:int) : convierte el entero i en su representación como string.
-* floatToString(f:float) : convierte el número flotante f en su representación como string.
-* intToFloat(i:int) : convierte el entero i en su representación en punto flotante.
+* `intToString(i:int)` : convierte el entero i en su representación como string.
+* `floatToString(f:float)` : convierte el número flotante f en su representación como string.
+* `intToFloat(i:int)` : convierte el entero i en su representación en punto flotante.
 
 ## Chequeos a tiempo de ejecución.
 
