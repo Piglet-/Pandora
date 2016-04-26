@@ -28,7 +28,8 @@ data Token
     | TokenNew       | TokenBegin     | TokenEnd       
     | TokenFunc      | TokenProc      | TokenFree 
     | TokenRepeat    | TokenUntil     | TokenRead      
-    | TokenWrite     | TokenOf 
+    | TokenWrite     | TokenOf        | TokenITS
+    | TokenFTS       | TokenITF
 
     -- types --
     | TokenIntT      | TokenBoolT     | TokenFloatT 
@@ -75,8 +76,8 @@ instance Show Token where
     show = \case
         TokenBracketOpen    -> "[" 
         TokenBracketClose   -> "]"
-        TokenParenOpen      -> ")"
-        TokenParenClose     -> "(" 
+        TokenParenOpen      -> "("
+        TokenParenClose     -> ")" 
         TokenComma          -> ","  
         TokenSemicolon      -> ";" 
         TokenPoint          -> "."
@@ -104,6 +105,9 @@ instance Show Token where
         TokenRead           -> "READ"
         TokenWrite          -> "WRITE"
         TokenOf             -> "OF"
+        TokenITF            -> "INTTOFLOAT"
+        TokenITS            -> "INTTOSTRING"
+        TokenFTS            -> "FLOATTOSTRING"
         TokenIntT           -> "INT"
         TokenBoolT          -> "BOOL"
         TokenFloatT         -> "FLOAT"

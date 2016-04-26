@@ -34,89 +34,92 @@ tokens :-
     --Comment
     <0> "--".*  ;
     --Nested Comment
-    <0> "-*"        { enterNewComment `andBegin` n }
-    <n> "-*"        { embedComment }
-    <n> "*-"        { unembedComment }
-    <n> .           ;
-    <n> \n          { skip }
+    <0> "-*"            { enterNewComment `andBegin` n }
+    <n> "-*"            { embedComment }
+    <n> "*-"            { unembedComment }
+    <n> .               ;
+    <n> \n              { skip }
     -- brackets 
-    <0> "("         { tok' TokenBracketOpen }
-    <0> ")"         { tok' TokenBracketClose }
-    <0> "["         { tok' TokenParenOpen }
-    <0> "]"         { tok' TokenParenClose }
+    <0> "["             { tok' TokenBracketOpen }
+    <0> "]"             { tok' TokenBracketClose }
+    <0> "("             { tok' TokenParenOpen }
+    <0> ")"             { tok' TokenParenClose }
     -- separators
-    <0> ","         { tok' TokenComma }
-    <0> ";"         { tok' TokenSemicolon }
+    <0> ","             { tok' TokenComma }
+    <0> ";"             { tok' TokenSemicolon }
     -- access to fields
-    <0> "."         { tok' TokenPoint }
+    <0> "."             { tok' TokenPoint }
     -- type declarations
-    <0> ":"         { tok' TokenTwoPoints }
+    <0> ":"             { tok' TokenTwoPoints }
     -- instructions
-    <0> "if"        { tok' TokenIf }
-    <0> "then"      { tok' TokenThen }
-    <0> "else"      { tok' TokenElse }
-    <0> "while"     { tok' TokenWhile }
-    <0> "for"       { tok' TokenFor }
-    <0> "from"      { tok' TokenFrom }
-    <0> "to"        { tok' TokenTo }
-    <0> "with"      { tok' TokenWith }
-    <0> "do"        { tok' TokenDo }
-    <0> "like"      { tok' TokenLike }
-    <0> "has"       { tok' TokenHas }
-    <0> "return"    { tok' TokenReturn }
-    <0> "new"       { tok' TokenNew }
-    <0> "begin"     { tok' TokenBegin }
-    <0> "end"       { tok' TokenEnd }
-    <0> "func"      { tok' TokenFunc }
-    <0> "proc"      { tok' TokenProc }
-    <0> "free"      { tok' TokenFree }
-    <0> "repeat"    { tok' TokenRepeat }
-    <0> "until"     { tok' TokenUntil }
-    <0> "read"      { tok' TokenRead }
-    <0> "write"     { tok' TokenWrite }
-    <0> "of"        { tok' TokenOf }
+    <0> "if"            { tok' TokenIf }
+    <0> "then"          { tok' TokenThen }
+    <0> "else"          { tok' TokenElse }
+    <0> "while"         { tok' TokenWhile }
+    <0> "for"           { tok' TokenFor }
+    <0> "from"          { tok' TokenFrom }
+    <0> "to"            { tok' TokenTo }
+    <0> "with"          { tok' TokenWith }
+    <0> "do"            { tok' TokenDo }
+    <0> "like"          { tok' TokenLike }
+    <0> "has"           { tok' TokenHas }
+    <0> "return"        { tok' TokenReturn }
+    <0> "new"           { tok' TokenNew }
+    <0> "begin"         { tok' TokenBegin }
+    <0> "end"           { tok' TokenEnd }
+    <0> "func"          { tok' TokenFunc }
+    <0> "proc"          { tok' TokenProc }
+    <0> "free"          { tok' TokenFree }
+    <0> "repeat"        { tok' TokenRepeat }
+    <0> "until"         { tok' TokenUntil }
+    <0> "read"          { tok' TokenRead }
+    <0> "write"         { tok' TokenWrite }
+    <0> "of"            { tok' TokenOf }
+    <0> "intToString"   { tok' TokenITS }
+    <0> "floatToString" { tok' TokenFTS }
+    <0> "intToFloat"    { tok' TokenITF }
     -- types
-    <0> "int"       { tok' TokenIntT }
-    <0> "float"     { tok' TokenFloatT }
-    <0> "char"      { tok' TokenCharT }
-    <0> "bool"      { tok' TokenBoolT }
-    <0> "array"     { tok' TokenArray }
-    <0> "struct"    { tok' TokenStruct }
-    <0> "union"     { tok' TokenUnion }
-    <0> @int        { tok (TokenInt  . read) }
-    <0> @float      { tok (TokenFloat  . read) }
-    <0> @char       { tok (TokenChar  . read) }
-    <0> @string     { tok (TokenString . read) }
+    <0> "int"           { tok' TokenIntT }
+    <0> "float"         { tok' TokenFloatT }
+    <0> "char"          { tok' TokenCharT }
+    <0> "bool"          { tok' TokenBoolT }
+    <0> "array"         { tok' TokenArray }
+    <0> "struct"        { tok' TokenStruct }
+    <0> "union"         { tok' TokenUnion }
+    <0> @int            { tok (TokenInt  . read) }
+    <0> @float          { tok (TokenFloat  . read) }
+    <0> @char           { tok (TokenChar  . read) }
+    <0> @string         { tok (TokenString . read) }
     -- boolean constants
-    <0> "true"      { tok' TokenTrue }
-    <0> "false"     { tok' TokenFalse }
+    <0> "true"          { tok' TokenTrue }
+    <0> "false"         { tok' TokenFalse }
     -- null value
-    <0> "null"      { tok' TokenNull }
+    <0> "null"          { tok' TokenNull }
     -- reference id
-    <0> "var"       { tok' TokenVar }
+    <0> "var"           { tok' TokenVar }
     -- binary operators
-    <0> "="         { tok' TokenAssign }
-    <0> "=="        { tok' TokenEq }
-    <0> "/="        { tok' TokenIneq }
-    <0> "+"         { tok' TokenPlus }
-    <0> "-"         { tok' TokenMinus }
-    <0> "*"         { tok' TokenAsterisk }
-    <0> "div"       { tok' TokenDivInt }
-    <0> "/"         { tok' TokenDivFloat }
-    <0> "mod"       { tok' TokenMod }
-    <0> ">"         { tok' TokenGT }
-    <0> ">="        { tok' TokenGE }
-    <0> "<"         { tok' TokenLT }
-    <0> "<="        { tok' TokenLE }
-    <0> "^"         { tok' TokenCircum }
-    <0> "and"       { tok' TokenAnd }
-    <0> "or"        { tok' TokenOr }
+    <0> "="             { tok' TokenAssign }
+    <0> "=="            { tok' TokenEq }
+    <0> "/="            { tok' TokenIneq }
+    <0> "+"             { tok' TokenPlus }
+    <0> "-"             { tok' TokenMinus }
+    <0> "*"             { tok' TokenAsterisk }
+    <0> "div"           { tok' TokenDivInt }
+    <0> "/"             { tok' TokenDivFloat }
+    <0> "mod"           { tok' TokenMod }
+    <0> ">"             { tok' TokenGT }
+    <0> ">="            { tok' TokenGE }
+    <0> "<"             { tok' TokenLT }
+    <0> "<="            { tok' TokenLE }
+    <0> "^"             { tok' TokenCircum }
+    <0> "and"           { tok' TokenAnd }
+    <0> "or"            { tok' TokenOr }
     -- unary operators
-    <0> "not"       { tok' TokenNot }
-    <0> "->"        { tok' TokenArrow }
+    <0> "not"           { tok' TokenNot }
+    <0> "->"            { tok' TokenArrow }
     
     -- Identifier
-    <0> @ident      { tok TokenIdent }
+    <0> @ident          { tok TokenIdent }
 
 {
 
