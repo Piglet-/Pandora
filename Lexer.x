@@ -86,7 +86,7 @@ tokens :-
     <0> "array"         { tok' TokenArray }
     <0> "struct"        { tok' TokenStruct }
     <0> "union"         { tok' TokenUnion }
-    <0> @int            { tok (TokenInt  . read) }
+    <0> @int            { tok' . lexInt }
     <0> @float          { tok (TokenFloat  . read) }
     <0> @char           { tok (TokenChar  . read) }
     <0> @string         { tok (TokenString . read) }
@@ -157,6 +157,13 @@ alexEOF = liftM (Lexeme TokenEOF ) alexGetPosition
 
 tok :: (String -> Token) -> AlexAction ( Lexeme Token )
 tok f (p,_,_,s) i = return $ Lexeme (f $ take i s) (toPosition p)
+
+lexInt :: AlexPosn -> String -> Token
+lexInt p s
+  | n < -2^31  =  TokenIntError s 
+  | n < 2^31   =  TokenInt      n 
+  | otherwise  =  TokenIntError s 
+  where n = (read s :: (Num a, Read a) => a)
 
 tok' :: Token -> AlexAction (Lexeme Token)
 tok' = tok . const
