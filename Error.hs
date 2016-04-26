@@ -2,12 +2,13 @@
 
 module Error
     ( Error(..)
-    , isError
+    , isTokenError
     , LexerError(..)
     ) where
 
 import  Tokens
 import  Position
+import  Lexeme
 import  Data.Function (on)
 
 data Error
@@ -23,8 +24,9 @@ instance Eq Error where
 --instance Ord Error where
 --    compare = compare `on` errorPos
 
-isError :: Error -> Bool
-isError _ = True
+isTokenError :: Lexeme Token -> Bool
+isTokenError (Lexeme (TokenError _) _) = True
+isTokenError _                         = False
 
 data LexerError
     = LexerError     String
