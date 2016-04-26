@@ -149,7 +149,7 @@ instance Show Token where
         TokenString   v     -> show v
         TokenIdent    v     -> show v 
         TokenEOF            -> "EOF"
-        TokenError    e     -> show e 
+        TokenError    e     -> "Unexpected token: " ++ show e 
         TokenIntError e     -> "Bad int error: " ++ show e ++ " (too large)"
         TokenFloatErrorO e  -> "Bad float error: " ++ show e ++ " (overflow)"
         TokenFloatErrorU e  -> "Bad float error: " ++ show e ++ " (underflow)"
