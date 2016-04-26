@@ -34,7 +34,7 @@ data Token
     -- types --
     | TokenIntT      | TokenBoolT     | TokenFloatT 
     | TokenCharT     | TokenStruct    | TokenUnion 
-    | TokenVoid      | TokenArray 
+    | TokenVoid      | TokenArray     | TokenStringT
 
     -- boolean constants --
     | TokenTrue  | TokenFalse 
@@ -115,6 +115,7 @@ instance Show Token where
         TokenBoolT          -> "BOOL"
         TokenFloatT         -> "FLOAT"
         TokenCharT          -> "CHAR"
+        TokenStringT        -> "STRING"
         TokenStruct         -> "STRUCT"
         TokenUnion          -> "UNION"
         TokenVoid           -> "VOID"

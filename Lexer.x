@@ -85,6 +85,7 @@ tokens :-
     <0> "char"          { tok' TokenCharT }
     <0> "bool"          { tok' TokenBoolT }
     <0> "array"         { tok' TokenArray }
+    <0> "string"        { tok' TokenStringT }
     <0> "struct"        { tok' TokenStruct }
     <0> "union"         { tok' TokenUnion }
     <0> @int            { tok lexInt }
