@@ -70,6 +70,7 @@ data Token
     | TokenIntError String 
     | TokenFloatError String
     | TokenEOF
+    | TokenBadComment
     deriving (Eq)
 
 -- show instance --
@@ -149,3 +150,4 @@ instance Show Token where
         TokenError    e     -> show e 
         TokenIntError e     -> show e
         TokenFloatError e   -> show e 
+        TokenBadComment     -> "Comment not closed at end of file"
