@@ -65,7 +65,7 @@ data Token
     | TokenIdent    String 
 
     -- errors --
-    | TokenError    String 
+    | TokenError    Char 
     | TokenIntError String 
     | TokenEOF
     deriving (Eq)

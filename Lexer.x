@@ -118,6 +118,8 @@ tokens :-
     -- Identifier
     <0> @ident      { tok TokenIdent }
 
+    <0>.            { tok (TokenError . head)}
+
 {
 
 data AlexUserState = 
@@ -140,6 +142,9 @@ getLexerCommentDepth =
 setLexerCommentDepth :: Int -> Alex ()
 setLexerCommentDepth ss = 
     Alex $ \s -> Right (s{alex_ust=(alex_ust s){lexerCommentDepth=ss}}, ())
+
+addLError :: Position -> LexerError -> Alex ()
+addLError p e = Alex $ \s -> Right (s{alex_ust=(alex_ust s){errors=errors (alex_ust s) |> (LError p e)}}, ())
 
 toPosition :: AlexPosn -> Position
 toPosition (AlexPn _ r c) = Position (r, c)
@@ -204,6 +209,8 @@ main = do
         then getContents
         else readFile (head args)
     case scanner str of
-        Right lexs -> mapM_ print lexs
+        Right lexs -> if (any isTokenError lexs) 
+                        then mapM_ print $ filter isTokenError lexs
+                        else mapM_ print lexs
         Left error -> print error
 }
