@@ -25,9 +25,10 @@ instance Eq Error where
 --    compare = compare `on` errorPos
 
 isTokenError :: Lexeme Token -> Bool
-isTokenError (Lexeme (TokenError _) _)   = True
-isTokenError (Lexeme TokenBadComment _)  = True
-isTokenError _                           = False
+isTokenError (Lexeme (TokenError _) _)    = True
+isTokenError (Lexeme (TokenIntError _) _) = True
+isTokenError (Lexeme TokenBadComment _)   = True
+isTokenError _                            = False
 
 data LexerError
     = LexerError     String

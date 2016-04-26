@@ -148,6 +148,6 @@ instance Show Token where
         TokenIdent    v     -> show v 
         TokenEOF            -> "EOF"
         TokenError    e     -> show e 
-        TokenIntError e     -> show e
+        TokenIntError e     -> "Error" ++ show e
         TokenFloatError e   -> show e 
         TokenBadComment     -> "Comment not closed at end of file"
