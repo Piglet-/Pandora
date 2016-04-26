@@ -58,17 +58,19 @@ data Token
     | TokenNot  | TokenArrow  
 
     -- variables --
-    | TokenInt      Int   
-    | TokenFloat    Float 
-    | TokenBool     Bool
-    | TokenChar     Char 
-    | TokenString   String 
-    | TokenIdent    String 
+    | TokenInt          Int   
+    | TokenFloat        Float 
+    | TokenBool         Bool
+    | TokenChar         Char 
+    | TokenString       String 
+    | TokenIdent        String 
 
     -- errors --
-    | TokenError    String 
-    | TokenIntError String 
+    | TokenError        String 
+    | TokenIntError     String 
+    | TokenFloatError   String
     | TokenEOF
+
     deriving (Eq)
 
 -- show instance --
@@ -138,12 +140,14 @@ instance Show Token where
         TokenOr             -> "OR"
         TokenNot            -> "NOT"
         TokenArrow          -> "->"
-        TokenInt      v     -> show v 
-        TokenFloat    v     -> show v 
-        TokenBool     v     -> show v
-        TokenChar     v     -> show v
-        TokenString   v     -> show v
-        TokenIdent    v     -> show v 
+        TokenInt        v   -> show v 
+        TokenFloat      v   -> show v 
+        TokenBool       v   -> show v
+        TokenChar       v   -> show v
+        TokenString     v   -> show v
+        TokenIdent      v   -> show v 
         TokenEOF            -> "EOF"
-        TokenError    e     -> show e 
+        TokenError      e   -> show e
+        TokenIntError   e   -> show e
+        TokenFloatError e   -> show e
 
