@@ -68,6 +68,7 @@ data Token
     -- errors --
     | TokenError    Char 
     | TokenIntError String 
+    | TokenFloatError String
     | TokenEOF
     deriving (Eq)
 
@@ -146,3 +147,5 @@ instance Show Token where
         TokenIdent    v     -> show v 
         TokenEOF            -> "EOF"
         TokenError    e     -> show e 
+        TokenIntError e     -> show e
+        TokenFloatError e   -> show e 
