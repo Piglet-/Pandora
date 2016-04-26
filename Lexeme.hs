@@ -5,10 +5,11 @@ module Lexeme
     ) where
 
 import Position
+import Tokens
 
 data Lexeme t = Lexeme
     {
-    	token :: t, 
+    	token :: Token, 
     	pos :: Position
      
     } deriving Eq

@@ -196,7 +196,7 @@ scanner str = runAlex str $ do
             then do f1 <- getLexerCommentDepth
                     if (f1 == 0)
                         then return [lex]
-                        else alexError "Comment not closed at end of file"
+                        else return [Lexeme TokenBadComment (Position (0,0))]
             else do
                 lexs <- loop
                 return (lex:lexs)
