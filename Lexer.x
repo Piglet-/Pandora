@@ -20,10 +20,11 @@ $backslash  = [\\abfnrtv]
 $digit      = 0-9
 $lower      = [a-z _]
 $upper      = [A-Z]
+@exp        = [e][\-\+]? $digit+
 @string     = \".*\"
 @ident      = $lower($upper|$lower|$digit)*
 @int        = $digit+
-@float      = $digit+(\.$digit+)?
+@float      = $digit+(\.$digit+) @exp?
 @char       = \'($printable # [\\'] | \\' | \\$backslash)\'
 
 tokens :- 
@@ -87,7 +88,7 @@ tokens :-
     <0> "struct"        { tok' TokenStruct }
     <0> "union"         { tok' TokenUnion }
     <0> @int            { tok lexInt }
-    <0> @float          { tok (TokenFloat  . read) }
+    <0> @float          { tok lexFloat }
     <0> @char           { tok (TokenChar  . read) }
     <0> @string         { tok (TokenString . read) }
     -- boolean constants
@@ -160,10 +161,18 @@ tok f (p,_,_,s) i = return $ Lexeme (f $ take i s) (toPosition p)
 
 lexInt :: String -> Token
 lexInt s
-  | n < -2^31  =  TokenIntError s 
-  | n < 2^31   =  TokenInt      n 
-  | otherwise  =  TokenIntError s 
+  | n < (-2^31)     =  TokenIntError s 
+  | n > (2^31) - 1  =  TokenIntError s  
+  | otherwise       =  TokenInt      n
   where n = (read s :: (Num a, Read a) => a)
+
+lexFloat :: String -> Token
+lexFloat s
+  | n < 1.0e-38    =  TokenFloatErrorU s 
+  | n > 1.0e38     =  TokenFloatErrorO s
+  | otherwise      =  TokenFloat      n 
+  where n = (read s :: (Num a, Read a) => a)
+
 
 tok' :: Token -> AlexAction (Lexeme Token)
 tok' = tok . const

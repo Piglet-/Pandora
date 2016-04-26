@@ -68,7 +68,8 @@ data Token
     -- errors --
     | TokenError    Char 
     | TokenIntError String 
-    | TokenFloatError String
+    | TokenFloatErrorO String
+    | TokenFloatErrorU String
     | TokenEOF
     | TokenBadComment
     deriving (Eq)
@@ -148,6 +149,7 @@ instance Show Token where
         TokenIdent    v     -> show v 
         TokenEOF            -> "EOF"
         TokenError    e     -> show e 
-        TokenIntError e     -> "Error" ++ show e
-        TokenFloatError e   -> show e 
+        TokenIntError e     -> "Bad int error: " ++ show e ++ " (too large)"
+        TokenFloatErrorO e  -> "Bad float error: " ++ show e ++ " (overflow)"
+        TokenFloatErrorU e  -> "Bad float error: " ++ show e ++ " (underflow)"
         TokenBadComment     -> "Comment not closed at end of file"
