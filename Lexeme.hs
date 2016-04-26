@@ -15,4 +15,4 @@ data Lexeme t = Lexeme
     } deriving Eq
 
 instance Show t => Show (Lexeme t) where
-    show (Lexeme t p) = "\n Token: " ++ show t ++ " \nLocation: " ++ show p ++ "\n"
+    show (Lexeme t p) = show t  ++ show p 
