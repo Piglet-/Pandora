@@ -158,6 +158,14 @@ alexEOF = liftM (Lexeme TokenEOF ) alexGetPosition
 tok :: (String -> Token) -> AlexAction ( Lexeme Token )
 tok f (p,_,_,s) i = return $ Lexeme (f $ take i s) (toPosition p)
 
+lexInt :: AlexPosn -> String -> AlexAction ( Lexeme Token )
+lexInt p s
+  | n < -2^31  = tok' (TokenIntError s)
+  | n < 2^31   = tok' (TokenInt      n )
+  | otherwise  = tok' (TokenIntError s )
+  where n = (read s :: (Num a, Read a) => a)
+
+
 tok' :: Token -> AlexAction (Lexeme Token)
 tok' = tok . const
 
