@@ -147,7 +147,7 @@ instance Show Token where
         TokenBool     v     -> "\nToken: BOOLEAN \nValue: " ++ show v
         TokenChar     v     -> "\nToken: CHAR \nValue: " ++ show v
         TokenString   v     -> "\nToken: STRING \nValue: " ++ show v
-        TokenIdent    v     -> "\nToken: ID \nValue: " ++ show v 
+        TokenIdent    v     -> "\nToken: ID \nValue: " ++ v 
         TokenEOF            -> "\nEOF"
         TokenError    e     -> "Unexpected token: " ++ show e 
         TokenIntError e     -> "Bad int error: " ++ show e ++ " (too large)"
