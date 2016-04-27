@@ -149,8 +149,8 @@ instance Show Token where
         TokenString   v     -> "\nToken: STRING \nValue: " ++ show v
         TokenIdent    v     -> "\nToken: ID \nValue: " ++ v 
         TokenEOF            -> "\nEOF"
-        TokenError    e     -> "Unexpected token: " ++ show e 
-        TokenIntError e     -> "Bad int error: " ++ show e ++ " (too large)"
-        TokenFloatErrorO e  -> "Bad float error: " ++ show e ++ " (overflow)"
-        TokenFloatErrorU e  -> "Bad float error: " ++ show e ++ " (underflow)"
-        TokenBadComment     -> "Comment not closed at end of file"
+        TokenError    e     -> "\nUnexpected token: " ++ show e 
+        TokenIntError e     -> "\nBad int error: " ++ show e ++ " (too large)"
+        TokenFloatErrorO e  -> "\nBad float error: " ++ show e ++ " (overflow)"
+        TokenFloatErrorU e  -> "\nBad float error: " ++ show e ++ " (underflow)"
+        TokenBadComment     -> "\nComment not closed at end of file"

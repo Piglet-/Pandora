@@ -11,7 +11,7 @@ import Error
 import Lexeme
 import Control.Monad
 import Data.Sequence (Seq, empty, (|>))
-import System.IO (readFile)
+import System.IO (readFile, hPutStrLn, stderr, stdout)
 import System.Environment (getArgs)
 }
 
@@ -121,7 +121,7 @@ tokens :-
     <0> "->"            { tok' TokenArrow }
     
     -- Identifier
-    <0> @ident          { tok TokenIdent }
+    <0> @ident          { tok TokenIdent . id }
 
     <0>.            { tok (TokenError . head)}
 
@@ -223,14 +223,16 @@ showPosn (AlexPn _ line col) = show line ++ ':': show col
 -- runhaskell Lexer.hs
 -- al finalizar, hacer <ctrl+D>
 
+fPrint:: Lexeme Token -> IO()
+fPrint t = if (isTokenError t) then hPutStrLn stderr (show t)
+                else hPutStrLn stdout (show t)
+
 main = do
     args <- getArgs
     str <- if null args
         then getContents
         else readFile (head args)
     case scanner str of
-        Right lexs -> if (any isTokenError lexs) 
-                        then mapM_ print $ filter isTokenError lexs
-                        else mapM_ print lexs
+        Right lexs -> mapM_ fPrint lexs
         Left error -> print error
 }
