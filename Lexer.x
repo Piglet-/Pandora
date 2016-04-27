@@ -4,10 +4,13 @@
 
 -------------- Lexer para el lenguaje de programación Pandora -----------------
 module Lexer
-    ( Alex(..)
+    ( fPrint
+    , scanner
+    , Alex(..)
     , Token(..)
     , Lexeme(..)
     , Error(..)
+    , module Error
     ) where
 
 import Error
@@ -243,15 +246,5 @@ fPrint:: Lexeme Token -> IO()
 fPrint t = if (isTokenError t) then hPutStrLn stderr (show t)
                 else hPutStrLn stdout (show t)
 
---------------------------- programa principal---------------------------------
--- runhaskell Lexer.hs
--- al finalizar, hacer <ctrl+D>
-main = do
-    args <- getArgs
-    str <- if null args
-        then getContents
-        else readFile (head args)
-    case scanner str of
-        Right lexs -> mapM_ fPrint lexs
-        Left error -> print error
+
 }
