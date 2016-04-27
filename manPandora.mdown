@@ -152,10 +152,10 @@ El alcance es la región del código donde la declaración de un elemento está 
 
 Son los tipos de datos incluidos en la implementación del lenguaje.
 
-* `int`
-* `float`
-* `bool`
-* `char`
+* `int` cualquier secuencia de números.
+* `float` cualquier secuencia de números con un punto seguido de otra secuencia de números o su representación en anotación cientifica.
+* `bool` `true` o `false`.
+* `char` cualquier carácter entre comillas simple o algún carácter especial como por ejemplo `'\n'`.
 
 ### Tipos compuestos
 
