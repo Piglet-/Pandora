@@ -426,7 +426,7 @@ Las existentes hasta el momento se enumeran a continuación:
     
 ### Merge Sort
 
-    def merge_sort(var a: array, p,r : int)
+    proc merge_sort(var a: array, p,r : int) : void
     	q : int;
 	    if (p < r) then
 		    q = (p+r) div 2;
@@ -436,7 +436,7 @@ Las existentes hasta el momento se enumeran a continuación:
 	    end
     end
 
-    def merge(var a : array, p, q, r : int)
+    proc merge(var a : array, p, q, r : int) : void
 	    i, j, k : int;
     	b : array of int[];
 	    i = p;
@@ -468,7 +468,7 @@ Las existentes hasta el momento se enumeran a continuación:
 
 ### Factorial recursivo
 
-    def factorial(n : int)
+    func factorial(n : int) : int
         if( n == 0 ) then 
             return 1;
         end
@@ -483,7 +483,7 @@ Las existentes hasta el momento se enumeran a continuación:
 
 ### Factorial recursivo de cola
 
-    def factorial(n : int, a : int)
+    func factorial(n : int, a : int) : int
         if( n == 0 ) then 
             return a;
         end
@@ -498,7 +498,7 @@ Las existentes hasta el momento se enumeran a continuación:
 
 ### Factorial iterativo
 
-    def factorial(n : int)
+    func factorial(n : int) : int
         f : int; 
         f = 1;
         for(i from 1 to n with i+1) do 
@@ -516,7 +516,7 @@ Las existentes hasta el momento se enumeran a continuación:
 
 ### Fibonacci
 
-    def fibonacci(n : int)
+    func fibonacci(n : int) : int
         if (n == 0) then
             return 0;
         end
@@ -534,9 +534,9 @@ Las existentes hasta el momento se enumeran a continuación:
 
 ### Algoritmo de euclides
 
-    def mcd(a, b : int)
+    func mcd(a, b : int) : int
         if (b == 0) then
-            return a;st
+            return a;
         end
         return mcd(b,a % b);
     end
