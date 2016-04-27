@@ -1,4 +1,8 @@
 {
+
+{-# OPTIONS_GHC -w #-}
+
+-------------- Lexer para el lenguaje de programación Pandora -----------------
 module Lexer
     ( Alex(..)
     , Token(..)
@@ -13,6 +17,8 @@ import System.IO (readFile, hPutStrLn, stderr, stdout)
 import System.Environment (getArgs)
 }
 
+------------------------- Expresiones regulares -------------------------------
+
 %wrapper "monadUserState"
 $backslash  = [\\abfnrtv]
 $digit      = 0-9
@@ -25,6 +31,7 @@ $upper      = [A-Z]
 @float      = $digit+(\.$digit+) @exp?
 @char       = \'($printable # [\\'] | \\' | \\$backslash)\'
 
+--------------------------- Tokens del lenguaje ------------------------------
 tokens :- 
 
     --Whitespaces
@@ -125,6 +132,8 @@ tokens :-
 
 {
 
+----------------------------- Lógica del lexer --------------------------------
+
 data AlexUserState = 
     AlexUST 
         { errors            :: Seq Error
@@ -138,6 +147,7 @@ alexInitUserState =
         , lexerCommentDepth = 0
         } 
 
+-- control de profundidad para comentarios multilínea
 getLexerCommentDepth :: Alex Int
 getLexerCommentDepth = 
     Alex $ \s@AlexState{alex_ust=ust} -> Right (s, lexerCommentDepth ust)
@@ -145,39 +155,6 @@ getLexerCommentDepth =
 setLexerCommentDepth :: Int -> Alex ()
 setLexerCommentDepth ss = 
     Alex $ \s -> Right (s{alex_ust=(alex_ust s){lexerCommentDepth=ss}}, ())
-
-addLError :: Position -> LexerError -> Alex ()
-addLError p e = Alex $ \s -> Right (s{alex_ust=(alex_ust s){errors=errors (alex_ust s) |> (LError p e)}}, ())
-
-toPosition :: AlexPosn -> Position
-toPosition (AlexPn _ r c) = Position (r, c)
-
-alexEOF :: Alex (Lexeme Token )
-alexEOF = liftM (Lexeme TokenEOF ) alexGetPosition
-
-tok :: (String -> Token) -> AlexAction ( Lexeme Token )
-tok f (p,_,_,s) i = return $ Lexeme (f $ take i s) (toPosition p)
-
-lexInt :: String -> Token
-lexInt s
-  | n < (-2^31)     =  TokenIntError s 
-  | n > (2^31) - 1  =  TokenIntError s  
-  | otherwise       =  TokenInt      n
-  where n = (read s :: (Num a, Read a) => a)
-
-lexFloat :: String -> Token
-lexFloat s
-  | n < 1.0e-38    =  TokenFloatErrorU s 
-  | n > 1.0e38     =  TokenFloatErrorO s
-  | otherwise      =  TokenFloat      n 
-  where n = (read s :: (Num a, Read a) => a)
-
-
-tok' :: Token -> AlexAction (Lexeme Token)
-tok' = tok . const
-
-alexGetPosition :: Alex Position
-alexGetPosition = alexGetInput >>= \(p,_,_,_) -> return $ toPosition p
 
 enterNewComment input len =
     do setLexerCommentDepth 1
@@ -194,16 +171,57 @@ unembedComment input len =
        when (cd == 1) (alexSetStartCode state_initial)
        skip input len
 
+addLError :: Position -> LexerError -> Alex ()
+addLError p e = Alex $ \s -> Right (s{alex_ust=(alex_ust s){errors=errors (alex_ust s) |> (LError p e)}}, ())
+
+-- obtiene la posición del token
+alexGetPosition :: Alex Position
+alexGetPosition = alexGetInput >>= \(p,_,_,_) -> return $ toPosition p
+
+toPosition :: AlexPosn -> Position
+toPosition (AlexPn _ r c) = Position (r, c)
+
+-- token fin de archivo
+alexEOF :: Alex (Lexeme Token )
+alexEOF = liftM (Lexeme TokenEOF ) alexGetPosition
+
+-- verifica overflow de enteros
+lexInt :: String -> Token
+lexInt s
+  | n < (-2^31)     =  TokenIntError s 
+  | n > (2^31) - 1  =  TokenIntError s  
+  | otherwise       =  TokenInt      n
+  where n = (read s :: (Num a, Read a) => a)
+
+-- verifica overflow y underflow de punto flotante
+lexFloat :: String -> Token
+lexFloat s
+  | n < 1.0e-38    =  TokenFloatErrorU s 
+  | n > 1.0e38     =  TokenFloatErrorO s
+  | otherwise      =  TokenFloat      n 
+  where n = (read s :: (Num a, Read a) => a)
+
+-- construye lexemas 
+tok :: (String -> Token) -> AlexAction ( Lexeme Token )
+tok f (p,_,_,s) i = return $ Lexeme (f $ take i s) (toPosition p)
+
+tok' :: Token -> AlexAction (Lexeme Token)
+tok' = tok . const
+
+-- estado inicial
 state_initial :: Int
 state_initial = 0
 
+-- error del lexer
 lexError str = do
     (pos, _, _, input) <- alexGetInput
     alexError $ showPosn pos ++ ": " ++ str ++
         (if (not (null input))
             then " before " ++ show (head input)
             else " at end of file")
+showPosn (AlexPn _ line col) = show line ++ ':': show col
 
+-- scanner de tokens
 scanner str = runAlex str $ do
     let loop = do
         lex@(Lexeme tok _) <- alexMonadScan
@@ -217,14 +235,15 @@ scanner str = runAlex str $ do
                 return (lex:lexs)
     loop
 
-showPosn (AlexPn _ line col) = show line ++ ':': show col
--- runhaskell Lexer.hs
--- al finalizar, hacer <ctrl+D>
 
+-- imprime la informacion del token en la salida correspondiente
 fPrint:: Lexeme Token -> IO()
 fPrint t = if (isTokenError t) then hPutStrLn stderr (show t)
                 else hPutStrLn stdout (show t)
 
+--------------------------- programa principal---------------------------------
+-- runhaskell Lexer.hs
+-- al finalizar, hacer <ctrl+D>
 main = do
     args <- getArgs
     str <- if null args

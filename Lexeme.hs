@@ -1,4 +1,4 @@
-
+------------------- Módulo que representa los lexemas -------------------------
 module Lexeme
     ( Lexeme(..)
     , module Position 
@@ -8,6 +8,7 @@ module Lexeme
 import Position
 import Tokens
 
+-- tipo de datos Lexeme compuesto por un token y su posición
 data Lexeme t = Lexeme
     {
     	token :: Token, 
@@ -15,5 +16,6 @@ data Lexeme t = Lexeme
      
     } deriving Eq
 
+-- instancia show para la información de un lexema
 instance Show t => Show (Lexeme t) where
     show (Lexeme t p) = show t  ++ show p 

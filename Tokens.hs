@@ -1,26 +1,27 @@
 {-# LANGUAGE LambdaCase #-}
 
+---------------------- Módulo que representa los tokens -----------------------
 module Tokens
 ( Token(..)
 ) where
 
--- tokens of Pandora --
+-- tipo de datos para los tokens del lenguaje --
 data Token
-    -- punctuation --
-    -- brackets --
+ -------------------------- puntuación ---------------------------------
+    -- corchetes
     = TokenBracketOpen   | TokenBracketClose 
     | TokenParenOpen     | TokenParenClose 
 
-    -- separators --
+    -- separadores --
     | TokenComma  | TokenSemicolon 
 
-    -- access to fields --
+    -- acceso a campos --
     | TokenPoint 
 
-    -- type declarations --
+    -- declaración de tipos --
     | TokenTwoPoints 
 
-    -- instructions --
+------------------------ instrucciones ---------------------------------
     | TokenIf        | TokenThen      | TokenElse      
     | TokenWhile     | TokenFor       | TokenFrom   
     | TokenTo        | TokenWith      | TokenDo      
@@ -31,22 +32,22 @@ data Token
     | TokenWrite     | TokenOf        | TokenITS
     | TokenFTS       | TokenITF
 
-    -- types --
+    -- tipos --
     | TokenIntT      | TokenBoolT     | TokenFloatT 
     | TokenCharT     | TokenStruct    | TokenUnion 
     | TokenVoid      | TokenArray     | TokenStringT
 
-    -- boolean constants --
+    -- constantes booleanas --
     | TokenTrue  | TokenFalse 
 
-    -- null value --
+    -- null --
     | TokenNull 
 
-   -- reference id --
+   -- valor por referencia --
    | TokenVar 
 
-    -- operators --
-    -- binary --
+-------------------------- operatdores ---------------------------------
+    -- binarios --
     | TokenAssign    | TokenEq        | TokenIneq 
     | TokenPlus      | TokenMinus     | TokenAsterisk 
     | TokenDivInt    | TokenDivFloat  | TokenMod 
@@ -54,10 +55,10 @@ data Token
     | TokenLE        | TokenCircum    | TokenAnd 
     | TokenOr       
 
-    -- unary --
+    -- unarios --
     | TokenNot  | TokenArrow  
 
-    -- variables --
+---------------------------- variables ---------------------------------
     | TokenInt      Int   
     | TokenFloat    Float 
     | TokenBool     Bool
@@ -65,7 +66,7 @@ data Token
     | TokenString   String 
     | TokenIdent    String 
 
-    -- errors --
+---------------------------- errores -----------------------------------
     | TokenError    Char 
     | TokenIntError String 
     | TokenFloatErrorO String
@@ -74,7 +75,7 @@ data Token
     | TokenBadComment
     deriving (Eq)
 
--- show instance --
+-- instancia show que muestra detalles de los tokens --
 instance Show Token where
     show = \case
         TokenBracketOpen    -> "\nToken: BRACKET OPEN \nLexeme: [" 
