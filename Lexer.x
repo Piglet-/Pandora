@@ -6,9 +6,7 @@ module Lexer
     , Error(..)
     ) where
 
-import Tokens
 import Error
-import Lexeme
 import Control.Monad
 import Data.Sequence (Seq, empty, (|>))
 import System.IO (readFile, hPutStrLn, stderr, stdout)

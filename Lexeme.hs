@@ -1,7 +1,8 @@
 
 module Lexeme
     ( Lexeme(..)
-    , module Position
+    , module Position 
+    , module Tokens
     ) where
 
 import Position

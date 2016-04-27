@@ -4,10 +4,9 @@ module Error
     ( Error(..)
     , isTokenError
     , LexerError(..)
+    , module Lexeme
     ) where
 
-import  Tokens
-import  Position
 import  Lexeme
 import  Data.Function (on)
 
