@@ -19,7 +19,7 @@ data Token
     | TokenPoint 
 
     -- declaración de tipos --
-    | TokenTwoPoints 
+    | TokenColon
 
 ------------------------ instrucciones ---------------------------------
     | TokenIf        | TokenThen      | TokenElse      
@@ -67,11 +67,12 @@ data Token
     | TokenIdent    String 
 
 ---------------------------- errores -----------------------------------
-    | TokenError    Char 
-    | TokenIntError String 
-    | TokenFloatErrorO String
-    | TokenFloatErrorU String
+    | TokenError        Char 
+    | TokenIntError     String 
+    | TokenFloatErrorO  String
+    | TokenFloatErrorU  String
     | TokenEOF
+    | TokenStringError  
     | TokenBadComment
     deriving (Eq)
 
@@ -85,7 +86,7 @@ instance Show Token where
         TokenComma          -> "\nToken: COMMA\nLexeme: ,"  
         TokenSemicolon      -> "\nToken: SEMICOLON\nLexeme: ;" 
         TokenPoint          -> "\nToken: POINT\nLexeme: ."
-        TokenTwoPoints      -> "\nToken: TWOPOINTS\nLexeme: :"
+        TokenColon          -> "\nToken: COLON\nLexeme: :"
         TokenIf             -> "\nToken: IF \nLexeme: if"
         TokenThen           -> "\nToken: THEN \nLexeme: then"
         TokenElse           -> "\nToken: ELSE \nLexeme: else"     
@@ -109,9 +110,9 @@ instance Show Token where
         TokenRead           -> "\nToken: READ \nLexeme: read"
         TokenWrite          -> "\nToken: WRITE \nLexeme: write"
         TokenOf             -> "\nToken: OF \nLexeme: of"
-        TokenITF            -> "\nToken: INTTOFLOAT \nLexeme: intToFloat"
-        TokenITS            -> "\nToken: INTTOSTRING \nLexeme: intToString"
-        TokenFTS            -> "\nToken: FLOATTOSTRING \nLexeme: floatToString"
+        TokenITF            -> "\nToken: INT TO FLOAT \nLexeme: intToFloat"
+        TokenITS            -> "\nToken: INT TO STRING \nLexeme: intToString"
+        TokenFTS            -> "\nToken: FLOAT TO STRING \nLexeme: floatToString"
         TokenIntT           -> "\nToken: TYPE INT \nLexeme: int"
         TokenBoolT          -> "\nToken: TYPE BOOL \nLexeme: bool"
         TokenFloatT         -> "\nToken: TYPE FLOAT \nLexeme: float"
@@ -155,3 +156,4 @@ instance Show Token where
         TokenFloatErrorO e  -> "\nBad float error: " ++ show e ++ " (overflow)"
         TokenFloatErrorU e  -> "\nBad float error: " ++ show e ++ " (underflow)"
         TokenBadComment     -> "\nComment not closed at end of file"
+        TokenStringError    -> "\nString not closed (missing character '\"' at end of line)"   

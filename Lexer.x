@@ -26,6 +26,7 @@ $lower      = [a-z _]
 $upper      = [A-Z]
 @exp        = [e][\-\+]? $digit+
 @string     = \".*\"
+@badString  = \".*
 @ident      = $lower($upper|$lower|$digit)*
 @int        = $digit+
 @float      = $digit+(\.$digit+) @exp?
@@ -56,7 +57,7 @@ tokens :-
     -- access to fields
     <0> "."             { tok' TokenPoint }
     -- type declarations
-    <0> ":"             { tok' TokenTwoPoints }
+    <0> ":"             { tok' TokenColon }
     -- instructions
     <0> "if"            { tok' TokenIf }
     <0> "then"          { tok' TokenThen }
@@ -97,6 +98,7 @@ tokens :-
     <0> @float          { tok lexFloat }
     <0> @char           { tok (TokenChar  . read) }
     <0> @string         { tok (TokenString . read) }
+    <0> @badString      { tok' TokenStringError  }
     -- boolean constants
     <0> "true"          { tok' TokenTrue }
     <0> "false"         { tok' TokenFalse }
