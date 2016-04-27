@@ -193,7 +193,7 @@ alexEOF = liftM (Lexeme TokenEOF ) alexGetPosition
 -- verifica overflow de enteros
 lexInt :: String -> Token
 lexInt s
-  | n < (-2^31)     =  TokenIntError s 
+  | n < (-2^31) -1  =  TokenIntError s 
   | n > (2^31) - 1  =  TokenIntError s  
   | otherwise       =  TokenInt      n
   where n = (read s :: (Num a, Read a) => a)
