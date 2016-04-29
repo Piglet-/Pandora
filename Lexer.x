@@ -27,7 +27,7 @@ $backslash  = [\\abfnrtv]
 $digit      = 0-9
 $lower      = [a-z _]
 $upper      = [A-Z]
-@exp        = [e][\-\+]? $digit+
+@exp        = [eE][\-\+]? $digit+
 @string     = \".*\"
 @badString  = \".*
 @ident      = $lower($upper|$lower|$digit)*
@@ -131,7 +131,7 @@ tokens :-
     <0> "->"            { tok' TokenArrow }
     
     -- Identifier
-    <0> @ident          { tok TokenIdent . id }
+    <0> @ident          { tok TokenIdent }
 
     <0>.            { tok (TokenError . head)}
 
@@ -141,7 +141,7 @@ tokens :-
 
 data AlexUserState = 
     AlexUST 
-        { errors            :: Seq Error
+        { errors            :: Seq Int
         , lexerCommentDepth :: Int 
         }
 
@@ -193,17 +193,17 @@ alexEOF = liftM (Lexeme TokenEOF ) alexGetPosition
 -- verifica overflow de enteros
 lexInt :: String -> Token
 lexInt s
-  | n < (-2^31) -1  =  TokenIntError s 
-  | n > (2^31) - 1  =  TokenIntError s  
+  | n < -2147483648 =  TokenIntError s 
+  | n > 2147483647  =  TokenIntError s  
   | otherwise       =  TokenInt      n
   where n = (read s :: (Num a, Read a) => a)
 
 -- verifica overflow y underflow de punto flotante
 lexFloat :: String -> Token
 lexFloat s
-  | n < 1.0e-38    =  TokenFloatErrorU s 
-  | n > 1.0e38     =  TokenFloatErrorO s
-  | otherwise      =  TokenFloat      n 
+  | n < 1.17549e-38 =  TokenFloatErrorU s 
+  | n > 3.40282e38  =  TokenFloatErrorO s
+  | otherwise       =  TokenFloat      n 
   where n = (read s :: (Num a, Read a) => a)
 
 -- construye lexemas 
