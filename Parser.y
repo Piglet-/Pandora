@@ -123,10 +123,11 @@ import Lexer
 %%
 
 Exp 
-    : int           { $1 }
+    : "+"           { $1 }
+    | "EOF"         { $1 }
 
 Exps 
-    : Exps          { $1 }
+    : Exp          { $1 }
     | Exps ";" Exp  { $1 }
 
 {

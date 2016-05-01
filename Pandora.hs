@@ -8,5 +8,6 @@ main = do
         then getContents
         else readFile (head args)
     case scanner str of
-        Right lexs -> mapM_ fPrint lexs
+        --Right lexs -> mapM_ fPrint lexs
+        Right lexs -> print (parse lexs)   
         Left error -> print error
