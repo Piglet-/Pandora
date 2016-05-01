@@ -393,7 +393,7 @@ Tabla de operadores con precedencia de menor a mayor y su asociatividad
 |        and        | Conjunción lógica           |      left     |
 |        not        | Negación lógica             |     right     |
 |        +, -       | Suma y resta aritmética     |      left     |
-| *, /, %, div, mod | Expresiones multiplicativas |      left     |
+|   *, /, div, mod  | Expresiones multiplicativas |      left     |
 |         ^         | Potencia aritmética         |      left     |
 |         -         | Negación aritmética         |     right     |
 

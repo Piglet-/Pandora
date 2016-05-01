@@ -61,7 +61,6 @@ data Token
 ---------------------------- variables ---------------------------------
     | TokenInt      Int   
     | TokenFloat    Float 
-    | TokenBool     Bool
     | TokenChar     Char 
     | TokenString   String 
     | TokenIdent    String 
@@ -146,7 +145,6 @@ instance Show Token where
         TokenArrow          -> "\nToken: ARROW \nLexeme: ->"
         TokenInt      v     -> "\nToken: INTEGER \nValue: " ++ show v 
         TokenFloat    v     -> "\nToken: FLOAT \nValue: " ++ show v 
-        TokenBool     v     -> "\nToken: BOOLEAN \nValue: " ++ show v
         TokenChar     v     -> "\nToken: CHAR \nValue: " ++ show v
         TokenString   v     -> "\nToken: STRING \nValue: " ++ v
         TokenIdent    v     -> "\nToken: ID \nValue: " ++ v 

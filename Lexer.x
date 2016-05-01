@@ -176,8 +176,6 @@ unembedComment input len =
        when (cd == 1) (alexSetStartCode state_initial)
        skip input len
 
-addLError :: Position -> LexerError -> Alex ()
-addLError p e = Alex $ \s -> Right (s{alex_ust=(alex_ust s){errors=errors (alex_ust s) |> (LError p e)}}, ())
 
 -- obtiene la posición del token
 alexGetPosition :: Alex Position
