@@ -122,13 +122,16 @@ import Lexer
 
 %%
 
-Exp 
-    : "+"           { $1 }
-    | "EOF"         { $1 }
+Program 
+    : Exps "EOF"  { $1 } 
 
 Exps 
-    : Exp          { $1 }
-    | Exps ";" Exp  { $1 }
+    : Exps ";" Exp { $1 }
+    | Exp          { $1 }
+
+Exp 
+    : "+"           { $1 }
+
 
 {
 
