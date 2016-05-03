@@ -131,8 +131,8 @@ Declarations: Funcs  {  }
             | Decs ";" {  }
             | Structs  {  }
 
-Funcs : func id "(" Params ")" ":" Type Block  {  }
-    | proc id "(" Params ")" ":" Type Block  {  }
+Funcs : func id "(" Params ")" ":" Type Insts end  {  }
+    | proc id "(" Params ")" ":" Type Insts end {  }
 
 Structs: struct id has Decs end  {  }
         | union id like Decs end  {  }
@@ -146,6 +146,7 @@ Dec : id ":" Type  {  }
 
 -- recursion izquierda
 Params: {- lambda -}  {  }
+        | Dec { }
         | var Dec {  }
         | Params "," Dec {  }
 
