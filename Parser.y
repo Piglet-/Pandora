@@ -120,7 +120,6 @@ import Lexer
 %right    not
 %left     "+" "-"
 %left     "*" "/" mod div
-%left     "^"
 %right    NEG
 
 %%
@@ -175,7 +174,7 @@ If : if "(" Exps ")" then Insts end  { $1 }
 
 While : while "(" Exps ")" Block  { $1 }
 
-Repeat : repeat Insts until Exps  { $1 }
+Repeat : repeat Insts until Exp  { $1 }
 
 Assign : id "=" Exp  { $1 }
 
@@ -197,7 +196,7 @@ Dimen : "[" Exp "]"  { $1 }
         | Dimen "[" Exp "]"  { $1 }
 
 Exps : Exp  { $1 }
-    | Exps ";" Exp  { $1 }
+    | Exp ";" Exps  { $1 }
 
 Exp : true  { $1 }
     | false  { $1 }
@@ -219,7 +218,7 @@ Op : "+"  { $1 }
     | "-"  { $1 }
     | "/"  { $1 }
     | "^"  { $1 }
-    | "*"  { $1 }
+    | "*"  { $ 1}
     | div  { $1 }
     | mod  { $1 }
     | ">"  { $1 }
