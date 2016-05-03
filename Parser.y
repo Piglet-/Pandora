@@ -238,7 +238,11 @@ Main : begin Insts end  {  }
 
 {
 
-parseError _ = error "Parse error"
+parseError :: [Lexeme Token] -> a
+parseError l = case l of
+  [] -> error $ "Unexpected EOF"
+  _  -> error $ "Unexpected " ++ show (head l)
+
 
 }
 
