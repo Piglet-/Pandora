@@ -120,6 +120,7 @@ import Lexer
 %right    not
 %left     "+" "-"
 %left     "*" "/" mod div
+%left     "^"
 %right    NEG
 
 %%
@@ -207,28 +208,27 @@ Exp : true  { $1 }
     | char  { $1 }
     | string  { $1 }
     | void { $1 }
-    | Exp Op Exp  { $1 }
+    | Exp "+" Exp  { $1 }
+    | Exp "-" Exp  { $1 }
+    | Exp "/" Exp  { $1 }
+    | Exp "^" Exp  { $1 }
+    | Exp "*" Exp  { $1 }
+    | Exp div Exp  { $1 }
+    | Exp mod Exp  { $1 }
+    | Exp ">" Exp  { $1 }
+    | Exp ">=" Exp  { $1 }
+    | Exp "<" Exp  { $1 }
+    | Exp "<=" Exp  { $1 }
+    | Exp "==" Exp  { $1 }
+    | Exp "/=" Exp  { $1 }
+    | Exp and Exp  { $1 }
+    | Exp or Exp  { $1 }
     | "-" Exp   %prec NEG  { $1 }
     | not Exp   %prec NEG  { $1 }
     | "->" Exp  %prec NEG  { $1 }
     | Accesor  { $1 }
     | CFunctions  { $1 }
 
-Op : "+"  { $1 }
-    | "-"  { $1 }
-    | "/"  { $1 }
-    | "^"  { $1 }
-    | "*"  { $ 1}
-    | div  { $1 }
-    | mod  { $1 }
-    | ">"  { $1 }
-    | ">="  { $1 }
-    | "<"  { $1 }
-    | "<="  { $1 }
-    | "=="  { $1 }
-    | "/="  { $1 }
-    | and  { $1 }
-    | or  { $1 }
 
 CFunctions : inttostr "(" Exp ")"  { $1 }
             | flotostr "(" Exp ")"  { $1 }
