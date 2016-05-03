@@ -16,14 +16,15 @@ import Lexer
 
 %token
     -- Corchetes -- 
-    "{"         { Lexeme TokenBracketOpen  _ }
-    "}"         { Lexeme TokenBracketClose _ }
+    "["         { Lexeme TokenBracketOpen  _ }
+    "]"         { Lexeme TokenBracketClose _ }
     "("         { Lexeme TokenParenOpen _ }
     ")"         { Lexeme TokenParenClose _ }
     
     -- Separadores --
     ","         { Lexeme TokenComma _ }
     ";"         { Lexeme TokenSemicolon _ }
+    ":"         { Lexeme TokenColon _ }
 
     -- acceso a campos --
     "."         { Lexeme TokenPoint _ }
@@ -69,11 +70,11 @@ import Lexer
     stringT     { Lexeme TokenStringT _ }
 
     -- constantes booleanas --
-    "true"      { Lexeme TokenTrue  _ }
-    "false"     { Lexeme TokenFalse _ }
+    true      { Lexeme TokenTrue  _ }
+    false     { Lexeme TokenFalse _ }
 
     -- null --
-    "null"      { Lexeme TokenNull _ }
+    null      { Lexeme TokenNull _ }
    
     -- valor por referencia --
     var         { Lexeme TokenVar _ } 
@@ -86,18 +87,18 @@ import Lexer
     ">="        { Lexeme TokenGE    _ }
     "=="        { Lexeme TokenEq    _ }
     "/="        { Lexeme TokenIneq  _ }
-    "or"        { Lexeme TokenOr    _ }
-    "and"       { Lexeme TokenAnd   _ }
+    or        { Lexeme TokenOr    _ }
+    and       { Lexeme TokenAnd   _ }
     "+"         { Lexeme TokenPlus  _ }
     "-"         { Lexeme TokenMinus _ }
     "*"         { Lexeme TokenAsterisk _ }
     "/"         { Lexeme TokenDivFloat _ }
-    "div"       { Lexeme TokenDivInt _ }
-    "mod"       { Lexeme TokenMod    _ }
+    div       { Lexeme TokenDivInt _ }
+    mod       { Lexeme TokenMod    _ }
     "^"         { Lexeme TokenCircum _ }
 
     -- unarios --
-    "not"       { Lexeme TokenNot   _ }
+    not       { Lexeme TokenNot   _ }
     "->"        { Lexeme TokenArrow _ }
 
     -- variables --
@@ -111,27 +112,129 @@ import Lexer
     "EOF"       { Lexeme TokenEOF _ }
 
 -- Precedencias
+%right    "="
 %nonassoc "<" "<=" ">" ">="
-%nonassoc "==" "/="
-%left     "or"
-%left     "and"
-%right    "not"
+%left "==" "/="
+%left     or
+%left     and
+%right    not
 %left     "+" "-"
-%left     "*" "/" "mod" "div"
+%left     "*" "/" mod div
 %right    NEG
 
 %%
 
-Program 
-    : Exps "EOF"  { $1 } 
+Program : Declarations Main "EOF"  { $1 }
 
-Exps 
-    : Exps ";" Exp { $1 }
-    | Exp          { $1 }
+Declarations: Funcs  { $1 }
+            | Decs  { $1 }
+            | Structs  { $1 }
 
-Exp 
-    : "+"           { $1 }
+Funcs : func id "(" Params ")" ":" Type Block  { $1 }
+    | proc id "(" Params ")" ":" Type Block  { $1 }
 
+Structs: struct id has Decs end  { $1 }
+        | union id like Decs end  { $1 }
+
+Decs : Dec  { $1 } 
+    | Decs ";" Dec  { $1 }
+
+Dec : id ":" Type  { $1 }
+    | id ":" array of Type Dimen  { $1 }
+    | new id { $1 }
+
+Params: {- lambda -}  {  }
+        | var Dec { $1 }
+        | Dec  { $1 }
+        | Params "," Dec  { $1 }
+
+Block : do Insts end  { $1 }
+
+Insts : Inst  { $1 }
+        | Inst ";" Insts  { $1 }
+
+Inst :  {- lambda -}  {  }
+        | Assign ";"  { $1 }
+        | Decs ";"  { $1 }
+        | If  { $1 }
+        | While  { $1 }
+        | Repeat  { $1 }
+        | For  { $1 }
+        | read Exp ";"  { $1 }
+        | write Exp ";"  { $1 }
+        | return Exp ";"  { $1 }
+        | free Exp ";" { $1 }
+
+For : for "(" id Range ")" Block  { $1 }
+
+Range : from Exp to Exp with Exp  { $1 }
+
+If : if "(" Exps ")" then Insts end  { $1 }
+    | If else Insts end  { $1 }
+
+While : while "(" Exps ")" Block  { $1 }
+
+Repeat : repeat Insts until Exp  { $1 }
+
+Assign : id "=" Exp  { $1 }
+
+Accesor : id Accs  { $1 }
+
+Accs: Acc  { $1 }
+    | Accs Acc  { $1 }
+
+Acc : "." id  { $1 }
+    | "[" Exp "]"  { $1 }
+
+Type : intT  { $1 }
+    | floatT  { $1 }
+    | stringT  { $1 }
+    | charT  { $1 }
+    | boolT { $1 }
+
+Dimen : "[" Exp "]"  { $1 }
+        | Dimen "[" Exp "]"  { $1 }
+
+Exps : Exp  { $1 }
+    | Exp ";" Exps  { $1 }
+
+Exp : true  { $1 }
+    | false  { $1 }
+    | null  { $1 }
+    | id  { $1 }
+    | int  { $1 }
+    | float  { $1 }
+    | char  { $1 }
+    | string  { $1 }
+    | void { $1 }
+    | Exp Op Exp  { $1 }
+    | "-" Exp   %prec NEG  { $1 }
+    | not Exp   %prec NEG  { $1 }
+    | "->" Exp  %prec NEG  { $1 }
+    | Accesor  { $1 }
+    | CFunctions  { $1 }
+
+Op : "+"  { $1 }
+    | "-"  { $1 }
+    | "/"  { $1 }
+    | "^"  { $1 }
+    | "*"  { $ 1}
+    | div  { $1 }
+    | mod  { $1 }
+    | ">"  { $1 }
+    | ">="  { $1 }
+    | "<"  { $1 }
+    | "<="  { $1 }
+    | "=="  { $1 }
+    | "/="  { $1 }
+    | and  { $1 }
+    | or  { $1 }
+
+CFunctions : inttostr "(" Exp ")"  { $1 }
+            | flotostr "(" Exp ")"  { $1 }
+            | inttoflo "(" Exp ")"  { $1 }
+
+Main : begin Insts end  { $1 }
 
 {
 
