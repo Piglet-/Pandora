@@ -192,6 +192,7 @@ Exp : true                  { }
     | "->" Exp  %prec NEG   { }
     | Accesor               { }
     | CFunctions            { }
+    | FuncCall              { }
     | "(" Exp ")"           { }
     | "[" Exps "]"          { }
 
@@ -223,20 +224,13 @@ Insts : Inst            { }
 Inst : Assign ";"   { } 
     | Dec ";"       { }
     | read Exp ";"  { }
-    | Write  ";"    { }
-    | Return ";"    { }
+    | write Exp  ";"    { }
+    | return Exp ";"    { }
     | free Exp ";"  { }
-    | FuncCall ";"  { }
     | If            { }
     | While         { }
     | Repeat        { }
     | For           { }
-
-Return : return Exp         { }
-        | return FuncCall   { }
-
-Write : write Exp           { }
-        | write FuncCall    { }
 
 If : if "(" Exp ")" then Insts end  { }
     | If else Insts end             { }
