@@ -192,13 +192,12 @@ Exp : true                  { }
     | "->" Exp  %prec NEG   { }
     | Accesor               { }
     | CFunctions            { }
-    | FuncCall              { }
     | "(" Exp ")"           { }
     | "[" Exps "]"          { }
 
-Assign : id "=" Exp         { }
-        | id "=" Inst       { }
-        | Accesor "=" Exp   { }
+Assign : id "=" Exp  ";"        { }
+        | id "=" InstA       { }
+        | Accesor "=" Exp ";"  { }
 
 Accesor : id Accs { }
 
@@ -221,16 +220,22 @@ CFunctions : inttostr "(" Exp ")"   { }
 Insts : Inst            { }
         | Insts Inst    { }
 
-Inst : Assign ";"   { } 
-    | Dec ";"       { }
-    | read Exp ";"  { }
-    | write Exp  ";"    { }
+InstA : Assign          { } 
+    | Dec ";"           { }
+    | read Exp ";"      { }
+    | write Exp ";"     { }
     | return Exp ";"    { }
-    | free Exp ";"  { }
-    | If            { }
-    | While         { }
-    | Repeat        { }
-    | For           { }
+    | free Exp ";"      { }
+    | FuncCall ";"      { }
+
+Inst : InstA { }
+    | InstB { }
+
+
+InstB: If               { }
+    | While             { }
+    | Repeat            { }
+    | For               { }
 
 If : if "(" Exp ")" then Insts end  { }
     | If else Insts end             { }
