@@ -9,7 +9,6 @@ module Lexer
     , Alex(..)
     , Token(..)
     , Lexeme(..)
-    , Error(..)
     , module Error
     ) where
 
@@ -215,15 +214,6 @@ tok' = tok . const
 -- estado inicial
 state_initial :: Int
 state_initial = 0
-
--- error del lexer
-lexError str = do
-    (pos, _, _, input) <- alexGetInput
-    alexError $ showPosn pos ++ ": " ++ str ++
-        (if (not (null input))
-            then " before " ++ show (head input)
-            else " at end of file")
-showPosn (AlexPn _ line col) = show line ++ ':': show col
 
 -- scanner de tokens
 scanner str = runAlex str $ do
