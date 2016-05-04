@@ -125,17 +125,20 @@ import Lexer
 
 %%
 
-Program : Declarations Main "EOF"   { }               
-	| Main "EOF" {}
+Program : Declarations Main "EOF"  { }               
+	   | Main "EOF"                { }
 
 Main : begin Insts end  { }
 
-Declarations: func id "(" Param ")" ":" Type Insts end  { }
-            | proc id "(" Param ")" ":" Type Insts end  { }
-            | struct id has Decs end                    { }
-            | union id like Decs end                    { }
-            | Decs                                      { }
-            | Assign                                    { }
+Declarations: D func id "(" Param ")" ":" Type Insts end  { }
+            | D proc id "(" Param ")" ":" Type Insts end  { }
+            | D struct id has Decs end                    { }
+            | D union id like Decs end                    { }
+            | D Dec                                       { }
+            | D Assign                                    { }
+
+D : {-lambda-}      { }
+    | Declarations  { }
 
 Decs : Dec      { }
     | Decs Dec  { }
