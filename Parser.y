@@ -258,7 +258,4 @@ parseError l = case l of
   [] -> error $ "Unexpected EOF"
   _  -> error $ "Unexpected " ++ show (head l)
 
-
 }
-
-
