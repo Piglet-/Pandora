@@ -1,5 +1,3 @@
--- Factorial recursivo de cola
-
 func factorial(n : int, a : int) : int
     if( n == 0 ) then 
         return a;
@@ -8,7 +6,7 @@ func factorial(n : int, a : int) : int
 end
 
 begin
-    int n;
+    n : int ;
     read n;
     write factorial(n,1); 
 end

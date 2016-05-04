@@ -1,6 +1,6 @@
 -- Algoritmo de euclides
 
-func mcd(a, b : int) : int
+func mcd(a : int, b : int) : int
     if (b == 0) then
         return a;
     end
@@ -8,7 +8,8 @@ func mcd(a, b : int) : int
 end
 
 begin
-    n, m : int;
+    n : int;
+    m : int;
     read n;
     read m;
     write mcd(n,m);

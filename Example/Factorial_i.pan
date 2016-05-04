@@ -7,7 +7,6 @@ func factorial(n : int) : int
         f = f * i;
     end
     return f;
-    end
 end
 
 begin
