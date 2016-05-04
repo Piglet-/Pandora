@@ -65,7 +65,7 @@ import Lexer
     charT       { Lexeme TokenCharT  _ }
     struct      { Lexeme TokenStruct _ }
     union       { Lexeme TokenUnion  _ }
-    void        { Lexeme TokenVoid   _ }
+    voidT       { Lexeme TokenVoid   _ }
     array       { Lexeme TokenArray  _ }
     stringT     { Lexeme TokenStringT _ }
 
@@ -87,19 +87,19 @@ import Lexer
     ">="        { Lexeme TokenGE    _ }
     "=="        { Lexeme TokenEq    _ }
     "/="        { Lexeme TokenIneq  _ }
-    or        { Lexeme TokenOr    _ }
-    and       { Lexeme TokenAnd   _ }
+    or          { Lexeme TokenOr    _ }
+    and         { Lexeme TokenAnd   _ }
     "+"         { Lexeme TokenPlus  _ }
     "-"         { Lexeme TokenMinus _ }
     "*"         { Lexeme TokenAsterisk _ }
     "/"         { Lexeme TokenDivFloat _ }
-    div       { Lexeme TokenDivInt _ }
-    mod       { Lexeme TokenMod    _ }
+    div         { Lexeme TokenDivInt _ }
+    mod         { Lexeme TokenMod    _ }
     "^"         { Lexeme TokenCircum _ }
 
     -- unarios --
     not       { Lexeme TokenNot   _ }
-    "->"        { Lexeme TokenArrow _ }
+    "->"      { Lexeme TokenArrow _ }
 
     -- variables --
     int         { Lexeme ( TokenInt    _ ) _ }
@@ -112,8 +112,8 @@ import Lexer
     "EOF"       { Lexeme TokenEOF _ }
 
 -- Precedencias
-%right    "="
-%nonassoc "<" "<=" ">" ">="
+%right    "=" 
+%nonassoc "<" "<=" ">" ">=" ","
 %left "==" "/="
 %left     or
 %left     and
@@ -125,117 +125,131 @@ import Lexer
 
 %%
 
-Program : Declarations Main "EOF"  { }
+Program : Declarations Main "EOF"   { }
+        | Main "EOF"                { }
 
-Declarations: Funcs  {  }
-            | Decs ";" {  }
-            | Structs  {  }
+Main : begin Insts end  { }
 
-Funcs : func id "(" Params ")" ":" Type Insts end  {  }
-    | proc id "(" Params ")" ":" Type Insts end {  }
+Declarations: func id "(" Param ")" ":" Type Insts end  { }
+            | proc id "(" Param ")" ":" Type Insts end  { }
+            | struct id has Decs end                    { }
+            | union id like Decs end                    { }
+            | Decs                                      { }
+            | Assign                                    { }
 
-Structs: struct id has Decs end  {  }
-        | union id like Decs end  {  }
+Decs : Dec      { }
+    | Decs Dec  { }
 
-Decs : Dec  {  } 
-    | Decs ";" Dec  {  }
+Dec : id ":" Type                   { }
+    | id ":" array of Type Dimen    { }
+    | new id                        { }
 
-Dec : id ":" Type  {  }
-    | id ":" array of Type Dimen  {  }
-    | new id {  }
+Param: {- lambda -}     { }
+        | Params        { }
 
--- recursion izquierda
-Params: {- lambda -}  {  }
-        | Dec { }
-        | var Dec {  }
-        | Params "," Dec {  }
+Params: Dec                 { }
+        | var Dec           { }
+        | Params "," Dec    { }
 
-Block : do Insts end  {  }
+Type : intT     { }
+    | floatT    { }
+    | stringT   { }
+    | charT     { }
+    | boolT     { }
+    | voidT     { }
 
-Insts : Inst  {  }
-        | Inst ";" Insts  {  }
+Dimen : "[" Exp "]"             { }
+        | Dimen "[" Exp "]"     { }
 
-Inst :  {- lambda -}  {  }
-        | Assign ";"  {  }
-        | Decs ";"  {  }
-        | If  {  }
-        | While  {  }
-        | Repeat  {  }
-        | For  {  }
-        | read Exp ";"  {  }
-        | write Exp ";"  {  }
-        | return Exp ";"  {  }
-        | free Exp ";" {  }
+Exps : Exp          { }
+    | Exp "," Exps  { }
 
-For : for "(" id Range ")" Block  {  }
+Exp : true                  { }
+    | false                 { }
+    | null                  { }
+    | id                    { }
+    | int                   { }
+    | float                 { }
+    | char                  { }
+    | string                { }
+    | Exp "+" Exp           { }
+    | Exp "-" Exp           { }
+    | Exp "/" Exp           { }
+    | Exp "^" Exp           { }
+    | Exp "*" Exp           { }
+    | Exp div Exp           { }
+    | Exp mod Exp           { }
+    | Exp ">" Exp           { }
+    | Exp ">=" Exp          { }
+    | Exp "<" Exp           { }
+    | Exp "<=" Exp          { }
+    | Exp "==" Exp          { }
+    | Exp "/=" Exp          { }
+    | Exp and Exp           { }
+    | Exp or Exp            { }
+    | "-" Exp   %prec NEG   { }
+    | not Exp   %prec NEG   { }
+    | "->" Exp  %prec NEG   { }
+    | Accesor               { }
+    | CFunctions            { }
+    | "(" Exp ")"           { }
+    | "[" Exps "]"          { }
 
-Range : from Exp to Exp with Exp  {  }
+Assign : id "=" Exp         { }
+        | id "=" Inst       { }
+        | Accesor "=" Exp   { }
 
-If : if "(" Exps ")" then Insts end  {  }
-    | If else Insts end  {  }
+Accesor : id Accs { }
 
-While : while "(" Exps ")" Block  {  }
+Accs: Acc       { }
+    | Acc Accs  { }
 
-Repeat : repeat Insts until Exp  {  }
+Acc : "." id        { }
+    | "[" Exp "]"   { }
 
-Assign : id "=" Exp  {  }
+FuncCall : id "(" Fields ")" { }
 
-Accesor : id Accs  {  }
+Fields : {- lambda -}       { }
+        | Exp               { }
+        | Exp "," Fields    { }
 
-Accs: Acc  {  }
-    | Acc Accs  {  }
+CFunctions : inttostr "(" Exp ")"   { }
+            | flotostr "(" Exp ")"  { }
+            | inttoflo "(" Exp ")"  { }
 
-Acc : "." id  {  }
-    | "[" Exp "]"  {  }
+Insts : Inst            { }
+        | Insts Inst    { }
 
-Type : intT  {  }
-    | floatT  {  }
-    | stringT  {  }
-    | charT  {  }
-    | boolT {  }
+Inst : Assign ";"   { } 
+    | Dec ";"       { }
+    | read Exp ";"  { }
+    | Write  ";"    { }
+    | Return ";"    { }
+    | free Exp ";"  { }
+    | FuncCall ";"  { }
+    | If            { }
+    | While         { }
+    | Repeat        { }
+    | For           { }
 
-Dimen : "[" Exp "]"  {  }
-        | Dimen "[" Exp "]"  {  }
+Return : return Exp         { }
+        | return FuncCall   { }
 
-Exps : Exp  {  }
-    | Exp ";" Exps  {  }
+Write : write Exp           { }
+        | write FuncCall    { }
 
-Exp : true  {  }
-    | false  {  }
-    | null  {  }
-    | id  {  }
-    | int  {  }
-    | float  {  }
-    | char  {  }
-    | string  {  }
-    | void {  }
-    | Exp "+" Exp  {  }
-    | Exp "-" Exp  {  }
-    | Exp "/" Exp  {  }
-    | Exp "^" Exp  {  }
-    | Exp "*" Exp  {  }
-    | Exp div Exp  {  }
-    | Exp mod Exp  {  }
-    | Exp ">" Exp  {  }
-    | Exp ">=" Exp  {  }
-    | Exp "<" Exp  {  }
-    | Exp "<=" Exp  {  }
-    | Exp "==" Exp  {  }
-    | Exp "/=" Exp  {  }
-    | Exp and Exp  {  }
-    | Exp or Exp  {  }
-    | "-" Exp   %prec NEG  {  }
-    | not Exp   %prec NEG  {  }
-    | "->" Exp  %prec NEG  {  }
-    | Accesor  {  }
-    | CFunctions  {  }
+If : if "(" Exp ")" then Insts end  { }
+    | If else Insts end             { }
 
+For : for "(" id Range ")" Block  { }
 
-CFunctions : inttostr "(" Exp ")"  {  }
-            | flotostr "(" Exp ")"  {  }
-            | inttoflo "(" Exp ")"  {  }
+Range : from Exp to Exp with Exp  { }
 
-Main : begin Insts end  {  }
+While : while "(" Exp ")" Block  { }
+
+Repeat : repeat Insts until Exp  { }
+
+Block : do Insts end  { }
 
 {
 
