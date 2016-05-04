@@ -10,10 +10,10 @@ main = do
     case scanner str of
         Right lexs ->
             if null (tail args)
-                then print (parse lexs) 
+                then print $ drop 2 (show (parse lexs) ++ "Accepted") 
                 else case head (tail args) of
                     "-l" -> mapM_ fPrint lexs
-                    "-p" -> print (parse lexs) 
+                    "-p" -> print $ drop 2 (show (parse lexs) ++ "Accepted") 
                     _    -> print help
         Left error -> print error
 
