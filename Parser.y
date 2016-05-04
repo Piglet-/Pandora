@@ -125,8 +125,8 @@ import Lexer
 
 %%
 
-Program : Declarations Main "EOF"   { }
-        | Main "EOF"                { }
+Program : Declarations Main "EOF"   { }               
+	| Main "EOF" {}
 
 Main : begin Insts end  { }
 
@@ -223,19 +223,24 @@ Insts : Inst            { }
 InstA : Assign          { } 
     | Dec ";"           { }
     | read Exp ";"      { }
-    | write Exp ";"     { }
-    | return Exp ";"    { }
+    | Write     { }
+    | Return    { }
     | free Exp ";"      { }
     | FuncCall ";"      { }
 
 Inst : InstA { }
     | InstB { }
 
-
 InstB: If               { }
     | While             { }
     | Repeat            { }
     | For               { }
+
+Return : return Exp ";"  {}
+	|return InstA {}
+
+Write : write Exp ";" {}
+	| write InstA {}
 
 If : if "(" Exp ")" then Insts end  { }
     | If else Insts end             { }
