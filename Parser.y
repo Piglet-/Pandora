@@ -65,7 +65,7 @@ import Lexer
     charT       { Lexeme TokenCharT  _ }
     struct      { Lexeme TokenStruct _ }
     union       { Lexeme TokenUnion  _ }
-    void        { Lexeme TokenVoid   _ }
+    voidT       { Lexeme TokenVoid   _ }
     array       { Lexeme TokenArray  _ }
     stringT     { Lexeme TokenStringT _ }
 
@@ -112,8 +112,8 @@ import Lexer
     "EOF"       { Lexeme TokenEOF _ }
 
 -- Precedencias
-%right    "="
-%nonassoc "<" "<=" ">" ">="
+%right    "=" 
+%nonassoc "<" "<=" ">" ">=" ","
 %left "==" "/="
 %left     or
 %left     and
@@ -126,59 +126,66 @@ import Lexer
 %%
 
 Program : Declarations Main "EOF"  { }
+        | Main "EOF" { }
 
-Declarations: Funcs  {  }
-            | Decs ";" {  }
-            | Structs  {  }
+Declarations: func id "(" Param ")" ":" Type Insts end  {  }
+            | proc id "(" Param ")" ":" Type Insts end {  }
+            | struct id has Decs end  {  }
+            | union id like Decs end  {  }
+            | Decs {  }
+            | Assign { }
 
-Funcs : func id "(" Params ")" ":" Type Insts end  {  }
-    | proc id "(" Params ")" ":" Type Insts end {  }
+Decs : Dec { }
+    | Decs Dec { }
 
-Structs: struct id has Decs end  {  }
-        | union id like Decs end  {  }
-
-Decs : Dec  {  } 
-    | Decs ";" Dec  {  }
-
-Dec : id ":" Type  {  }
+Dec : id ":" Type {  }
     | id ":" array of Type Dimen  {  }
     | new id {  }
 
--- recursion izquierda
-Params: {- lambda -}  {  }
-        | Dec { }
+Param: {- lambda -}  {  }
+        | Params { }
+
+Params: Dec { }
         | var Dec {  }
         | Params "," Dec {  }
 
 Block : do Insts end  {  }
 
 Insts : Inst  {  }
-        | Inst ";" Insts  {  }
+        | Insts Inst   {  }
 
-Inst :  {- lambda -}  {  }
-        | Assign ";"  {  }
-        | Decs ";"  {  }
-        | If  {  }
-        | While  {  }
-        | Repeat  {  }
-        | For  {  }
-        | read Exp ";"  {  }
-        | write Exp ";"  {  }
-        | return Exp ";"  {  }
-        | free Exp ";" {  }
+Inst : Assign ";" {  } 
+    | Dec ";"  {  }
+    | read Exp ";"  {  }
+    | Write  ";" {  }
+    | Return ";"  {  }
+    | free Exp ";" {  }
+    | FuncCall ";" { }
+    | If  {  }
+    | While  {  }
+    | Repeat  {  }
+    | For  {  }
+
+Return : return Exp { }
+        | return FuncCall { }
+
+Write : write Exp { }
+        | write FuncCall { }
 
 For : for "(" id Range ")" Block  {  }
 
 Range : from Exp to Exp with Exp  {  }
 
-If : if "(" Exps ")" then Insts end  {  }
+If : if "(" Exp ")" then Insts end  {  }
     | If else Insts end  {  }
 
-While : while "(" Exps ")" Block  {  }
+While : while "(" Exp ")" Block  {  }
 
 Repeat : repeat Insts until Exp  {  }
 
 Assign : id "=" Exp  {  }
+        | id "=" Inst { }
+        | Accesor "=" Exp { }
 
 Accesor : id Accs  {  }
 
@@ -193,12 +200,13 @@ Type : intT  {  }
     | stringT  {  }
     | charT  {  }
     | boolT {  }
+    | voidT {  }
 
 Dimen : "[" Exp "]"  {  }
         | Dimen "[" Exp "]"  {  }
 
-Exps : Exp  {  }
-    | Exp ";" Exps  {  }
+Exps : Exp { }
+    | Exp "," Exps { }
 
 Exp : true  {  }
     | false  {  }
@@ -208,7 +216,6 @@ Exp : true  {  }
     | float  {  }
     | char  {  }
     | string  {  }
-    | void {  }
     | Exp "+" Exp  {  }
     | Exp "-" Exp  {  }
     | Exp "/" Exp  {  }
@@ -229,7 +236,15 @@ Exp : true  {  }
     | "->" Exp  %prec NEG  {  }
     | Accesor  {  }
     | CFunctions  {  }
+    | "(" Exp ")" { }
+    | "[" Exps "]" { }
 
+
+FuncCall : id "(" Fields ")" { }
+
+Fields : {- lambda -} { }
+        | Exp { }
+        | Exp "," Fields { }
 
 CFunctions : inttostr "(" Exp ")"  {  }
             | flotostr "(" Exp ")"  {  }
