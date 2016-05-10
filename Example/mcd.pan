@@ -1,15 +1,18 @@
--- Algoritmo de euclides
-
-func mcd(a, b : int) : int
-    if (b == 0) then
-        return a;
+func mcd(a:int , b : int) : int
+        i : int;
+        if (b == 0) then
+            return a;
+        end
+        i = mcd(b,a mod b);
+        return i;
     end
-    return mcd(b,a mod b);
-end
 
-begin
-    n, m : int;
-    read n;
-    read m;
-    write mcd(n,m);
-end
+    begin
+        n: int;
+        m : int;
+        r : int;
+        read n;
+        read m;
+        r = mcd(n,m);
+        write r;
+    end

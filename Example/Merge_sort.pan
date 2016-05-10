@@ -1,17 +1,18 @@
--- Merge sort
-
-proc merge(var a : array, p, q, r : int) : void
-    i, j, k : int;
-    b : array of int[];
+proc merge(var a : array of int[10], p:int, q:int, r: int) : void
+    i: int;
+    j : int;
+    k : int;
+    b : array of int[10];
     i = p;
     j = q+1;
     k = p;
-    while (i <= q and j <= r) do
+    while ((i <= q) and (j <= r)) do
         if( a[i] < a[j]) then
             b[k] = a[i];
             i = i+1;
+        end
         else
-            b[k] = a[j];
+            b[k] = a[j]; 
             j = j+1;
         end
         k = k+1;

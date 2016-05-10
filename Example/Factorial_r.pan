@@ -1,14 +1,16 @@
--- Factorial recursivo
-
 func factorial(n : int) : int
-    if( n == 0 ) then 
-        return 1;
+        i : int;
+        if( n == 0 ) then 
+            return 1;
+        end
+        i = factorial(n-1);
+        return n * i;
     end
-    return n * factorial(n-1);
-end
 
-begin
-    int n;
-    read n;
-    write factorial(n);
-end
+    begin
+        n : int;
+        m : int;
+        read n;
+        m = factorial(n);
+        write m;
+    end

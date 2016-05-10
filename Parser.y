@@ -125,17 +125,20 @@ import Lexer
 
 %%
 
-Program : Declarations Main "EOF"   { }
-        | Main "EOF"                { }
+Program : Declarations Main "EOF"  { }               
+	   | Main "EOF"                { }
 
 Main : begin Insts end  { }
 
-Declarations: func id "(" Param ")" ":" Type Insts end  { }
-            | proc id "(" Param ")" ":" Type Insts end  { }
-            | struct id has Decs end                    { }
-            | union id like Decs end                    { }
-            | Decs                                      { }
-            | Assign                                    { }
+Declarations: D func id "(" Param ")" ":" Type Insts end  { }
+            | D proc id "(" Param ")" ":" Type Insts end  { }
+            | D struct id has Decs end                    { }
+            | D union id like Decs end                    { }
+            | D Dec                                       { }
+            | D Assign                                    { }
+
+D : {-lambda-}      { }
+    | Declarations  { }
 
 Decs : Dec      { }
     | Decs Dec  { }
@@ -195,9 +198,9 @@ Exp : true                  { }
     | "(" Exp ")"           { }
     | "[" Exps "]"          { }
 
-Assign : id "=" Exp         { }
-        | id "=" Inst       { }
-        | Accesor "=" Exp   { }
+Assign : id "=" Exp  ";"        { }
+        | id "=" InstA       { }
+        | Accesor "=" Exp ";"  { }
 
 Accesor : id Accs { }
 
@@ -220,23 +223,27 @@ CFunctions : inttostr "(" Exp ")"   { }
 Insts : Inst            { }
         | Insts Inst    { }
 
-Inst : Assign ";"   { } 
-    | Dec ";"       { }
-    | read Exp ";"  { }
-    | Write  ";"    { }
-    | Return ";"    { }
-    | free Exp ";"  { }
-    | FuncCall ";"  { }
-    | If            { }
-    | While         { }
-    | Repeat        { }
-    | For           { }
+InstA : Assign          { } 
+    | Dec ";"           { }
+    | read Exp ";"      { }
+    | Write     { }
+    | Return    { }
+    | free Exp ";"      { }
+    | FuncCall ";"      { }
 
-Return : return Exp         { }
-        | return FuncCall   { }
+Inst : InstA { }
+    | InstB { }
 
-Write : write Exp           { }
-        | write FuncCall    { }
+InstB: If               { }
+    | While             { }
+    | Repeat            { }
+    | For               { }
+
+Return : return Exp ";"  {}
+	|return InstA {}
+
+Write : write Exp ";" {}
+	| write InstA {}
 
 If : if "(" Exp ")" then Insts end  { }
     | If else Insts end             { }
@@ -258,7 +265,4 @@ parseError l = case l of
   [] -> error $ "Unexpected EOF"
   _  -> error $ "Unexpected " ++ show (head l)
 
-
 }
-
-

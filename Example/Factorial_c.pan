@@ -1,14 +1,16 @@
--- Factorial recursivo de cola
-
 func factorial(n : int, a : int) : int
-    if( n == 0 ) then 
-        return a;
+        i : int;
+        if( n == 0 ) then 
+            return a;
+        end
+        i = factorial(n-1, n * a);
+        return i;
     end
-    return factorial(n-1, n * a);
-end
 
-begin
-    int n;
-    read n;
-    write factorial(n,1); 
-end
+    begin
+        n : int;
+        m : int;
+        read n;
+        m = factorial(n,1);
+        write m; 
+    end

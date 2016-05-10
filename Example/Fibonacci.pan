@@ -1,17 +1,21 @@
--- Fibonacci
-
-    func fibonacci(n : int) : int
+func fibonacci(n : int) : int
+        i : int;
+        j : int;
         if (n == 0) then
             return 0;
         end
         if (n == 1) then 
             return 1;
         end
-        return fibonacci(n-1) + fibonacci(n-2);
+        i = fibonacci(n-1);
+        j = fibonacci(n-2);
+        return i + j;
     end
 
     begin
         n : int;
+        m : int;
         read n;
-        write fibonacci(n);
+        m = fibonacci(n);
+        write m;
     end
