@@ -29,6 +29,12 @@ lookupS k (Symbol_Table m sts, bs) =
                         			else lookupS k $ goBack (Symbol_Table m sts, bs)
                         v  		-> v
 
+insertS :: String -> a -> Zipper a -> Zipper a
+insertS k v (Symbol_Table m sts, bs) = (Symbol_Table (DMap.insert k v m) sts, bs) 
+
+insertT :: Symbol_Table a -> Zipper a -> Zipper a
+insertT st (Symbol_Table m sts, bs) = (Symbol_Table m (st:sts), bs)
+
 focus :: Symbol_Table a -> Zipper a
 focus st = (st, [])
 
