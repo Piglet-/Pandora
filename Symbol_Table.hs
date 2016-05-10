@@ -17,6 +17,18 @@ goBack :: Zipper a -> Zipper a
 goBack (fcs, []) = (fcs, [])
 goBack (st, (Breadcrumbs p ls rs): bs) = (Symbol_Table p (ls ++ [st] ++ rs) , bs)
 
+goRight :: Zipper a -> Maybe (Zipper a)
+goRight (_, []) = Nothing
+goRight (_,   (Breadcrumbs _ _ []): bs ) = Nothing
+goRight (fcs, (Breadcrumbs p ls (r: rs)): bs) = 
+    Just (r, (Breadcrumbs p (ls++[fcs]) rs): bs)
+
+goLeft :: Zipper a -> Maybe (Zipper a)
+goLeft (_, []) = Nothing
+goLeft (_,   (Breadcrumbs _ [] _): bs ) = Nothing
+goLeft (fcs, (Breadcrumbs p (l:ls) rs): bs) = 
+    Just (l, (Breadcrumbs p ls (l:rs)): bs)
+
 tothetop :: Zipper a -> Zipper a
 tothetop (fcs, []) = (fcs, []) 
 tothetop bc = tothetop $ goBack bc
