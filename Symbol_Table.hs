@@ -5,7 +5,6 @@ module Symbol_Table
 import qualified Data.Map.Strict as DMap
 import qualified Data.Sequence   as DS
 
-
 data Symbol_Table = Symbol_Table Int (DMap.Map String String) (DS.Seq (Symbol_Table)) 
         deriving (Show)
 data Breadcrumbs = 
@@ -19,7 +18,6 @@ goDown (Symbol_Table i f sts, bs) =
         then Nothing
         else Just (fcs, (Breadcrumbs i f DS.empty st): bs)
             where fcs DS.:< st = DS.viewl sts
-
 
 goBack :: Zipper -> Zipper
 goBack (fcs, []) = (fcs, [])
@@ -39,12 +37,11 @@ goLeft (fcs, (Breadcrumbs i p ls rs): bs) =
     if DS.null ls 
         then Nothing
         else Just (l, (Breadcrumbs i p lls (fcs DS.<| rs)): bs)
-            where l DS.:< lls = DS.viewl ls
-
+			where l DS.:< lls = DS.viewl ls
+			
 tothetop :: Zipper -> Zipper
 tothetop (fcs, []) = (fcs, []) 
 tothetop bc = tothetop $ goBack bc
-
 
 lookupS :: String -> Zipper -> Maybe String 
 lookupS k (Symbol_Table i m sts, bs) = 
@@ -56,6 +53,7 @@ lookupS k (Symbol_Table i m sts, bs) =
 
 insertS :: String -> String -> Zipper -> Zipper 
 insertS k v (Symbol_Table i m sts, bs) = (Symbol_Table i (DMap.insert k v m) sts, bs) 
+
 
 insertT :: Symbol_Table -> Zipper -> Zipper
 insertT st (Symbol_Table i m sts, bs) = (Symbol_Table i m (st DS.<| sts), bs)
