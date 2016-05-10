@@ -21,9 +21,16 @@ tothetop :: Zipper a -> Zipper a
 tothetop (fcs, []) = (fcs, []) 
 tothetop bc = tothetop $ goBack bc
 
---lookup :: Zipper a -> String -> Maybe a 
---lookup (Symbol_Table m _, []) k = DMap.lookup k m
---lookup (Symbol_Table m _, bs) k = 
---                case DMap.lookup k m of
---                        Nothing -> DMap.lookup $ goBack (Symbol_Table m _, bs)
---                        Just v  -> Just v
+lookupS :: String -> Zipper a -> Maybe a 
+lookupS k (Symbol_Table m sts, bs) = 
+                case DMap.lookup k m of
+                        Nothing -> if null bs 
+                        			then Nothing
+                        			else lookupS k $ goBack (Symbol_Table m sts, bs)
+                        v  		-> v
+
+focus :: Symbol_Table a -> Zipper a
+focus st = (st, [])
+
+defocus :: Zipper a -> Symbol_Table a
+defocus (st, bs) = st 
