@@ -1,9 +1,19 @@
 module Symbol_Table
-    (Symbol_Table(..)
+    ( Symbol_Table(..)
+    , focus
+    , lookupS
+    , empty_ST
+    , goDown
+    , goBack
+    , insertT
+    , insertS
+    , tothetop
+    , Zipper	
     ) where
 
 import qualified Data.Map.Strict as DMap
 import qualified Data.Sequence   as DS
+import Data.Maybe (fromJust)
 
 data Symbol_Table = Symbol_Table Int (DMap.Map String String) (DS.Seq (Symbol_Table)) 
         deriving (Show)
@@ -19,9 +29,9 @@ goDown (Symbol_Table i f sts, bs) =
         else Just (fcs, (Breadcrumbs i f DS.empty st): bs)
             where fcs DS.:< st = DS.viewl sts
 
-goBack :: Zipper -> Zipper
-goBack (fcs, []) = (fcs, [])
-goBack (st, (Breadcrumbs i p ls rs): bs) = (Symbol_Table i p ((ls DS.|> st) DS.>< rs) , bs)
+goBack :: Zipper -> Maybe (Zipper)
+goBack (fcs, []) = Nothing
+goBack (st, (Breadcrumbs i p ls rs): bs) = Just (Symbol_Table i p ((ls DS.|> st) DS.>< rs) , bs)
 
 goRight :: Zipper -> Maybe (Zipper)
 goRight (_, []) = Nothing
@@ -38,25 +48,26 @@ goLeft (fcs, (Breadcrumbs i p ls rs): bs) =
         then Nothing
         else Just (l, (Breadcrumbs i p lls (fcs DS.<| rs)): bs)
 			where l DS.:< lls = DS.viewl ls
-			
+
 tothetop :: Zipper -> Zipper
 tothetop (fcs, []) = (fcs, []) 
-tothetop bc = tothetop $ goBack bc
+tothetop bc = tothetop $ fromJust (goBack bc)
 
 lookupS :: String -> Zipper -> Maybe String 
 lookupS k (Symbol_Table i m sts, bs) = 
                 case DMap.lookup k m of
                         Nothing -> if null bs 
                                     then Nothing
-                                    else lookupS k $ goBack (Symbol_Table i m sts, bs)
+                                    else lookupS k $ fromJust $ goBack (Symbol_Table i m sts, bs)
                         v       -> v
 
 insertS :: String -> String -> Zipper -> Zipper 
 insertS k v (Symbol_Table i m sts, bs) = (Symbol_Table i (DMap.insert k v m) sts, bs) 
 
 
-insertT :: Symbol_Table -> Zipper -> Zipper
-insertT st (Symbol_Table i m sts, bs) = (Symbol_Table i m (st DS.<| sts), bs)
+insertT :: Zipper -> Zipper
+insertT (Symbol_Table i m sts, bs) = (Symbol_Table i m (st DS.<| sts), bs)
+	where st = (Symbol_Table (succ i) DMap.empty (DS.empty))
 
 focus :: Symbol_Table -> Zipper
 focus st = (st, [])
@@ -64,5 +75,5 @@ focus st = (st, [])
 defocus :: Zipper -> Symbol_Table 
 defocus (st, bs) = st  
 
-empty_ST :: Symbol_Table 
-empty_ST = Symbol_Table 0 (DMap.empty) (DS.empty)
+empty_ST :: Int -> Symbol_Table 
+empty_ST i = Symbol_Table i (DMap.empty) (DS.empty)
