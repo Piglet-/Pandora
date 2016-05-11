@@ -12,6 +12,7 @@ beginTester = do
 	putStr "Write \'close\' to close the current scope.\n"
 	putStr "Write \'insert\' to add a new variable into the current scope.\n"
 	putStr "Write \'print\' to show the content of the current scope.\n"
+	putStr "Write \'find\' to find a variable.\n"
 	putStr "Write \'quit\' to exit and print all the symbol table.\n\n"
 	tester firstScope 
 
@@ -21,11 +22,12 @@ tester z = do
 	putStr "What?\n"
 	line <- getLine
 	case (toLower $ head line) of
-		'o' 		-> openScope z
-		'c' 		-> closeScope z
+		'o' 	-> openScope z
+		'c' 	-> closeScope z
 		'i'	 	-> insertVar z
 		'q'		-> quitTester z
 		'p'		-> printScopes z
+		'f'		-> findSimbol z
 	
 firstScope :: Zipper
 firstScope = focus $ empty_ST 0
@@ -49,7 +51,7 @@ insertVar :: Zipper -> IO ()
 insertVar z = do
 	putStr "What name? \n"
 	line <- getLine
-	case (lookupS line z) of
+	case (lookupS' line z) of
 		Nothing -> do
 			putStr "Inserted.\n" 
 			tester (insertS line line z)
@@ -67,3 +69,15 @@ quitTester z = do
 		putStr "Bye.. \n"
 		print st 
 			where (st,bs) = (tothetop z)
+
+findSimbol :: Zipper -> IO ()
+findSimbol z = do
+		putStr "What name?\n"
+		line <- getLine
+		case (lookupS line z) of
+			Nothing -> do
+				putStr "Variable not found.\n"
+				tester z
+			Just (x,y) -> do
+				putStr $ "Variable " ++ show x ++ " found in level " ++ show y ++ "\n"
+				tester z
