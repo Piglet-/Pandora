@@ -19,11 +19,11 @@ import Data.Maybe (fromJust)
 data Symbol_Table = Symbol_Table Int (DMap.Map String String) (DS.Seq (Symbol_Table)) 
     
 instance Show Symbol_Table where
-    show st = "\nSymbol Table: \n" ++ showTable st
+    show st = "\nSymbol Table: \n\n" ++ showTable st
 
 showTable :: Symbol_Table -> String
 showTable (Symbol_Table t maps childrens) = 
-    (tabs t) ++ "Scope variables:\n" ++
+    (tabs t) ++ "Scope:\n" ++
     (showHash maps t) ++ concat (toList (fmap showTable (DS.reverse childrens))) 
         where tabs t = concat $ replicate t "\t"
 
@@ -49,22 +49,6 @@ goDown (Symbol_Table i f sts, bs) =
 goBack :: Zipper -> Maybe (Zipper)
 goBack (fcs, []) = Nothing
 goBack (st, (Breadcrumbs i p ls rs): bs) = Just (Symbol_Table i p ((ls DS.|> st) DS.>< rs) , bs)
-
-goRight :: Zipper -> Maybe (Zipper)
-goRight (_, []) = Nothing
-goRight (fcs, (Breadcrumbs i p ls rs): bs) = 
-    if DS.null rs 
-        then Nothing
-        else Just (r, (Breadcrumbs i p (ls DS.|> fcs) rrs): bs)
-            where r DS.:< rrs = DS.viewl rs
-
-goLeft :: Zipper-> Maybe (Zipper)
-goLeft (_, []) = Nothing
-goLeft (fcs, (Breadcrumbs i p ls rs): bs) = 
-    if DS.null ls 
-        then Nothing
-        else Just (l, (Breadcrumbs i p lls (fcs DS.<| rs)): bs)
-			where l DS.:< lls = DS.viewl ls
 
 tothetop :: Zipper -> Zipper
 tothetop (fcs, []) = (fcs, []) 

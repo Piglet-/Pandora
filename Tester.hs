@@ -1,4 +1,5 @@
-module Tester() where
+module Tester(
+beginTester) where
 import Symbol_Table
 import System.IO
 import Data.Char (toLower)
@@ -6,6 +7,12 @@ import Data.Maybe (fromJust)
 
 beginTester :: IO ()
 beginTester = do
+	putStr "\nInstructions: \n\n"
+	putStr "Write \'open\' to open a new scope inside the current scope.\n"
+	putStr "Write \'close\' to close the current scope.\n"
+	putStr "Write \'insert\' to add a new variable into the current scope.\n"
+	putStr "Write \'print\' to show the content of the current scope.\n"
+	putStr "Write \'quit\' to exit and print all the symbol table.\n\n"
 	tester firstScope 
 
 
@@ -13,12 +20,12 @@ tester :: Zipper -> IO ()
 tester z = do
 	putStr "What?\n"
 	line <- getLine
-	case (map toLower line) of
-		"open" 		-> openScope z
-		"close" 	-> closeScope z
-		"insert" 	-> insertVar z
-		"quit"		-> quitTester z
-		"print"		-> printScopes z
+	case (toLower $ head line) of
+		'o' 		-> openScope z
+		'c' 		-> closeScope z
+		'i'	 	-> insertVar z
+		'q'		-> quitTester z
+		'p'		-> printScopes z
 	
 firstScope :: Zipper
 firstScope = focus $ empty_ST 0
@@ -40,7 +47,7 @@ closeScope z = do
 
 insertVar :: Zipper -> IO ()
 insertVar z = do
-	putStr "Name? \n"
+	putStr "What name? \n"
 	line <- getLine
 	case (lookupS line z) of
 		Nothing -> do
