@@ -58,4 +58,5 @@ printScopes (st, bs) = do
 quitTester :: Zipper -> IO ()
 quitTester z = do
 		putStr "Bye.. \n"
-		print (tothetop z)
+		print st 
+			where (st,bs) = (tothetop z)
