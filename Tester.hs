@@ -51,13 +51,11 @@ insertVar z = do
 			tester z 
 
 printScopes :: Zipper -> IO ()
-printScopes z = do
-	print z
-	tester z
+printScopes (st, bs) = do
+	print st
+	tester (st,bs)
 
 quitTester :: Zipper -> IO ()
 quitTester z = do
 		putStr "Bye.. \n"
 		print (tothetop z)
-
-
