@@ -24,7 +24,7 @@ instance Show Symbol_Table where
 showTable :: Symbol_Table -> String
 showTable (Symbol_Table t maps childrens) = 
     (tabs t) ++ "Scope variables:\n" ++
-    (showHash maps t) ++ concat (toList (fmap showTable childrens)) 
+    (showHash maps t) ++ concat (toList (fmap showTable (DS.reverse childrens))) 
         where tabs t = concat $ replicate t "\t"
 
 showHash :: (DMap.Map String String) -> Int -> String
