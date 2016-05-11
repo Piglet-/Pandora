@@ -13,10 +13,21 @@ module Symbol_Table
 
 import qualified Data.Map.Strict as DMap
 import qualified Data.Sequence   as DS
+import Data.Foldable (toList)
 import Data.Maybe (fromJust)
 
 data Symbol_Table = Symbol_Table Int (DMap.Map String String) (DS.Seq (Symbol_Table)) 
-        deriving (Show)
+    
+instance Show Symbol_Table where
+    show st = "Symbol Table: \n" ++ showTable st
+
+showTable :: Symbol_Table -> String
+showTable (Symbol_Table t maps childrens) = 
+    (tabs t) ++ "Scope: " ++ show t ++ "\n" ++
+    (tabs t) ++ show (DMap.keys maps) ++ "\n" ++ concat (toList (fmap showTable childrens)) 
+        where tabs t = concat $ replicate t "\t"
+
+
 data Breadcrumbs = 
     Breadcrumbs Int (DMap.Map String String) (DS.Seq (Symbol_Table)) (DS.Seq (Symbol_Table)) 
         deriving (Show) 
