@@ -113,7 +113,7 @@ import Lexer
 
 -- Precedencias
 %right    "=" 
-%nonassoc "<" "<=" ">" ">=" ","
+%nonassoc "<" "<=" ">" ">=" 
 %left "==" "/="
 %left     or
 %left     and
@@ -130,29 +130,30 @@ Program : Declarations Main "EOF"  { }
 
 Main : begin Insts end  { }
 
-Declarations: D func id "(" Param ")" ":" Type Insts end  { }
-            | D proc id "(" Param ")" ":" Type Insts end  { }
-            | D struct id has Decs end                    { }
-            | D union id like Decs end                    { }
-            | D Dec                                       { }
-            | D Assign                                    { }
+Declaration: func id "(" Param ")" ":" Type Insts end  { }
+            | proc id "(" Param ")" ":" Type Insts end  { }
+            | struct id has Decs end                    { }
+            | union id like Decs end                    { }
+            | Dec                                       { }
+            | Assign                                    { }
 
-D : {-lambda-}      { }
-    | Declarations  { }
+Declarations : Declaration { }
+    | Declarations Declaration  { }
 
-Decs : Dec      { }
-    | Decs Dec  { }
+Decs : Dec         { }
+    | Decs Dec     { }
 
-Dec : id ":" Type                   { }
-    | id ":" array of Type Dimen    { }
-    | new id                        { }
+Dec : ListId ":" Type ";"                  { }
+    | ListId ":" array of Type Dimen ";"   { }
+    | new ListId ";"                       { }
 
 Param: {- lambda -}     { }
         | Params        { }
 
-Params: Dec                 { }
-        | var Dec           { }
-        | Params "," Dec    { }
+Params: Dec                	 { }
+        | var Dec	    	 { }
+        | Params "," var Dec     { }
+        | Params "," Dec   	 { }
 
 Type : intT     { }
     | floatT    { }
@@ -165,7 +166,7 @@ Dimen : "[" Exp "]"             { }
         | Dimen "[" Exp "]"     { }
 
 Exps : Exp          { }
-    | Exp "," Exps  { }
+    | Exps "," Exp  { }
 
 Exp : true                  { }
     | false                 { }
@@ -202,10 +203,13 @@ Assign : id "=" Exp  ";"        { }
         | id "=" InstA       { }
         | Accesor "=" Exp ";"  { }
 
+ListId : id                 { }
+        | ListId "," id     { }
+
 Accesor : id Accs { }
 
 Accs: Acc       { }
-    | Acc Accs  { }
+    | Accs Acc  { }
 
 Acc : "." id        { }
     | "[" Exp "]"   { }
@@ -214,7 +218,7 @@ FuncCall : id "(" Fields ")" { }
 
 Fields : {- lambda -}       { }
         | Exp               { }
-        | Exp "," Fields    { }
+        | Fields "," Exp    { }
 
 CFunctions : inttostr "(" Exp ")"   { }
             | flotostr "(" Exp ")"  { }
@@ -224,29 +228,29 @@ Insts : Inst            { }
         | Insts Inst    { }
 
 InstA : Assign          { } 
-    | Dec ";"           { }
+    | Dec               { }
     | read Exp ";"      { }
-    | Write     { }
-    | Return    { }
+    | Write    		    { }
+    | Return            { }
     | free Exp ";"      { }
     | FuncCall ";"      { }
 
-Inst : InstA { }
-    | InstB { }
+Inst : InstA 	{ }
+    | InstB 	{ }
 
 InstB: If               { }
     | While             { }
     | Repeat            { }
     | For               { }
 
-Return : return Exp ";"  {}
-	|return InstA {}
+Return : return Exp ";"  	{ }
+	|return FuncCall ";" 	{ } 
 
-Write : write Exp ";" {}
-	| write InstA {}
+Write : write Exp ";"  { }
+	| write InstA      { }
 
-If : if "(" Exp ")" then Insts end  { }
-    | If else Insts end             { }
+If : if "(" Exp ")" then Block                      { }
+    | if "(" Exp ")" then Block else Insts end      { }
 
 For : for "(" id Range ")" Block  { }
 
