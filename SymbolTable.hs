@@ -27,6 +27,7 @@ data Entry = Entry String Position
 data Scope = Scope Int (Position, Position)
 
 -- tipo de datos para la tabla de simbolos
+-- cambiar el Int por Scope  y el segundo String por Entry
 data SymbolTable = SymbolTable Int (DMap.Map String String) (DS.Seq (SymbolTable)) 
 
 -- instancia show de la tabla de simbolos

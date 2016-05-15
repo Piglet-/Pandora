@@ -1,18 +1,13 @@
-func mcd(a:int , b : int) : int
-        i : int;
+func mcd(a: int, b : int) : int
         if (b == 0) then
             return a;
         end
-        i = mcd(b,a mod b);
-        return i;
+        return mcd(b,a mod b);
     end
 
     begin
-        n: int;
+        n : int;
         m : int;
-        r : int;
         read n;
-        read m;
-        r = mcd(n,m);
-        write r;
+        write mcd(n,m);
     end

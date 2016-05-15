@@ -1,5 +1,4 @@
 func factorial(n : int) : int
-        i : int;
         if( n == 0 ) then 
             return 1;
         end
@@ -9,8 +8,6 @@ func factorial(n : int) : int
 
     begin
         n : int;
-        m : int;
         read n;
-        m = factorial(n);
-        write m;
+        write factorial(n); 
     end

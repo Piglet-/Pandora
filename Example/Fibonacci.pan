@@ -9,13 +9,11 @@ func fibonacci(n : int) : int
         end
         i = fibonacci(n-1);
         j = fibonacci(n-2);
-        return i + j;
+        return i +j; 
     end
 
     begin
         n : int;
-        m : int;
         read n;
-        m = fibonacci(n);
-        write m;
+        write fibonacci(n);
     end

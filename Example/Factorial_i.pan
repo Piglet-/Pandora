@@ -9,8 +9,6 @@ func factorial(n : int) : int
 
     begin
         n : int;
-        m : int;
         read n;
-        m = factorial(n);
-        write m;
+        write factorial(n);
     end
