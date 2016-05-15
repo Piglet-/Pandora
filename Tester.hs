@@ -1,9 +1,9 @@
 module Tester(
 beginTester) where
-import Symbol_Table
+import SymbolTable
 import System.IO
 import Data.Char (toLower)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, maybe)
 
 beginTester :: IO ()
 beginTester = do
@@ -30,7 +30,7 @@ tester z = do
 		'f'		-> findSimbol z
 	
 firstScope :: Zipper
-firstScope = focus $ empty_ST 0
+firstScope = focus $ emptyST 0
 
 openScope :: Zipper -> IO ()
 openScope z = do
