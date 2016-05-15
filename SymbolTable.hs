@@ -115,6 +115,6 @@ openScope:: Zipper -> Zipper
 openScope z = fromJust $ goDown $ insertT z
 
 -- cerrar el alcance actual, si no se puede porque es root
--- no hace nada.. debería dar una excepcion??
+-- no hace nada.. debería dar un error??
 closeScope :: Zipper -> Zipper
 closeScope z = maybe z id (goBack z)
