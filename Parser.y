@@ -143,9 +143,8 @@ Declarations : Declaration { }
 Decs : Dec         { }
     | Decs Dec     { }
 
-Dec : ListId ":" Type ";"                  { }
-    | ListId ":" array of Type Dimen ";"   { }
-    | new ListId ";"                       { }
+Dec : ListId ":" Type                   { }
+    | ListId ":" array of Type Dimen    { }
 
 Param: {- lambda -}     { }
         | Params        { }
@@ -228,7 +227,8 @@ Insts : Inst            { }
         | Insts Inst    { }
 
 InstA : Assign          { } 
-    | Dec               { }
+    | Dec ";"           { }
+    | new ListId ";"                       { }
     | read Exp ";"      { }
     | Write    		    { }
     | Return            { }
@@ -260,7 +260,7 @@ While : while "(" Exp ")" Block  { }
 
 Repeat : repeat Insts until Exp  { }
 
-Block : do Insts end  { }
+Block : Insts end  { }
 
 {
 
