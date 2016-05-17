@@ -1,6 +1,7 @@
 module SymbolTable
     ( SymbolTable(..)
     , focus
+    , defocus
     , lookupS
     , lookupS'
     , emptyST
@@ -9,7 +10,10 @@ module SymbolTable
     , insertT
     , insertS
     , tothetop
-    , Zipper	
+    , Zipper
+    , Entry(..)
+    , Scope(..)
+    , emptyScope
     ) where
 
 import Position
@@ -120,3 +124,6 @@ openScope z = fromJust $ goDown $ insertT z
 -- no hace nada.. debería dar un error??
 closeScope :: Zipper -> Zipper
 closeScope z = maybe z id (goBack z)
+
+emptyScope :: Scope
+emptyScope = Scope 0 (Position (0,0), Position (0,0))

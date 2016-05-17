@@ -1,6 +1,8 @@
 import Lexer
 import Parser
 import System.Environment (getArgs)
+import SymbolTable
+import Control.Monad.RWS
 
 main = do
     args <- getArgs
@@ -12,14 +14,18 @@ main = do
             if null (tail args)
                 then if any isTokenError lexs 
                         then mapM_ fPrint (filter isTokenError lexs)
-                        else print $ drop 2 (show (parse lexs) ++ "Accepted") 
+                        else do let (state, bita) = execRWS (parse lexs) "" (focus $ emptyST emptyScope, focus $ emptyST emptyScope )
+                                print $ defocus $ fst state
+                            --print $ drop 2 (show (parse lexs) ++ "Accepted") 
                 else case head (tail args) of
                     "-l" -> if any isTokenError lexs 
                                 then mapM_ fPrint (filter isTokenError lexs)
                                 else mapM_ fPrint lexs
                     "-p" -> if any isTokenError lexs 
                                 then mapM_ fPrint (filter isTokenError lexs)
-                                else print $ drop 2 (show (parse lexs) ++ "Accepted") 
+                                else do let (state, bita) = execRWS (parse lexs) "" (focus $ emptyST emptyScope, focus $ emptyST emptyScope )
+                                        print $ defocus $ fst state
+                                    --print $ drop 2 (show (parse lexs) ++ "Accepted") 
                     _    -> print help
         Left error -> print error
 

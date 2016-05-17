@@ -7,9 +7,15 @@ module Parser
     ) where
 
 import Lexer
+import Control.Monad.RWS
+import SymbolTable
 
 }
+-- reader: string, writer: lista de strings (por ahora)
+-- state: tupla (z1,z2) donde z1 = zipper de strings reservados
+-- z2 = zipper del resto de las declaraciones
 
+%monad      { RWS String [String] (Zipper,Zipper) }
 %name         parse 
 %tokentype  { Lexeme Token }
 %error      { parseError }
@@ -125,142 +131,144 @@ import Lexer
 
 %%
 
-Program : Declarations Main "EOF"  { }               
-	   | Main "EOF"                { }
+Program : Declarations Main "EOF"  {% return () }               
+	   | Main "EOF"                { % return ()}
 
-Main : begin Insts end  { }
+Main : begin Insts end  {% return () }
 
-Declaration: func id "(" Param ")" ":" Type Insts end  { }
-            | proc id "(" Param ")" ":" Type Insts end  { }
-            | struct id has Decs end                    { }
-            | union id like Decs end                    { }
-            | Dec                                       { }
-            | Assign                                    { }
+Declaration: func id "(" Param ")" ":" Type Insts end   { % return ()}
+            | proc id "(" Param ")" ":" Type Insts end  { % return ()}
+            | struct id has Decs end                    { % return ()}
+            | union id like Decs end                    { % return ()}
+            | Dec                                       { % return ()}
+            | Assign                                    { % return ()}
 
-Declarations : Declaration { }
-    | Declarations Declaration  { }
+Declarations : Declaration {% return () }
+    | Declarations Declaration  {% return () }
 
-Decs : Dec         { }
-    | Decs Dec     { }
+Decs : Dec         { % return ()}
+    | Decs Dec     { % return ()}
 
-Dec : ListId ":" Type                   { }
-    | ListId ":" array of Type Dimen    { }
+Dec : ListId ":" Type                   { % return ()}
+    | ListId ":" array of Type Dimen    { % return ()}
 
-Param: {- lambda -}     { }
-        | Params        { }
+Param: {- lambda -}     {% return () }
+        | Params        {% return () }
 
-Params: Dec                	 { }
-        | var Dec	    	 { }
-        | Params "," var Dec     { }
-        | Params "," Dec   	 { }
+Params: Dec                  	 {% return () }
+        | var Dec	          	 {% return () }
+        | Params "," var Dec     { % return ()}
+        | Params "," Dec     	 { % return ()}
 
-Type : intT     { }
-    | floatT    { }
-    | stringT   { }
-    | charT     { }
-    | boolT     { }
-    | voidT     { }
+Type : intT     { $1 } 
+    | floatT    { $1 }
+    | stringT   { $1 }
+    | charT     { $1 }
+    | boolT     { $1 }
+    | voidT     { $1 }
 
-Dimen : "[" Exp "]"             { }
-        | Dimen "[" Exp "]"     { }
+Dimen : "[" Exp "]"             {% return () }
+        | Dimen "[" Exp "]"     {% return () }
 
-Exps : Exp          { }
-    | Exps "," Exp  { }
+Exps : Exp          { % return ()}
+    | Exps "," Exp  { % return ()}
 
-Exp : true                  { }
-    | false                 { }
-    | null                  { }
-    | id                    { }
-    | int                   { }
-    | float                 { }
-    | char                  { }
-    | string                { }
-    | Exp "+" Exp           { }
-    | Exp "-" Exp           { }
-    | Exp "/" Exp           { }
-    | Exp "^" Exp           { }
-    | Exp "*" Exp           { }
-    | Exp div Exp           { }
-    | Exp mod Exp           { }
-    | Exp ">" Exp           { }
-    | Exp ">=" Exp          { }
-    | Exp "<" Exp           { }
-    | Exp "<=" Exp          { }
-    | Exp "==" Exp          { }
-    | Exp "/=" Exp          { }
-    | Exp and Exp           { }
-    | Exp or Exp            { }
-    | "-" Exp   %prec NEG   { }
-    | not Exp   %prec NEG   { }
-    | "->" Exp  %prec NEG   { }
-    | Accesor               { }
-    | CFunctions            { }
-    | "(" Exp ")"           { }
-    | "[" Exps "]"          { }
+Exp : true                  { % return () }
+    | false                 { % return () }
+    | null                  { % return () }
+    | id                    { % return () }
+    | int                   { % return () }
+    | float                 { % return () }
+    | char                  { % return () }
+    | string                { % return () }
+    | Exp "+" Exp           { % return ()}
+    | Exp "-" Exp           { % return ()}
+    | Exp "/" Exp           { % return ()}
+    | Exp "^" Exp           { % return ()}
+    | Exp "*" Exp           { % return ()}
+    | Exp div Exp           { % return ()}
+    | Exp mod Exp           { % return ()}
+    | Exp ">" Exp           { % return ()}
+    | Exp ">=" Exp          { % return ()}
+    | Exp "<" Exp           { % return ()}
+    | Exp "<=" Exp          { % return ()}
+    | Exp "==" Exp          { % return ()}
+    | Exp "/=" Exp          { % return ()}
+    | Exp and Exp           { % return ()}
+    | Exp or Exp            { % return ()}
+    | "-" Exp   %prec NEG   { % return ()}
+    | not Exp   %prec NEG   { % return ()}
+    | "->" Exp  %prec NEG   { % return ()}
+    | Accesor               {% return () }
+    | CFunctions            { % return ()}
+    | "(" Exp ")"           { % return ()}
+    | "[" Exps "]"          { % return ()}
 
-Assign : id "=" Exp  ";"        { }
-        | id "=" InstA       { }
-        | Accesor "=" Exp ";"  { }
+Assign : id "=" Exp  ";"        {% return () }
+        | id "=" InstA       { % return ()}
+        | Accesor "=" Exp ";"  { % return ()}
 
-ListId : id                 { }
-        | ListId "," id     { }
+ListId : id                 {% do
+                                (z, z1) <- get 
+                                put ((doInsert $1 z),z1) }
+        | ListId "," id     { % return ()}
 
-Accesor : id Accs { }
+Accesor : id Accs { % return ()}
 
-Accs: Acc       { }
-    | Accs Acc  { }
+Accs: Acc       { % return ()}
+    | Accs Acc  { % return ()}
 
-Acc : "." id        { }
-    | "[" Exp "]"   { }
+Acc : "." id        { % return ()}
+    | "[" Exp "]"   { % return ()}
 
-FuncCall : id "(" Fields ")" { }
+FuncCall : id "(" Fields ")" { % return ()}
 
-Fields : {- lambda -}       { }
-        | Exp               { }
-        | Fields "," Exp    { }
+Fields : {- lambda -}       { % return ()}
+        | Exp               { % return ()}
+        | Fields "," Exp    { % return ()}
 
-CFunctions : inttostr "(" Exp ")"   { }
-            | flotostr "(" Exp ")"  { }
-            | inttoflo "(" Exp ")"  { }
+CFunctions : inttostr "(" Exp ")"   { % return ()}
+            | flotostr "(" Exp ")"  { % return ()}
+            | inttoflo "(" Exp ")"  { % return ()}
 
-Insts : Inst            { }
-        | Insts Inst    { }
+Insts : Inst            { % return ()}
+        | Insts Inst    { % return ()}
 
-InstA : Assign          { } 
-    | Dec ";"           { }
-    | new ListId ";"                       { }
-    | read Exp ";"      { }
-    | Write    		    { }
-    | Return            { }
-    | free Exp ";"      { }
-    | FuncCall ";"      { }
+InstA : Assign          {% return () } 
+    | Dec ";"           {% return () }
+    | new ListId ";"    { % return ()}
+    | read Exp ";"      { % return ()}
+    | Write    		    { % return ()}
+    | Return            { % return ()}
+    | free Exp ";"      { % return ()}
+    | FuncCall ";"      { % return ()}
 
-Inst : InstA 	{ }
-    | InstB 	{ }
+Inst : InstA 	{% return () }
+    | InstB 	{ % return ()}
 
-InstB: If               { }
-    | While             { }
-    | Repeat            { }
-    | For               { }
+InstB: If               { % return ()}
+    | While             { % return ()}
+    | Repeat            { % return ()}
+    | For               { % return ()}
 
-Return : return Exp ";"  	{ }
-	|return FuncCall ";" 	{ } 
+Return : return Exp ";"  	{ % return ()}
+	|return FuncCall ";" 	{ % return ()} 
 
-Write : write Exp ";"  { }
-	| write InstA      { }
+Write : write Exp ";"  { % return ()}
+	| write InstA      { % return ()}
 
-If : if "(" Exp ")" then Block                      { }
-    | if "(" Exp ")" then Block else Insts end      { }
+If : if "(" Exp ")" then Block                      { % return ()}
+    | if "(" Exp ")" then Block else Insts end      { % return ()}
 
-For : for "(" id Range ")" Block  { }
+For : for "(" id Range ")" Block  { % return ()}
 
-Range : from Exp to Exp with Exp  { }
+Range : from Exp to Exp with Exp  { % return ()}
 
-While : while "(" Exp ")" Block  { }
+While : while "(" Exp ")" Block  { % return ()}
 
-Repeat : repeat Insts until Exp  { }
+Repeat : repeat Insts until Exp  { % return ()}
 
-Block : Insts end  { }
+Block : Insts end  { % return ()}
 
 {
 
@@ -268,5 +276,11 @@ parseError :: [Lexeme Token] -> a
 parseError l = case l of
   [] -> error $ "Unexpected EOF"
   _  -> error $ "Unexpected " ++ show (head l)
+
+
+doInsert:: Lexeme Token -> Zipper -> Zipper
+doInsert t z = insertS (show t) emptyEntry z
+
+emptyEntry = Entry "" (Position (0,0))
 
 }

@@ -7,7 +7,7 @@ func factorial(n : int, a : int) : int
 end
 
 begin
-	n  int;
+		n : int;
         m : int;
         read n;
         write factorial(n,1); 
