@@ -1,3 +1,7 @@
 *.o
 *.hi
 *.pdf
+Pandora
+Lexer.hs
+Parser.hs
+nfo
