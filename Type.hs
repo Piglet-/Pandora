@@ -1,8 +1,6 @@
 module Type
 	( 
 	Type (..)
-	, Object (..)
-	, BasicT (..)
 	, makeBtype
 	, makeObj
 	) where
@@ -10,12 +8,7 @@ module Type
 import Tokens
 import Lexeme
 
-data Object = FuncT BasicT	
-			| ProcT BasicT	
-			| ArrayT BasicT
-			deriving(Show, Eq)
-
-data BasicT = IntT
+data Type = IntT
 		| FloatT 
 		| BoolT
 		| CharT	
@@ -24,13 +17,12 @@ data BasicT = IntT
 		| StructT
 		| UnionT
 		| StringT
+		| FuncT BasicT	
+		| ProcT BasicT	
+		| ArrayT BasicT
 		deriving(Show, Eq)	
 
-data Type = Object
-		| BasicT
-		deriving(Show, Eq)
-
-makeBtype :: Lexeme t -> BasicT
+makeBtype :: Lexeme t -> Type
 makeBtype l = case (token l) of
 	TokenIntT 		-> IntT
 	TokenFloatT 	-> FloatT
@@ -42,7 +34,7 @@ makeBtype l = case (token l) of
 	TokenUnion 		-> UnionT
 	TokenNew 		-> PointerT
 
-makeObj :: Lexeme t -> BasicT -> Object
+makeObj :: Lexeme t -> Type -> Type
 makeObj l bt = case (token l) of
 	TokenArray 		-> ArrayT bt
 	TokenProc		-> ProcT bt
