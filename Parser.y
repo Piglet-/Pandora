@@ -279,8 +279,8 @@ parseError l = case l of
 
 
 doInsert:: Lexeme Token -> Zipper -> Zipper
-doInsert t z = insertS (show t) emptyEntry z
+doInsert l z = insertS (show $ token l) (newEntry l) z
 
-emptyEntry = Entry "" (Position (0,0))
+newEntry l = Entry (show $ token l) (pos l)
 
 }

@@ -3248,9 +3248,9 @@ parseError l = case l of
 
 
 doInsert:: Lexeme Token -> Zipper -> Zipper
-doInsert t z = insertS (show t) emptyEntry z
+doInsert l z = insertS (show $ token l) (emptyEntry l) z
 
-emptyEntry = Entry "" (Position (0,0))
+emptyEntry l = Entry (show $ token l) (pos l)
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "<built-in>" #-}

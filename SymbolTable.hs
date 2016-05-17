@@ -44,12 +44,16 @@ showTable :: SymbolTable -> String
 showTable (SymbolTable (Scope t s) maps childrens) = 
     (tabs t) ++ "Level: " ++ show t ++ "\n" ++
     (tabs t) ++ "Scope:\n" ++
-    (showHash maps t) ++ concat (toList (fmap showTable (DS.reverse childrens))) 
+    (showAux (DMap.keys maps) (reverse $ DMap.elems maps) t) ++ concat (toList (fmap showTable (DS.reverse childrens))) 
         where tabs t = concat $ replicate t "\t"
 
 -- muestra los elementos internos de la tabla
 showHash :: (DMap.Map String Entry) -> Int -> String
 showHash m t = showListC (DMap.keys m) t
+
+showAux :: [String] -> [Entry] -> Int -> String
+showAux (c:cs) (v:vs) t = s
+        where s = ((concat $ replicate t "\t") ++ show c ++ " p: " ++ show v ++ "\n") ++ (showAux cs vs t)
 
 showListC :: [String] -> Int -> String
 showListC [] _ = ""
