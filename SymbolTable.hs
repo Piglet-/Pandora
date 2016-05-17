@@ -21,10 +21,11 @@ import qualified Data.Map.Strict as DMap
 import qualified Data.Sequence   as DS
 import Data.Foldable (toList)
 import Data.Maybe (fromJust)
+import Type
 
 -- una entrada (o valor en un hash) es el tipo (en string)
 -- y la posición de una variable dentro de la tabla de símbolos
-data Entry = Entry String Position deriving (Show)
+data Entry = Entry Type Position deriving (Show)
 
 -- un scope es un entero que representa el nivel de anidamiento,
 -- y una tupla con la posicion inicial y final del scope
@@ -52,6 +53,7 @@ showHash :: (DMap.Map String Entry) -> Int -> String
 showHash m t = showListC (DMap.keys m) t
 
 showAux :: [String] -> [Entry] -> Int -> String
+showAux [] _  _ = ""
 showAux (c:cs) (v:vs) t = s
         where s = ((concat $ replicate t "\t") ++ show c ++ " p: " ++ show v ++ "\n") ++ (showAux cs vs t)
 
