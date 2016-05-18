@@ -17,7 +17,7 @@ import qualified Data.Sequence as DS
 -- state: tupla (z1,z2) donde z1 = zipper de strings reservados
 -- z2 = zipper del resto de las declaraciones
 
-%monad      { RWS String [String] (Zipper,Zipper) }
+%monad      { RWS String [Binnacle] (Zipper,Zipper) }
 %name         parse 
 %tokentype  { Lexeme Token }
 %error      { parseError }
@@ -138,20 +138,28 @@ Program : Declarations Main "EOF"  { % return () } -- abrir el primer scope
 
 Main : begin Insts end  { % return () } -- abrir scope del main
 
-Declaration:  func id OS "(" Param ")" ":" Type OS Insts CS end CS  { % do
-                                                            (z, z') <- get
-                                                            put (doInsert ((makeObj $1) (makeBtype $8)) z $2, z')} -- meter el id con type func 
-            | proc id OS "(" Param ")" ":" Type OS Insts CS end CS { % do
-                                                            (z, z') <- get
-                                                            put (doInsert ((makeObj $1) (makeBtype $8)) z $2, z') }
+Declaration:  FuncDec OS Insts CS end CS        {% return () }
             | struct id has OS Decs end CS                   { % do 
                                                             (z, z') <- get
-                                                            put (doInsert (makeBtype $1) z $2, z') }
+                                                            tell (snd (doInsert (makeBtype $1) (z,[]) $2))
+                                                            put (fst (doInsert (makeBtype $1) (z,[]) $2), z') }
             | union id like OS Decs end CS                   { % do 
                                                             (z, z') <- get
-                                                            put (doInsert (makeBtype $1) z $2, z') }
+                                                            tell (snd (doInsert (makeBtype $1) (z,[]) $2))
+                                                            put (fst(doInsert (makeBtype $1) (z,[]) $2), z') }
             | Dec                                       { % return () }
             | Assign                                    { % return () } -- ignorar de momento
+
+FuncDec : TypeFunc OS "(" Param ")"  {% return () }
+        
+TypeFunc :  Type ":" func id {% do 
+                                                    (z, z') <- get
+                                                    tell( snd (doInsert ((makeObj $3) (makeBtype $1)) (z,[]) $4))
+                                                    put(fst (doInsert ((makeObj $3) (makeBtype $1)) (z,[]) $4), z') }
+        | Type ":" proc id {% do 
+                                                    (z, z') <- get
+                                                    tell (snd (doInsert ((makeObj $3) (makeBtype $1)) (z,[]) $4))
+                                                    put(fst(doInsert ((makeObj $3) (makeBtype $1)) (z,[]) $4), z') }
 
 OS: {- Lambda -} { % do 
                      (z, z') <- get 
@@ -166,17 +174,18 @@ CS: {- Lambda -} { % do
 Declarations : Declaration { % return () }
     | Declarations Declaration  { % return () }
 
-Decs : Dec         { % return () }
-    | Decs Dec     { % return () }
+Decs : Dec          { % return () }
+    | Decs Dec      { % return () }
 
 -- y la declaracion de apuntadores?
-Dec : ListId ":" Type                   { % 
-                                            do 
+Dec : Type ":" ListId                      { % do 
                                             (z, z') <- get 
-                                            put (foldl (doInsert (makeBtype $3)) z  $1, z')}
-    | ListId ":" array of Type Dimen    { % do
+                                            tell (snd (foldl (doInsert (makeBtype $1)) (z,[])  $3) )
+                                            put (fst (foldl (doInsert (makeBtype $1)) (z,[])  $3), z')}
+    | array of Type Dimen ":" ListId       { % do
                                             (z , z') <- get
-                                            put (foldl (doInsert (makeObj $3 (makeBtype $5))) z $1, z') } -- igual al anterior pero el type es array
+                                            tell (snd (foldl (doInsert (makeObj $1 (makeBtype $3))) (z,[]) $6))
+                                            put (fst(foldl (doInsert (makeObj $1 (makeBtype $3))) (z,[]) $6), z') } -- igual al anterior pero el type es array
 
 -- abrir un scope e insertar los parametros
 Param: {- lambda -}     { % return () } 
@@ -203,13 +212,16 @@ Exps : Exp          { % return () }
 Values : true               { $1 }
     | false                 { $1 }
     | null                  { $1 }
-    | id                    { $1 }
     | int                   { $1 }
     | float                 { $1 }
     | char                  { $1 }
 
 
 Exp : Values                { % return () }
+    | id                    { % do
+                                    (z, z') <- get
+                                    put (fst (findId $1 z),z') 
+                                    tell (snd (findId $1 z)) }
     | Exp "+" Exp           { % return () }
     | Exp "-" Exp           { % return () }
     | Exp "/" Exp           { % return () }
@@ -234,16 +246,26 @@ Exp : Values                { % return () }
     | "[" Exps "]"          { % return () }
     | string                { % do 
                                 (z, z') <- get
-                                put (z, doInsertStr StringT z' $1) }
+                                put (z, doInsertStr StringT z' $1)
+                                }
 
-Assign : id "=" Exp  ";"        { % return () }
-        | id "=" InstA          { % return () }
+Assign : id "=" Exp  ";"        { % do 
+                                    (z, z') <- get
+                                    put (fst (findId $1 z),z') 
+                                    tell (snd (findId $1 z)) }
+        | id "=" InstA          {% do 
+                                    (z, z') <- get
+                                    put (fst (findId $1 z),z') 
+                                    tell (snd (findId $1 z)) }
         | Accesor "=" Exp ";"   { % return () }
 
 ListId : id                 { [$1] }
         | ListId "," id     {  $3 : $1 }
 
-Accesor : id Accs { % return () }
+Accesor : id Accs { % do 
+                        (z, z') <- get
+                        put (fst (findId $1 z),z') 
+                        tell (snd (findId $1 z))}
 
 Accs: Acc       { % return () }
     | Accs Acc  { % return () }
@@ -251,7 +273,10 @@ Accs: Acc       { % return () }
 Acc : "." id        { % return () }
     | "[" Exp "]"   { % return () }
 
-FuncCall : id "(" Fields ")" { % return () }
+FuncCall : id "(" Fields ")" { % do 
+                                    (z, z') <- get
+                                    put (fst (findId $1 z),z') 
+                                    tell (snd (findId $1 z))}
 
 Fields : {- lambda -}       { % return () }
         | Exp               { % return () }
@@ -266,7 +291,10 @@ Insts : Inst            { % return () }
 
 -- poner Dec, Write, Return, free en Inst
 -- y poner el ";" en Inst
-InstA :  new ListId ";" { % return () }
+InstA : new ListId ";"  { % do 
+                                (z, z') <- get 
+                                put (fst (foldl (doInsert PointerT) (z,[]) $2), z')
+                                tell (snd (foldl (doInsert PointerT) (z,[]) $2)) }
     | read Exp ";"      { % return () }
     | FuncCall ";"      { % return () }
 
@@ -295,8 +323,9 @@ If : if "(" Exp ")" then Block                      { % return () }
 For : for OS "(" Range ")" do Block CS  { % return () }
 
 Range : id from Exp to Exp with Exp  { % do 
-                                        (z, z') <- get
-                                        put (doInsert IteratorT z $1, z') }
+                                            (z, z') <- get
+                                            put (fst $ doInsert IteratorT (z,[]) $1, z')
+                                            tell (snd (doInsert IteratorT (z,[]) $1)) }
 
 While : while "(" Exp ")" do Block  { % return () }
 
@@ -314,12 +343,15 @@ parseError l = case l of
 
 -- en lugar de lexeme token, DS.seq (Lexeme Token) y hacer
 -- fold que inserte en el zipper.
-doInsert:: Type -> Zipper -> Lexeme Token -> Zipper
-doInsert t z l@(Lexeme (TokenIdent s) p) = 
+doInsert:: Type -> (Zipper,[Binnacle]) -> Lexeme Token -> (Zipper, [Binnacle])
+doInsert VoidT (z,_) l@(Lexeme (TokenIdent s) p) = 
+     (z, [Left $ ("Variable " ++ show s ++ " in " ++ show p ++
+                                    " can't be declare as void")])
+doInsert t (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
-        Nothing -> insertS s (Entry t p) z
-        Just (Entry typ pos) -> error ("Variable " ++ show s ++ " in " ++ show p ++
-                                      " already declare in " ++ show pos) 
+        Nothing -> (insertS s (Entry t p) z, [Right $ ""])
+        Just (Entry typ pos) -> (z, [Left $ ("Variable " ++ show s ++ " in " ++ show p ++
+                                      " already declare in " ++ show pos)])
 
 doInsertStr:: Type -> Zipper -> Lexeme Token -> Zipper
 doInsertStr t z l@(Lexeme (TokenString s) p) = 
@@ -327,8 +359,9 @@ doInsertStr t z l@(Lexeme (TokenString s) p) =
         Nothing -> insertS s (Entry t p) z
         _ -> z
  
--- nota -------> FOLDL <---------- 
-newEntry :: Lexeme Token -> Type -> Entry
-newEntry l t = Entry t (pos l)
+findId :: Lexeme Token -> Zipper -> (Zipper, [Binnacle])
+findId l@(Lexeme (TokenIdent s) p) z =  case lookupS s z of
+                Nothing -> (z, [Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " is not defined")])
+                Just v  -> (z, [Right $ ""])
 
 }
