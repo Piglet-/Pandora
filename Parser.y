@@ -292,9 +292,11 @@ Write : write Exp ";"       { % return () }
 If : if "(" Exp ")" then Block                      { % return () }
     | if "(" Exp ")" then Block else Insts end      { % return () }
 
-For : for "(" id Range ")" do Block  { % return () }
+For : for OS "(" Range ")" do Block CS  { % return () }
 
-Range : from Exp to Exp with Exp  { % return () }
+Range : id from Exp to Exp with Exp  { % do 
+                                        (z, z') <- get
+                                        put (doInsert IteratorT z $1, z') }
 
 While : while "(" Exp ")" do Block  { % return () }
 
@@ -316,7 +318,7 @@ doInsert:: Type -> Zipper -> Lexeme Token -> Zipper
 doInsert t z l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
         Nothing -> insertS s (Entry t p) z
-        Just (Entry typ pos) -> error ("Variable" ++ s ++ " in " ++ show p ++
+        Just (Entry typ pos) -> error ("Variable " ++ show s ++ " in " ++ show p ++
                                       " already declare in " ++ show pos) 
 
 doInsertStr:: Type -> Zipper -> Lexeme Token -> Zipper

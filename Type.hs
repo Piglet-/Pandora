@@ -17,6 +17,7 @@ data Type = IntT
 		| StructT
 		| UnionT
 		| StringT
+		| IteratorT
 		| FuncT Type	
 		| ProcT Type	
 		| ArrayT Type
@@ -34,6 +35,7 @@ instance Show Type where
 		 	StructT 		-> "Struct"
 		 	UnionT 			-> "Union"
 		 	StringT 		-> "String"
+		 	IteratorT 		-> "Iterator"
 		 	FuncT t			-> "Function "  ++ show t
 		 	ProcT t 	 	-> "Procedure " ++ show t 
 		 	ArrayT t 		-> "Array "  	++ show t
