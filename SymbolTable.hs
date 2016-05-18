@@ -14,6 +14,8 @@ module SymbolTable
     , Entry(..)
     , Scope(..)
     , emptyScope
+    , openScope
+    , closeScope
     ) where
 
 import Position
@@ -25,8 +27,10 @@ import Type
 
 -- una entrada (o valor en un hash) es el tipo (en string)
 -- y la posición de una variable dentro de la tabla de símbolos
-data Entry = Entry Type Position deriving (Show)
+data Entry = Entry Type Position
 
+instance Show Entry where
+    show (Entry t p) = show t ++ " " ++ show p
 -- un scope es un entero que representa el nivel de anidamiento,
 -- y una tupla con la posicion inicial y final del scope
 data Scope = Scope Int (Position, Position) deriving(Show)
@@ -45,7 +49,7 @@ showTable :: SymbolTable -> String
 showTable (SymbolTable (Scope t s) maps childrens) = 
     (tabs t) ++ "Level: " ++ show t ++ "\n" ++
     (tabs t) ++ "Scope:\n" ++
-    (showAux (DMap.keys maps) (reverse $ DMap.elems maps) t) ++ concat (toList (fmap showTable (DS.reverse childrens))) 
+    (showAux (DMap.keys maps) (DMap.elems maps) t) ++ concat (toList (fmap showTable (DS.reverse childrens))) 
         where tabs t = concat $ replicate t "\t"
 
 -- muestra los elementos internos de la tabla
@@ -55,7 +59,7 @@ showHash m t = showListC (DMap.keys m) t
 showAux :: [String] -> [Entry] -> Int -> String
 showAux [] _  _ = ""
 showAux (c:cs) (v:vs) t = s
-        where s = ((concat $ replicate t "\t") ++ show c ++ " p: " ++ show v ++ "\n") ++ (showAux cs vs t)
+        where s = ((concat $ replicate t "\t") ++ "variable: " ++ show c ++ " type: " ++ show v ++ "\n") ++ (showAux cs vs t)
 
 showListC :: [String] -> Int -> String
 showListC [] _ = ""

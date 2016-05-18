@@ -26,6 +26,7 @@ main = do
                                 then mapM_ fPrint (filter isTokenError lexs)
                                 else do let (state, bita) = execRWS (parse lexs) "" (emptyZipper, emptyZipper)
                                         print $ defocus $ fst state
+                                        print $ defocus $ snd state
                                     --print $ drop 2 (show (parse lexs) ++ "Accepted") 
                     _    -> print help
         Left error -> print error

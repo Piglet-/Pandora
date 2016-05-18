@@ -12,7 +12,7 @@ newtype Position = Position (Int, Int)
 
 -- instancia show que muestra los detalles de la posición
 instance Show Position where
-  show (Position (l, c)) = "\nLocation: Line " ++ show l ++ " Column " ++ show c
+  show (Position (l, c)) = "Location: Line " ++ show l ++ " Column " ++ show c
 
 -- función que devuelve la línea de un token
 line :: Position -> Int

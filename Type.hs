@@ -17,10 +17,26 @@ data Type = IntT
 		| StructT
 		| UnionT
 		| StringT
-		| FuncT BasicT	
-		| ProcT BasicT	
-		| ArrayT BasicT
-		deriving(Show, Eq)	
+		| FuncT Type	
+		| ProcT Type	
+		| ArrayT Type
+		deriving(Eq)
+
+instance Show Type where
+	show t = 
+		case t of
+			IntT         	-> "Int"
+			FloatT 			-> "Float"
+		 	BoolT 			-> "Bool"
+		 	CharT			-> "Char"
+		 	PointerT		-> "Pointer"
+		 	VoidT 			-> "Void"
+		 	StructT 		-> "Struct"
+		 	UnionT 			-> "Union"
+		 	StringT 		-> "String"
+		 	FuncT t			-> "Function "  ++ show t
+		 	ProcT t 	 	-> "Procedure " ++ show t 
+		 	ArrayT t 		-> "Array "  	++ show t
 
 makeBtype :: Lexeme t -> Type
 makeBtype l = case (token l) of

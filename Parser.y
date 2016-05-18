@@ -138,12 +138,30 @@ Program : Declarations Main "EOF"  { % return () } -- abrir el primer scope
 
 Main : begin Insts end  { % return () } -- abrir scope del main
 
-Declaration: func id "(" Param ")" ":" Type Insts end   { % return () } -- meter el id con type func 
-            | proc id "(" Param ")" ":" Type Insts end  { % return () }
-            | struct id has Decs end                    { % return () }
-            | union id like Decs end                    { % return () }
+Declaration:  func id OS "(" Param ")" ":" Type OS Insts CS end CS  { % do
+                                                            (z, z') <- get
+                                                            put (doInsert ((makeObj $1) (makeBtype $8)) z $2, z')} -- meter el id con type func 
+            | proc id OS "(" Param ")" ":" Type OS Insts CS end CS { % do
+                                                            (z, z') <- get
+                                                            put (doInsert ((makeObj $1) (makeBtype $8)) z $2, z') }
+            | struct id has OS Decs end CS                   { % do 
+                                                            (z, z') <- get
+                                                            put (doInsert (makeBtype $1) z $2, z') }
+            | union id like OS Decs end CS                   { % do 
+                                                            (z, z') <- get
+                                                            put (doInsert (makeBtype $1) z $2, z') }
             | Dec                                       { % return () }
             | Assign                                    { % return () } -- ignorar de momento
+
+OS: {- Lambda -} { % do 
+                     (z, z') <- get 
+                     put (openScope z, z')
+                 }
+
+CS: {- Lambda -} { % do 
+                     (z, z') <- get 
+                     put (closeScope z, z')
+                 }
 
 Declarations : Declaration { % return () }
     | Declarations Declaration  { % return () }
@@ -152,11 +170,13 @@ Decs : Dec         { % return () }
     | Decs Dec     { % return () }
 
 -- y la declaracion de apuntadores?
-Dec : ListId ":" Type                   { % return () } 
-                                            --do 
-                                            --(z, z') <- get 
-                                            --put (fmap (doInsert (makeBtype $3) z) $1, z')}
-    --| ListId ":" array of Type Dimen    { % return () } -- igual al anterior pero el type es array
+Dec : ListId ":" Type                   { % 
+                                            do 
+                                            (z, z') <- get 
+                                            put (foldl (doInsert (makeBtype $3)) z  $1, z')}
+    | ListId ":" array of Type Dimen    { % do
+                                            (z , z') <- get
+                                            put (foldl (doInsert (makeObj $3 (makeBtype $5))) z $1, z') } -- igual al anterior pero el type es array
 
 -- abrir un scope e insertar los parametros
 Param: {- lambda -}     { % return () } 
@@ -187,7 +207,7 @@ Values : true               { $1 }
     | int                   { $1 }
     | float                 { $1 }
     | char                  { $1 }
-    | string                { $1 }
+
 
 Exp : Values                { % return () }
     | Exp "+" Exp           { % return () }
@@ -212,13 +232,16 @@ Exp : Values                { % return () }
     | CFunctions            { % return () }
     | "(" Exp ")"           { % return () }
     | "[" Exps "]"          { % return () }
+    | string                { % do 
+                                (z, z') <- get
+                                put (z, doInsertStr StringT z' $1) }
 
 Assign : id "=" Exp  ";"        { % return () }
         | id "=" InstA          { % return () }
         | Accesor "=" Exp ";"   { % return () }
 
-ListId : id                 { DS.singleton $1 }
-        | ListId "," id     { $1 DS.|> $3 }
+ListId : id                 { [$1] }
+        | ListId "," id     {  $3 : $1 }
 
 Accesor : id Accs { % return () }
 
@@ -275,9 +298,9 @@ Range : from Exp to Exp with Exp  { % return () }
 
 While : while "(" Exp ")" do Block  { % return () }
 
-Repeat : repeat Insts until Exp  { % return () }
+Repeat : repeat OS Insts until Exp CS  { % return () }
 
-Block : Insts end  { % return () } -- abrir y cerrar el scope
+Block : OS Insts end CS { % return () } -- abrir y cerrar el scope
 
 {
 
@@ -290,7 +313,17 @@ parseError l = case l of
 -- en lugar de lexeme token, DS.seq (Lexeme Token) y hacer
 -- fold que inserte en el zipper.
 doInsert:: Type -> Zipper -> Lexeme Token -> Zipper
-doInsert t z l = insertS (show $ token l) (newEntry l t) z
+doInsert t z l@(Lexeme (TokenIdent s) p) = 
+    case lookupS' s z of
+        Nothing -> insertS s (Entry t p) z
+        Just (Entry typ pos) -> error ("Variable" ++ s ++ " in " ++ show p ++
+                                      " already declare in " ++ show pos) 
+
+doInsertStr:: Type -> Zipper -> Lexeme Token -> Zipper
+doInsertStr t z l@(Lexeme (TokenString s) p) = 
+    case lookupS' s z of
+        Nothing -> insertS s (Entry t p) z
+        _ -> z
  
 -- nota -------> FOLDL <---------- 
 newEntry :: Lexeme Token -> Type -> Entry
