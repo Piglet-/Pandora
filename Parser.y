@@ -191,10 +191,38 @@ Dec : Type ":" ListId                      { % do
 Param: {- lambda -}     { % return () } 
         | Params        { % return () } -- abrir el nuevo scope, guardar
 
-Params: Dec                  	 { % return () }
-        | var Dec	          	 { % return () }
-        | Params "," var Dec     { % return () }
-        | Params "," Dec     	 { % return () }
+Params: Type ":" id     { % do
+                            (z , z') <- get
+                            tell (snd (doInsert (makeBtype $1) (z,[]) $3))
+                            put ((fst (doInsert (makeBtype $1) (z,[]) $3)), z') }
+        | array of Type Dimen ":" id    {% do
+                                            (z , z') <- get
+                                            tell (snd (doInsert (makeObj $1 (makeBtype $3)) (z,[]) $6))
+                                            put ((fst (doInsert (makeObj $1 (makeBtype $3)) (z,[]) $6)), z')}
+        | var Type ":" id   { % do
+                                (z , z') <- get
+                                tell (snd (doInsert (makeBtype $2) (z,[]) $4))
+                                put ((fst (doInsert (makeBtype $2) (z,[]) $4)), z')}
+        | var array of Type Dimen ":" id    { % do
+                                                (z , z') <- get
+                                                tell (snd (doInsert (makeObj $2 (makeBtype $4)) (z,[]) $7))
+                                                put (fst(doInsert (makeObj $2 (makeBtype $4)) (z,[]) $7), z')}
+        | Params "," var Type ":" id    {% do
+                                            (z , z') <- get
+                                            tell (snd (doInsert (makeBtype $4) (z,[]) $6))
+                                            put ((fst (doInsert (makeBtype $4) (z,[]) $6)), z') }
+        | Params "," var array of Type Dimen ":" id     {% do
+                                                            (z , z') <- get
+                                                            tell (snd (doInsert (makeObj $4 (makeBtype $6)) (z,[]) $9))
+                                                            put ((fst (doInsert (makeObj $4 (makeBtype $6)) (z,[]) $9)), z') }
+        | Params "," Type ":" id    { % do
+                                        (z , z') <- get
+                                        tell (snd (doInsert (makeBtype $3) (z,[]) $5))
+                                        put ((fst (doInsert (makeBtype $3) (z,[]) $5)), z') }
+        | Params "," array of Type Dimen ":" id     { % do
+                                                        (z , z') <- get
+                                                        tell (snd (doInsert (makeObj $3 (makeBtype $5)) (z,[]) $8))
+                                                        put ((fst (doInsert (makeObj $3 (makeBtype $5)) (z,[]) $8)), z') }
 
 Type : intT     { $1 } 
     | floatT    { $1 }
@@ -251,12 +279,12 @@ Exp : Values                { % return () }
 
 Assign : id "=" Exp  ";"        { % do 
                                     (z, z') <- get
-                                    put (fst (findId $1 z),z') 
-                                    tell (snd (findId $1 z)) }
+                                    put (fst (findIdA $1 z),z') 
+                                    tell (snd (findIdA $1 z)) }
         | id "=" InstA          {% do 
                                     (z, z') <- get
-                                    put (fst (findId $1 z),z') 
-                                    tell (snd (findId $1 z)) }
+                                    put (fst (findIdA $1 z),z') 
+                                    tell (snd (findIdA $1 z)) }
         | Accesor "=" Exp ";"   { % return () }
 
 ListId : id                 { [$1] }
@@ -322,10 +350,11 @@ If : if "(" Exp ")" then Block                      { % return () }
 
 For : for OS "(" Range ")" do Block CS  { % return () }
 
-Range : id from Exp to Exp with Exp  { % do 
-                                            (z, z') <- get
-                                            put (fst $ doInsert IteratorT (z,[]) $1, z')
-                                            tell (snd (doInsert IteratorT (z,[]) $1)) }
+Range : It from Exp to Exp with Exp  { % return () }
+It : id { % do 
+                (z, z') <- get
+                put (fst $ doInsert IteratorT (z,[]) $1, z')
+                tell (snd (doInsert IteratorT (z,[]) $1)) }
 
 While : while "(" Exp ")" do Block  { % return () }
 
@@ -346,12 +375,12 @@ parseError l = case l of
 doInsert:: Type -> (Zipper,[Binnacle]) -> Lexeme Token -> (Zipper, [Binnacle])
 doInsert VoidT (z,_) l@(Lexeme (TokenIdent s) p) = 
      (z, [Left $ ("Variable " ++ show s ++ " in " ++ show p ++
-                                    " can't be declare as void")])
+                                    " can't be declared as void")])
 doInsert t (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
         Nothing -> (insertS s (Entry t p) z, [Right $ ""])
         Just (Entry typ pos) -> (z, [Left $ ("Variable " ++ show s ++ " in " ++ show p ++
-                                      " already declare in " ++ show pos)])
+                                      " already declared in " ++ show pos)])
 
 doInsertStr:: Type -> Zipper -> Lexeme Token -> Zipper
 doInsertStr t z l@(Lexeme (TokenString s) p) = 
@@ -363,5 +392,12 @@ findId :: Lexeme Token -> Zipper -> (Zipper, [Binnacle])
 findId l@(Lexeme (TokenIdent s) p) z =  case lookupS s z of
                 Nothing -> (z, [Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " is not defined")])
                 Just v  -> (z, [Right $ ""])
+
+findIdA :: Lexeme Token -> Zipper -> (Zipper, [Binnacle])
+findIdA l@(Lexeme (TokenIdent s) p) z =  case lookupS s z of
+                Nothing -> (z, [Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " is not defined")])
+                Just ((Entry t p),scp)  -> if t == IteratorT 
+                                            then (z, [Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " can't be assigned")])
+                                            else (z, [Right $ ""])
 
 }

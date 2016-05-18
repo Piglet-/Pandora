@@ -3,6 +3,7 @@ import Parser
 import System.Environment (getArgs)
 import SymbolTable
 import Type
+import Data.Either (lefts)
 import Control.Monad.RWS
 
 main = do
@@ -18,7 +19,7 @@ main = do
                         else do let (state, bita) = execRWS (parse lexs) "" (emptyZipper, emptyZipper)
                                 print $ defocus $ fst state
                                 print $ defocus $ snd state
-                                print $ filterBit bita
+                                putStr (filterBit bita)
                             --print $ drop 2 (show (parse lexs) ++ "Accepted") 
                 else case head (tail args) of
                     "-l" -> if any isTokenError lexs 
@@ -40,11 +41,8 @@ help = "Los flags permitidos por ahora son -l (lexer) y -p (parser)"
 emptyZipper :: Zipper
 emptyZipper = focus $ emptyST emptyScope
 
-filterBit :: [Binnacle] -> [Binnacle]
-filterBit []        = []
-filterBit (b:bs)    =  if b == (Right "") 
-                            then filterBit bs
-                            else b:(filterBit bs)
+filterBit :: [Binnacle] -> String
+filterBit bs = unlines (lefts bs)
 --    case scanner str of
         --Right lexs -> mapM_ fPrint lexs
 --        Right lexs -> print (parse lexs)   

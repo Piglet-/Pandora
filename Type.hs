@@ -60,3 +60,4 @@ makeObj l bt = case (token l) of
 	TokenFunc		-> FuncT bt
 
 type Binnacle = Either String String
+
