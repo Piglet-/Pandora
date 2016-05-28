@@ -4,6 +4,8 @@ import System.Environment (getArgs)
 import SymbolTable
 import Type
 import Data.Either (lefts)
+import qualified Data.Sequence as DS
+import qualified Data.Foldable as FB
 import Control.Monad.RWS
 
 main = do
@@ -43,8 +45,8 @@ help = "Los flags permitidos por ahora son -l (lexer) y -p (parser)"
 emptyZipper :: Zipper
 emptyZipper = focus $ emptyST emptyScope
 
-filterBit :: [Binnacle] -> String
-filterBit bs = unlines (lefts bs)
+filterBit :: DS.Seq(Binnacle) -> String
+filterBit bs = unlines (lefts (FB.toList bs))
 --    case scanner str of
         --Right lexs -> mapM_ fPrint lexs
 --        Right lexs -> print (parse lexs)   
