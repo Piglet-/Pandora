@@ -18,8 +18,8 @@ data Type = IntT
 		| CharT	
 		| PointerT Type
 		| VoidT
-		| StructT [(Lexeme Token, Type)]
-		| UnionT [(Lexeme Token, Type)]
+		| StructT [(String, Type)]
+		| UnionT [(String, Type)]
 		| StringT
 		| IteratorT
 		| FuncT Type [Type]	
@@ -31,20 +31,20 @@ data Type = IntT
 instance Show Type where
 	show t = 
 		case t of
-			IntT         	-> "Int"
-			FloatT 			-> "Float"
-		 	BoolT 			-> "Bool"
-		 	CharT			-> "Char"
-		 	PointerT t		-> "Pointer" ++ show t
-		 	VoidT 			-> "Void"
-		 	StructT l		-> "Struct" ++ show l
-		 	UnionT 	l		-> "Union" 	++ show l
-		 	StringT 		-> "String"
-		 	IteratorT 		-> "Iterator"
+			IntT         	-> "Int "
+			FloatT 			-> "Float "
+		 	BoolT 			-> "Bool "
+		 	CharT			-> "Char "
+		 	PointerT t		-> "Pointer to " ++ show t
+		 	VoidT 			-> "Void "
+		 	StructT l		-> "Struct " ++ show l
+		 	UnionT 	l		-> "Union " ++ show l
+		 	StringT 		-> "String "
+		 	IteratorT 		-> "Iterator "
 		 	FuncT t	l		-> "Function "  ++ show t ++ show l
 		 	ProcT t l	 	-> "Procedure " ++ show t ++ show l
-		 	ArrayT t 		-> "Array "  	++ show t 
-		 	TypeT s 		-> "TypeT" ++ s
+		 	ArrayT t 		-> "Array of " ++ show t 
+		 	TypeT s 		-> "TypeT " ++ s
 
 makeBtype :: Lexeme t -> Type
 makeBtype l = case (token l) of
@@ -58,8 +58,12 @@ makeBtype l = case (token l) of
 
 makeStruct :: Lexeme t -> [(Lexeme Token, Type)] -> Type
 makeStruct lex list = case (token lex) of
-	TokenStruct -> StructT list
-	TokenUnion	-> UnionT list
+	TokenStruct -> StructT (aux list)
+	TokenUnion	-> UnionT (aux list)
+
+aux :: [(Lexeme Token, Type)] -> [(String, Type)]
+aux [] = []
+aux (((Lexeme (TokenIdent s) _),t):ls) =  (s,t):(aux ls)
 
 
 makeObj :: Lexeme t -> Type -> [Type]-> Type
