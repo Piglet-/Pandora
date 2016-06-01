@@ -156,18 +156,13 @@ StructObjs : StructOb                   { $1 }
 StructOb : Type ":" ListId { [(x,y) | x <- $3,  y <- [(makeBtype $1)]] }
             | array of Type Dimen ":" ListId { [(x,y) | x <- $6,  y <- [(makeArray $4 (makeBtype $3))] ] }
 
-FuncDec : TypeFunc OS "(" Param ")"  {% return () }
+FuncDec : TypeFunc OS "(" Param ")"  {% do
+                                        (z, z') <- get
+                                        tell( snd (doInsert (makeObj (fst (snd $1)) (snd (snd $1)) $4) (z,DS.empty) (fst $1)))
+                                        put(fst (doInsert (makeObj (fst (snd $1)) (snd (snd $1)) $4) (z,DS.empty) (fst $1)), z') }
         
-TypeFunc :  Type ":" func id {% do 
-                                                    (z, z') <- get
-                                                    tell( snd (doInsert ((makeObj $3) (makeBtype $1)) (z,DS.empty) $4))
-                                                    put(fst (doInsert ((makeObj $3) (makeBtype $1)) (z,DS.empty) $4), z') 
-                                                    return ($4, (makeBtype $1))} -- NUEVO
-        | Type ":" proc id {% do 
-                                                    (z, z') <- get
-                                                    tell (snd (doInsert ((makeObj $3) (makeBtype $1)) (z,DS.empty) $4))
-                                                    put(fst(doInsert ((makeObj $3) (makeBtype $1)) (z,DS.empty) $4), z') 
-                                                    return ($4, (makeBtype $1))} -- NUEVO
+TypeFunc :  Type ":" func id    {% do return ($4, ($3, (makeBtype $1)))} 
+        | Type ":" proc id {% do return ($4, ($3, (makeBtype $1)))} 
 
 OS: {- Lambda -} { % do 
                      (z, z') <- get 

@@ -22,8 +22,8 @@ data Type = IntT
 		| UnionT [(Lexeme Token, Type)]
 		| StringT
 		| IteratorT
-		| FuncT Type	
-		| ProcT Type	
+		| FuncT Type [Type]	
+		| ProcT Type [Type]	
 		| ArrayT Type 
 		deriving(Eq)
 
@@ -40,8 +40,8 @@ instance Show Type where
 		 	UnionT 	l		-> "Union" 	++ show l
 		 	StringT 		-> "String"
 		 	IteratorT 		-> "Iterator"
-		 	FuncT t			-> "Function "  ++ show t
-		 	ProcT t 	 	-> "Procedure " ++ show t 
+		 	FuncT t	l		-> "Function "  ++ show t ++ show l
+		 	ProcT t l	 	-> "Procedure " ++ show t ++ show l
 		 	ArrayT t 		-> "Array "  	++ show t 
 
 makeBtype :: Lexeme t -> Type
@@ -59,10 +59,10 @@ makeStruct lex list = case (token lex) of
 	TokenUnion	-> UnionT list
 
 
-makeObj :: Lexeme t -> Type -> Type
-makeObj l bt = case (token l) of
-	TokenProc		-> ProcT bt
-	TokenFunc		-> FuncT bt
+makeObj :: Lexeme t -> Type -> [Type]-> Type
+makeObj l bt lt = case (token l) of
+	TokenProc		-> ProcT bt lt
+	TokenFunc		-> FuncT bt lt
 
 makePointer :: Int -> Type -> Type 
 makePointer 0 ty = ty
