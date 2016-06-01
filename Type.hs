@@ -25,6 +25,7 @@ data Type = IntT
 		| FuncT Type [Type]	
 		| ProcT Type [Type]	
 		| ArrayT Type 
+		| TypeT String 
 		deriving(Eq)
 
 instance Show Type where
@@ -43,6 +44,7 @@ instance Show Type where
 		 	FuncT t	l		-> "Function "  ++ show t ++ show l
 		 	ProcT t l	 	-> "Procedure " ++ show t ++ show l
 		 	ArrayT t 		-> "Array "  	++ show t 
+		 	TypeT s 		-> "TypeT" ++ s
 
 makeBtype :: Lexeme t -> Type
 makeBtype l = case (token l) of
@@ -52,6 +54,7 @@ makeBtype l = case (token l) of
 	TokenCharT 		-> CharT
 	TokenStringT 	-> StringT
 	TokenVoid 		-> VoidT
+	TokenIdent s    -> TypeT s
 
 makeStruct :: Lexeme t -> [(Lexeme Token, Type)] -> Type
 makeStruct lex list = case (token lex) of

@@ -138,7 +138,10 @@ Program : Declarations Main "EOF"  { % return () } -- abrir el primer scope
 
 Main : begin Insts end  { % return () } -- abrir scope del main
 
-Declaration:  FuncDec OS Insts CS end CS        {% return () }
+Declaration:  FuncDec OS Insts CS end CS        {% do 
+                                                   (z, z') <- get
+                                                   tell (snd (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) (fst(snd $1))) (z,DS.empty) (snd (snd $1))))
+                                                   put (fst (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) (fst(snd $1))) (z,DS.empty) (snd (snd $1))),z') }
             | struct id has OS StructObjs end CS    { % do 
                                                         (z, z') <- get
                                                         tell (snd (doInsert (makeStruct $1 $5) (z,DS.empty) $2))
@@ -156,13 +159,18 @@ StructObjs : StructOb                   { $1 }
 StructOb : Type ":" ListId { [(x,y) | x <- $3,  y <- [(makeBtype $1)]] }
             | array of Type Dimen ":" ListId { [(x,y) | x <- $6,  y <- [(makeArray $4 (makeBtype $3))] ] }
 
-FuncDec : TypeFunc OS "(" Param ")"  {% do
-                                        (z, z') <- get
-                                        tell( snd (doInsert (makeObj (fst (snd $1)) (snd (snd $1)) $4) (z,DS.empty) (fst $1)))
-                                        put(fst (doInsert (makeObj (fst (snd $1)) (snd (snd $1)) $4) (z,DS.empty) (fst $1)), z') }
+FuncDec : TypeFunc OS "(" Param ")"  {% do return (fst $1,($4,snd $1)) }
         
-TypeFunc :  Type ":" func id    {% do return ($4, ($3, (makeBtype $1)))} 
-        | Type ":" proc id {% do return ($4, ($3, (makeBtype $1)))} 
+TypeFunc :  Type ":" func id    {% do 
+                                   (z, z') <- get
+                                   tell( snd (doInsert (makeObj $3 (makeBtype $1) []) (z,DS.empty) $4))
+                                   put(fst (doInsert (makeObj $3 (makeBtype $1) []) (z,DS.empty) $4), z')
+                                   return (($3,makeBtype $1),$4) } 
+        | Type ":" proc id {% do 
+                              (z, z') <- get
+                              tell( snd (doInsert (makeObj $3 (makeBtype $1) []) (z,DS.empty) $4))
+                              put(fst (doInsert (makeObj $3 (makeBtype $1) []) (z,DS.empty) $4), z')
+                              return (($3,makeBtype $1),$4)} 
 
 OS: {- Lambda -} { % do 
                      (z, z') <- get 
@@ -251,6 +259,7 @@ Type : intT     { $1 }
     | charT     { $1 }
     | boolT     { $1 }
     | voidT     { $1 }
+    | id        { $1 }
 
 Dimen : "[" Exp "]"             { % return 1 }
         | Dimen "[" Exp "]"     { % return ($1 + 1) } -- CAMBIAR INSERT DE ARREGLOS
@@ -392,11 +401,36 @@ doInsert:: Type -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq(
 doInsert VoidT (z,_) l@(Lexeme (TokenIdent s) p) = 
      (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
                                     " can't be declared as void")))
+
+doInsert (TypeT t) (z,_) l@(Lexeme (TokenIdent s) p) =
+    case lookupS t z of
+        Nothing -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " in " ++ show p ++
+                                      " not declared")))
+        Just ((Entry st pos),_) -> 
+            case st of
+                StructT _ ->  
+                    case lookupS' s z of
+                        Nothing -> (insertS s (Entry (TypeT t) p) z, DS.singleton(Right $ ""))
+                        Just (Entry typ pos) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
+                                      " already declared in " ++ show pos)))
+                UnionT _ -> case lookupS' s z of
+                        Nothing -> (insertS s (Entry (TypeT t) p) z, DS.singleton(Right $ ""))
+                        Just (Entry typ pos) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
+                                      " already declared in " ++ show pos)))
+                _ -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " in " ++ show p ++
+                                      " not declared")))
+
+
 doInsert t (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
         Nothing -> (insertS s (Entry t p) z, DS.singleton(Right $ ""))
         Just (Entry typ pos) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
                                       " already declared in " ++ show pos)))
+
+doInsertFun :: Type -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq(Binnacle))
+doInsertFun t (z,_) l@(Lexeme (TokenIdent s) p) = 
+    (insertS s (Entry t p) z, DS.singleton(Right $ ""))
+
 
 doInsertStr:: Type -> Zipper -> Lexeme Token -> Zipper
 doInsertStr t z l@(Lexeme (TokenString s) p) = 
