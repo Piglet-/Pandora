@@ -139,27 +139,35 @@ Program : Declarations Main "EOF"  { % return () } -- abrir el primer scope
 Main : begin Insts end  { % return () } -- abrir scope del main
 
 Declaration:  FuncDec OS Insts CS end CS        {% return () }
-            | struct id has OS Decs end CS                   { % do 
-                                                            (z, z') <- get
-                                                            tell (snd (doInsert (makeBtype $1) (z,DS.empty) $2))
-                                                            put (fst (doInsert (makeBtype $1) (z,DS.empty) $2), z') }
-            | union id like OS Decs end CS                   { % do 
-                                                            (z, z') <- get
-                                                            tell (snd (doInsert (makeBtype $1) (z,DS.empty) $2))
-                                                            put (fst(doInsert (makeBtype $1) (z,DS.empty) $2), z') }
+            | struct id has OS StructObjs end CS    { % do 
+                                                        (z, z') <- get
+                                                        tell (snd (doInsert (makeStruct $1 $5) (z,DS.empty) $2))
+                                                        put (fst (doInsert (makeStruct $1 $5) (z,DS.empty) $2), z') }
+            | union id like OS StructObjs end CS    { % do 
+                                                        (z, z') <- get
+                                                        tell (snd (doInsert (makeStruct $1 $5) (z,DS.empty) $2))
+                                                        put (fst(doInsert (makeStruct $1 $5) (z,DS.empty) $2), z') }
             | Dec                                       { % return () }
             | Assign                                    { % return () } -- ignorar de momento
+
+StructObjs : StructOb                   { $1 }
+            | StructObjs ";" StructOb   { $1 ++ $3 }
+
+StructOb : Type ":" ListId { [(x,y) | x <- $3,  y <- [(makeBtype $1)]] }
+            | array of Type Dimen ":" ListId { [(x,y) | x <- $6,  y <- [(makeArray $4 (makeBtype $3))] ] }
 
 FuncDec : TypeFunc OS "(" Param ")"  {% return () }
         
 TypeFunc :  Type ":" func id {% do 
                                                     (z, z') <- get
                                                     tell( snd (doInsert ((makeObj $3) (makeBtype $1)) (z,DS.empty) $4))
-                                                    put(fst (doInsert ((makeObj $3) (makeBtype $1)) (z,DS.empty) $4), z') }
+                                                    put(fst (doInsert ((makeObj $3) (makeBtype $1)) (z,DS.empty) $4), z') 
+                                                    return ($4, (makeBtype $1))} -- NUEVO
         | Type ":" proc id {% do 
                                                     (z, z') <- get
                                                     tell (snd (doInsert ((makeObj $3) (makeBtype $1)) (z,DS.empty) $4))
-                                                    put(fst(doInsert ((makeObj $3) (makeBtype $1)) (z,DS.empty) $4), z') }
+                                                    put(fst(doInsert ((makeObj $3) (makeBtype $1)) (z,DS.empty) $4), z') 
+                                                    return ($4, (makeBtype $1))} -- NUEVO
 
 OS: {- Lambda -} { % do 
                      (z, z') <- get 
@@ -180,49 +188,67 @@ Decs : Dec          { % return () }
 -- y la declaracion de apuntadores?
 Dec : Type ":" ListId                      { % do 
                                             (z, z') <- get 
-                                            tell (snd (foldl (doInsert (makeBtype $1)) (z,DS.empty)  $3) )
+                                            tell (snd (foldl (doInsert (makeBtype $1)) (z,DS.empty)  $3))
                                             put (fst (foldl (doInsert (makeBtype $1)) (z,DS.empty)  $3), z')}
     | array of Type Dimen ":" ListId       { % do
                                             (z , z') <- get
-                                            tell (snd (foldl (doInsert (makeObj $1 (makeBtype $3))) (z,DS.empty) $6))
-                                            put (fst(foldl (doInsert (makeObj $1 (makeBtype $3))) (z,DS.empty) $6), z') } -- igual al anterior pero el type es array
+                                            tell (snd (foldl (doInsert (makeArray $4 (makeBtype $3))) (z,DS.empty) $6))
+                                            put (fst(foldl (doInsert (makeArray $4 (makeBtype $3))) (z,DS.empty) $6), z') } 
+    -- no hace falta foldl
+    | Type Astk id  { % do 
+                        (z, z') <- get 
+                        tell (snd (doInsert (makePointer $2 (makeBtype $1)) (z,DS.empty) $3))
+                        put (fst (doInsert (makePointer $2 (makeBtype $1)) (z,DS.empty) $3), z') 
+                        }
+
+Astk : "*"     {% return 1}
+    | Astk "*" {% return ($1 + 1)}
+
 
 -- abrir un scope e insertar los parametros
-Param: {- lambda -}     { % return () } 
-        | Params        { % return () } -- abrir el nuevo scope, guardar
+Param: {- lambda -}     { % return [] } 
+        | Params        { % return $1 } -- NUEVO
 
 Params: Type ":" id     { % do
                             (z , z') <- get
                             tell (snd (doInsert (makeBtype $1) (z,DS.empty) $3))
-                            put ((fst (doInsert (makeBtype $1) (z,DS.empty) $3)), z') }
+                            put ((fst (doInsert (makeBtype $1) (z,DS.empty) $3)), z')
+                            return [(makeBtype $1)]} --NUEVO
         | array of Type Dimen ":" id    {% do
                                             (z , z') <- get
-                                            tell (snd (doInsert (makeObj $1 (makeBtype $3)) (z,DS.empty) $6))
-                                            put ((fst (doInsert (makeObj $1 (makeBtype $3)) (z,DS.empty) $6)), z')}
+                                            tell (snd (doInsert (makeArray $4 (makeBtype $3)) (z,DS.empty) $6))
+                                            put ((fst (doInsert (makeArray $4 (makeBtype $3)) (z,DS.empty) $6)), z')
+                                            return [(makeBtype $3)]} -- NUEVO
         | var Type ":" id   { % do
                                 (z , z') <- get
                                 tell (snd (doInsert (makeBtype $2) (z,DS.empty) $4))
-                                put ((fst (doInsert (makeBtype $2) (z,DS.empty) $4)), z')}
+                                put ((fst (doInsert (makeBtype $2) (z,DS.empty) $4)), z')
+                                return [(makeBtype $2)]} --NUEVO
         | var array of Type Dimen ":" id    { % do
                                                 (z , z') <- get
-                                                tell (snd (doInsert (makeObj $2 (makeBtype $4)) (z,DS.empty) $7))
-                                                put (fst(doInsert (makeObj $2 (makeBtype $4)) (z,DS.empty) $7), z')}
+                                                tell (snd (doInsert (makeArray $5 (makeBtype $4)) (z,DS.empty) $7))
+                                                put ((fst (doInsert (makeArray $5 (makeBtype $4)) (z,DS.empty) $7)), z')
+                                                return [(makeBtype $4)]} --NUEVO
         | Params "," var Type ":" id    {% do
                                             (z , z') <- get
                                             tell (snd (doInsert (makeBtype $4) (z,DS.empty) $6))
-                                            put ((fst (doInsert (makeBtype $4) (z,DS.empty) $6)), z') }
+                                            put ((fst (doInsert (makeBtype $4) (z,DS.empty) $6)), z') 
+                                            return ((makeBtype $4):$1)} --NUEVO
         | Params "," var array of Type Dimen ":" id     {% do
                                                             (z , z') <- get
-                                                            tell (snd (doInsert (makeObj $4 (makeBtype $6)) (z,DS.empty) $9))
-                                                            put ((fst (doInsert (makeObj $4 (makeBtype $6)) (z,DS.empty) $9)), z') }
+                                                            tell (snd (doInsert (makeArray $7 (makeBtype $6)) (z,DS.empty) $9))
+                                                            put ((fst (doInsert (makeArray $7 (makeBtype $6)) (z,DS.empty) $9)), z') 
+                                                            return ((makeBtype $6):$1)} --NUEVO
         | Params "," Type ":" id    { % do
                                         (z , z') <- get
                                         tell (snd (doInsert (makeBtype $3) (z,DS.empty) $5))
-                                        put ((fst (doInsert (makeBtype $3) (z,DS.empty) $5)), z') }
+                                        put ((fst (doInsert (makeBtype $3) (z,DS.empty) $5)), z')
+                                        return ((makeBtype $3):$1)} --NUEVO
         | Params "," array of Type Dimen ":" id     { % do
                                                         (z , z') <- get
-                                                        tell (snd (doInsert (makeObj $3 (makeBtype $5)) (z,DS.empty) $8))
-                                                        put ((fst (doInsert (makeObj $3 (makeBtype $5)) (z,DS.empty) $8)), z') }
+                                                        tell (snd (doInsert (makeArray $6 (makeBtype $5)) (z,DS.empty) $8))
+                                                        put ((fst (doInsert (makeArray $6 (makeBtype $5)) (z,DS.empty) $8)), z')
+                                                        return ((makeBtype $5):$1) } --NUEVO
 
 Type : intT     { $1 } 
     | floatT    { $1 }
@@ -231,8 +257,8 @@ Type : intT     { $1 }
     | boolT     { $1 }
     | voidT     { $1 }
 
-Dimen : "[" Exp "]"             { % return () }
-        | Dimen "[" Exp "]"     { % return () }
+Dimen : "[" Exp "]"             { % return 1 }
+        | Dimen "[" Exp "]"     { % return ($1 + 1) } -- CAMBIAR INSERT DE ARREGLOS
 
 Exps : Exp          { % return () }
     | Exps "," Exp  { % return () }
@@ -243,7 +269,6 @@ Values : true               { $1 }
     | int                   { $1 }
     | float                 { $1 }
     | char                  { $1 }
-
 
 Exp : Values                { % return () }
     | id                    { % do
@@ -319,11 +344,7 @@ Insts : Inst            { % return () }
 
 -- poner Dec, Write, Return, free en Inst
 -- y poner el ";" en Inst
-InstA : new ListId ";"  { % do 
-                                (z, z') <- get 
-                                put (fst (foldl (doInsert PointerT) (z,DS.empty) $2), z')
-                                tell (snd (foldl (doInsert PointerT) (z,DS.empty) $2)) }
-    | read Exp ";"      { % return () }
+InstA : read Exp ";"      { % return () }
     | FuncCall ";"      { % return () }
 
 Inst : InstA            { % return () }
