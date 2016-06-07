@@ -26,6 +26,7 @@ data Type = IntT
 		| ProcT Type [Type]	
 		| ArrayT Type 
 		| TypeT String 
+		| TypeError
 		deriving(Eq)
 
 instance Show Type where
@@ -44,7 +45,8 @@ instance Show Type where
 		 	FuncT t	l		-> "Function "  ++ show t ++ show l
 		 	ProcT t l	 	-> "Procedure " ++ show t ++ show l
 		 	ArrayT t 		-> "Array "  	++ show t 
-		 	TypeT s 		-> "TypeT" ++ s
+		 	TypeT s 		-> "TypeT " ++ s
+		 	TypeError 		-> "TypeError"
 
 makeBtype :: Lexeme t -> Type
 makeBtype l = case (token l) of

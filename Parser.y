@@ -264,46 +264,93 @@ Type : intT     { $1 }
 Dimen : "[" Exp "]"             { % return 1 }
         | Dimen "[" Exp "]"     { % return ($1 + 1) } -- CAMBIAR INSERT DE ARREGLOS
 
-Exps : Exp          { % return () }
-    | Exps "," Exp  { % return () }
+Exps : Exp          { % return $1 }
+    | Exps "," Exp  { % return VoidT }
 
-Values : true               { $1 }
-    | false                 { $1 }
-    | null                  { $1 }
-    | int                   { $1 }
-    | float                 { $1 }
-    | char                  { $1 }
+Values : true               { BoolT }
+    | false                 { BoolT }
+    | null                  { VoidT }
+    | int                   { IntT }
+    | float                 { FloatT }
+    | char                  { CharT }
 
-Exp : Values                { % return () }
+Exp : Values                { % return $1 }
     | id                    { % do
                                     (z, z') <- get
                                     put (fst (findId $1 z),z') 
-                                    tell (snd (findId $1 z)) }
-    | Exp "+" Exp           { % return () }
-    | Exp "-" Exp           { % return () }
-    | Exp "/" Exp           { % return () }
-    | Exp "^" Exp           { % return () }
-    | Exp "*" Exp           { % return () }
-    | Exp div Exp           { % return () }
-    | Exp mod Exp           { % return () }
-    | Exp ">" Exp           { % return () }
-    | Exp ">=" Exp          { % return () }
-    | Exp "<" Exp           { % return () }
-    | Exp "<=" Exp          { % return () }
-    | Exp "==" Exp          { % return () }
-    | Exp "/=" Exp          { % return () }
-    | Exp and Exp           { % return () }
-    | Exp or Exp            { % return () }
-    | "-" Exp   %prec NEG   { % return () }
-    | not Exp   %prec NEG   { % return () }
-    | "->" Exp  %prec NEG   { % return () }
-    | Accesor               { % return () }
-    | CFunctions            { % return () }
-    | "(" Exp ")"           { % return () }
-    | "[" Exps "]"          { % return () }
+                                    tell (snd (findId $1 z)) 
+                                    return (typeToken $1 z) }
+    | Exp "+" Exp           { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp "-" Exp           { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp "/" Exp           { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp "^" Exp           { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp "*" Exp           { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp div Exp           { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp mod Exp           { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp ">" Exp           { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp ">=" Exp          { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp "<" Exp           { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp "<=" Exp          { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp "==" Exp          { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp "/=" Exp          { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp and Exp           { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | Exp or Exp            { % do 
+                                    (z, z') <- get 
+                                    tell (snd (binExp $1 $3))
+                                    return (fst (binExp $1 $3)) }
+    | "-" Exp   %prec NEG   { % return $2  }
+    | not Exp   %prec NEG   { % return $2 }
+    | "->" Exp  %prec NEG   { % return $2 }
+    | Accesor               { % return $1 }
+    | CFunctions            { % return $1 }
+    | "(" Exp ")"           { % return $2 }
+    | "[" Exps "]"          { % return $2 }
     | string                { % do 
                                 (z, z') <- get
                                 put (z, doInsertStr StringT z' $1)
+                                return StringT
                                 }
 
 Assign : id "=" Exp  ";"        { % do 
@@ -322,7 +369,8 @@ ListId : id                 { [$1] }
 Accesor : id Accs { % do 
                         (z, z') <- get
                         put (fst (findId $1 z),z') 
-                        tell (snd (findId $1 z))}
+                        tell (snd (findId $1 z))
+                        return (typeToken $1 z)}
 
 Accs: Acc       { % return () }
     | Accs Acc  { % return () }
@@ -339,9 +387,9 @@ Fields : {- lambda -}       { % return () }
         | Exp               { % return () }
         | Fields "," Exp    { % return () }
 
-CFunctions : inttostr "(" Exp ")"   { % return () }
-            | flotostr "(" Exp ")"  { % return () }
-            | inttoflo "(" Exp ")"  { % return () }
+CFunctions : inttostr "(" Exp ")"   { % return StringT }
+            | flotostr "(" Exp ")"  { % return StringT }
+            | inttoflo "(" Exp ")"  { % return FloatT }
 
 Insts : Inst            { % return () }
         | Insts Inst    { % return () }
@@ -449,5 +497,18 @@ findIdA l@(Lexeme (TokenIdent s) p) z =  case lookupS s z of
                 Just ((Entry t p),scp)  -> if t == IteratorT 
                                             then (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " can't be assigned")))
                                             else (z, DS.singleton (Right $ ""))
+
+
+typeToken :: Lexeme Token -> Zipper -> Type
+typeToken (Lexeme (TokenIdent s) _) z = case lookupS s z of
+                Nothing                -> TypeError
+                Just ((Entry t p),scp) -> t 
+
+binExp :: Type -> Type -> (Type, DS.Seq(Binnacle))
+binExp IntT   IntT   = (IntT , DS.singleton (Right $ ""))
+binExp FloatT FloatT = (FloatT , DS.singleton (Right $ ""))
+binExp IteratorT IntT = (IntT , DS.singleton (Right $ ""))
+binExp IntT IteratorT = (IntT , DS.singleton (Right $ ""))
+binExp _ _ = (TypeError , DS.singleton (Left $ "TypeError"))
 
 }
