@@ -1,7 +1,6 @@
 module Type
 	( 
 	Type (..)
-	,ClassType (..)
 	, Binnacle(..)
 	, makeBtype
 	, makeObj
@@ -12,26 +11,22 @@ module Type
 
 import Tokens
 import Lexeme
-
-data ClassType = Variable Type
-				| Field	  Type
-				| Ctype   Type -- nuevos tipos (structs, unions)
-
+import qualified Data.Map.Strict as DMap
 
 data Type = IntT
 		| FloatT 
 		| BoolT
 		| CharT	
-		| PointerT Type
+		| PointerT 	Type
 		| VoidT
-		| StructT [(String, Type)] 
-		| UnionT [(String, Type)]
+		| StructT 	(DMap.Map String Type) 
+		| UnionT 	(DMap.Map String Type)
 		| StringT
 		| IteratorT
-		| FuncT Type [Type]	
-		| ProcT Type [Type]	
-		| ArrayT Type 
-		| TypeT String 
+		| FuncT 	Type [Type]	
+		| ProcT 	Type [Type]	
+		| ArrayT 	Type 
+		| TypeT 	String 
 		| TypeError
 		deriving(Eq)
 
@@ -67,13 +62,15 @@ makeBtype l = case (token l) of
 
 makeStruct :: Lexeme t -> [(Lexeme Token, Type)] -> Type
 makeStruct lex list = case (token lex) of
-	TokenStruct -> StructT (aux list)
-	TokenUnion	-> UnionT (aux list)
+	TokenStruct -> StructT 	(toMap list)
+	TokenUnion	-> UnionT 	(toMap list)
 
 aux :: [(Lexeme Token, Type)] -> [(String, Type)]
 aux [] = []
 aux (((Lexeme (TokenIdent s) _),t):ls) =  (s,t):(aux ls)
 
+toMap :: [(Lexeme Token, Type)] -> DMap.Map String Type
+toMap l = DMap.fromList (aux l)
 
 makeObj :: Lexeme t -> Type -> [Type]-> Type
 makeObj l bt lt = case (token l) of
@@ -81,15 +78,14 @@ makeObj l bt lt = case (token l) of
 	TokenFunc		-> FuncT bt lt
 
 makePointer :: Int -> Type -> Type 
-makePointer 0 ty = ty
-makePointer n ty = PointerT t
-		where t = makePointer (n-1) ty
+makePointer 0 ty 	= ty
+makePointer n ty 	= PointerT t
+		where t 	= makePointer (n-1) ty
 
 makeArray :: Int -> Type -> Type
-makeArray 0 ty = ty
-makeArray n ty = ArrayT t
+makeArray 0 ty 	= ty
+makeArray n ty 	= ArrayT t
 		where t = makeArray (n-1) ty
 
 
 type Binnacle = Either String String
-

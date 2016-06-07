@@ -138,17 +138,17 @@ Program : Declarations Main "EOF"  { % return () }
 Main : begin Insts end  { % return () } 
 
 Declaration:  FuncDec OS Insts CS end CS        {% do 
-                                                   (z, z') <- get
-                                                   tell (snd (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) (fst(snd $1))) (z,DS.empty) (snd (snd $1))))
-                                                   put (fst (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) (fst(snd $1))) (z,DS.empty) (snd (snd $1))),z') }
+                                                    (z, z') <- get
+                                                    tell (snd (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) (fst(snd $1))) (z,DS.empty) (snd (snd $1))))
+                                                    put (fst (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) (fst(snd $1))) (z,DS.empty) (snd (snd $1))),z') }
             | struct id has OS StructObjs ";" end CS    { % do 
                                                         (z, z') <- get
                                                         tell (snd (doInsert (makeStruct $1 $5) (z,DS.empty) $2))
-                                                        put (fst (doInsert (makeStruct $1 $5) (z,DS.empty) $2), z') }
+                                                        put (fst (doInsert (makeStruct $1 $5) (z,DS.empty) $2), z')  }
             | union id like OS StructObjs ";" end CS    { % do 
                                                         (z, z') <- get
                                                         tell (snd (doInsert (makeStruct $1 $5) (z,DS.empty) $2))
-                                                        put (fst(doInsert (makeStruct $1 $5) (z,DS.empty) $2), z') }
+                                                        put (fst(doInsert (makeStruct $1 $5) (z,DS.empty) $2), z')  }
             | Dec                                       { % return () }
             | Assign                                    { % return () } 
 
@@ -188,15 +188,18 @@ Declarations : Declaration { % return () }
 Dec : Type ":" ListId                      { % do 
                                             (z, z') <- get 
                                             tell (snd (foldl (doInsert (makeBtype $1)) (z,DS.empty)  $3))
-                                            put (fst (foldl (doInsert (makeBtype $1)) (z,DS.empty)  $3), z')}
+                                            put (fst (foldl (doInsert (makeBtype $1)) (z,DS.empty)  $3), z')
+                                            return VoidT}
     | array of Type Dimen ":" ListId       { % do
                                             (z , z') <- get
                                             tell (snd (foldl (doInsert (makeArray $4 (makeBtype $3))) (z,DS.empty) $6))
-                                            put (fst(foldl (doInsert (makeArray $4 (makeBtype $3))) (z,DS.empty) $6), z') } 
+                                            put (fst(foldl (doInsert (makeArray $4 (makeBtype $3))) (z,DS.empty) $6), z')
+                                            return VoidT } 
     | Type Astk id  { % do 
                         (z, z') <- get 
                         tell (snd (doInsert (makePointer $2 (makeBtype $1)) (z,DS.empty) $3))
-                        put (fst (doInsert (makePointer $2 (makeBtype $1)) (z,DS.empty) $3), z') 
+                        put (fst (doInsert (makePointer $2 (makeBtype $1)) (z,DS.empty) $3), z')
+                        return VoidT 
                         }
 
 Astk : "*"     {% return 1}
@@ -257,9 +260,6 @@ Type : intT     { $1 }
 
 Dimen : "[" Exp "]"             { % return 1 }
         | Dimen "[" Exp "]"     { % return ($1 + 1) } 
-
-Exps : Exp          { % return $1 }
-    | Exps "," Exp  { % return VoidT }
 
 Values : true               { BoolT }
     | false                 { BoolT }
@@ -340,7 +340,7 @@ Exp : Values                { % return $1 }
     | Accesor               { % return $1 }
     | CFunctions            { % return $1 }
     | "(" Exp ")"           { % return $2 }
-    | "[" Exps "]"          { % return $2 }
+    | "[" Exp "]"           { % return $2 }
     | string                { % do 
                                 (z, z') <- get
                                 put (z, doInsertStr StringT z' $1)
@@ -349,13 +349,15 @@ Exp : Values                { % return $1 }
 
 Assign : id "=" Exp  ";"        { % do 
                                     (z, z') <- get
-                                    put (fst (findIdA $1 z),z') 
-                                    tell (snd (findIdA $1 z)) }
+                                    put (fst (findIdA $1 z),z') -- verificar tipo y devolver void
+                                    tell (snd (findIdA $1 z))
+                                    return VoidT }
         | id "=" InstA          {% do 
                                     (z, z') <- get
                                     put (fst (findIdA $1 z),z') 
-                                    tell (snd (findIdA $1 z)) }
-        | Accesor "=" Exp ";"   { % return () }
+                                    tell (snd (findIdA $1 z)) 
+                                    return VoidT }
+        | Accesor "=" Exp ";"   { % return VoidT }
 
 ListId : id                 { [$1] }
         | ListId "," id     {  $3 : $1 }
@@ -366,67 +368,89 @@ Accesor : id Accs { % do
                         tell (snd (findId $1 z))
                         return (typeToken $1 z)}
 
-Accs: Acc       { % return () }
-    | Accs Acc  { % return () }
+Accs: Acc       { % return VoidT }
+    | Accs Acc  { % return VoidT }
 
-Acc : "." id        { % return () }
-    | "[" Exp "]"   { % return () }
+Acc : "." id        { % return VoidT }
+    | "[" Exp "]"   { % return VoidT }
 
 FuncCall : id "(" Fields ")" { % do 
-                                    (z, z') <- get
-                                    put (fst (findId $1 z),z') 
-                                    tell (snd (findId $1 z))}
+                                    (z, z') <- get 
+                                    tell (snd (findFunc $1 $3 z))
+                                    return (fst (findFunc $1 $3 z)) }
 
-Fields : {- lambda -}       { % return () }
-        | Exp               { % return () }
-        | Fields "," Exp    { % return () }
+Fields : {- lambda -}       { % return [] }
+        | Exp               { % return ([$1]) }
+        | Fields "," Exp    { % return ($3:$1) }
 
-CFunctions : inttostr "(" Exp ")"   { % return StringT }
-            | flotostr "(" Exp ")"  { % return StringT }
-            | inttoflo "(" Exp ")"  { % return FloatT }
+CFunctions : inttostr "(" Exp ")"   { % return (ifInt $3 StringT ) } 
+            | flotostr "(" Exp ")"  { % return (ifFloat $3 StringT) } 
+            | inttoflo "(" Exp ")"  { % return (ifInt $3 FloatT) } 
 
-Insts : Inst            { % return () }
-        | Insts Inst    { % return () }
+Insts : Inst            { % return VoidT }
+        | Insts Inst    { % return VoidT }
 
 
-InstA : read Exp ";"      { % return () }
-    | FuncCall ";"      { % return () }
+InstA : read Exp ";"    { % return $2 } 
+    | FuncCall ";"      { % return $1 } 
 
-Inst : InstA            { % return () }
-    | Assign            { % return () } 
-    | Dec ";"           { % return () }
-    | Write             { % return () }
-    | Return            { % return () }
-    | free Exp ";"      { % return () }
-    | InstB             { % return () }
+Inst : InstA            { % return VoidT }
+    | Assign            { % return $1 } 
+    | Dec ";"           { % return $1 }
+    | Write             { % return $1 }
+    | Return            { % return $1 }
+    | free Exp ";"      { % do  
+                            tell (snd (freeInst $2 $1))
+                            return (fst (freeInst $2 $1)) } 
+    | InstB             { % return $1 }
 
-InstB: If               { % return () }
-    | While             { % return () }
-    | Repeat            { % return () }
-    | For               { % return () }
+InstB: If               { % return $1 }
+    | While             { % return $1 }
+    | Repeat            { % return $1 }
+    | For               { % return $1 }
 
-Return : return Exp ";"  	{ % return () }
-	|return FuncCall ";" 	{ % return () } 
+Return : return Exp ";"  	{ % return $2 } --retorna el valor de la expresion?
+	|return FuncCall ";" 	{ % return $2 } -- retorna el valor de la llamada de la funcion?
 
-Write : write Exp ";"       { % return () }
-	| write FuncCall ";"    { % return () }
+Write : write Exp ";"       { % do 
+                                tell (snd (writeInst $2))
+                                return (fst (writeInst $2)) } -- verificar string
+	| write FuncCall ";"    { % do 
+                                tell (snd (writeInst $2))
+                                return (fst (writeInst $2)) } -- tampoco se
 
-If : if "(" Exp ")" then Block                      { % return () }
-    | if "(" Exp ")" then Block else Insts end      { % return () }
+If : if "(" Exp ")" then Block  { % do 
+                                    tell (snd (ifInst $3 $1 $6))
+                                    return (fst (ifInst $3 $1 $6)) } 
+    | if "(" Exp ")" then Block else Insts end  {% do 
+                                                    tell (snd (ifElseInst $3 $1 $6 $8))
+                                                    return (fst (ifElseInst $3 $1 $6 $8)) }
 
-For : for OS "(" Range ")" do Block CS  { % return () }
+For : for OS "(" Range ")" do Block CS  { % do 
+                                        (z, z') <- get 
+                                        tell (snd (forInst $4 $7 $1))
+                                        return (fst (forInst $4 $7 $1)) } 
 
-Range : It from Exp to Exp with Exp  { % return () }
+Range : It from Exp to Exp with Exp  { % do 
+                                        (z, z') <- get 
+                                        tell (snd (rangeVef $3 $5 $7))
+                                        return (fst (rangeVef $3 $5 $7)) }
 It : id { % do 
                 (z, z') <- get
                 put (fst $ doInsert IteratorT (z,DS.empty) $1, z')
                 tell (snd (doInsert IteratorT (z,DS.empty) $1)) }
 
-While : while "(" Exp ")" do Block  { % return () }
+While : while "(" Exp ")" do Block  { % do
+                                        (z,z') <- get
+                                        tell (snd (whileInst $3 $1 $6))
+                                        return (fst (whileInst $3 $1 $6)) }
 
-Repeat : repeat OS Insts until Exp CS  { % return () }
+Repeat : repeat OS Insts until Exp CS  { % do
+                                        (z,z') <- get
+                                        tell (snd (whileInst $5 $1 $3))
+                                        return (fst (whileInst $5 $1 $3)) }
 
-Block : OS Insts end CS { % return () } 
+Block : OS Insts end CS { % return $2 } 
 
 {
 
@@ -489,6 +513,16 @@ findIdA l@(Lexeme (TokenIdent s) p) z =  case lookupS s z of
                                             then (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " can't be assigned")))
                                             else (z, DS.singleton (Right $ ""))
 
+findFunc :: Lexeme Token -> [Type] -> Zipper -> (Type, DS.Seq(Binnacle))
+findFunc l@(Lexeme (TokenIdent s) p) ts z =  case lookupS s z of
+                Nothing                 -> (TypeError, DS.singleton (Left $ ("Variable " ++ show s ++ " in " 
+                                            ++ show p ++ " is not defined")))
+                Just ((Entry t@(FuncT ty lts) p),scp)  -> 
+                                            case matchType t ts of
+                                                TypeError -> (TypeError, DS.singleton (Left $ ("TypeError " ++ show s ++ " in " 
+                                                            ++ show p ++ " expecting " ++ show lts ++ 
+                                                            " but have " ++ show ts)))
+                                                v         -> (v,DS.singleton (Right $ ""))
 
 typeToken :: Lexeme Token -> Zipper -> Type
 typeToken (Lexeme (TokenIdent s) _) z = case lookupS s z of
@@ -496,21 +530,84 @@ typeToken (Lexeme (TokenIdent s) _) z = case lookupS s z of
                 Just ((Entry t p),scp) -> t 
 
 binExp :: Type -> Type -> (Type, DS.Seq(Binnacle))
-binExp IntT   IntT   = (IntT , DS.singleton (Right $ ""))
-binExp FloatT FloatT = (FloatT , DS.singleton (Right $ ""))
-binExp IteratorT IntT = (IntT , DS.singleton (Right $ ""))
-binExp IntT IteratorT = (IntT , DS.singleton (Right $ ""))
-binExp _ _ = (TypeError , DS.singleton (Left $ "TypeError"))
+binExp IntT   IntT      = (IntT , DS.singleton (Right $ ""))
+binExp FloatT FloatT    = (FloatT , DS.singleton (Right $ ""))
+binExp IteratorT IntT   = (IntT , DS.singleton (Right $ ""))
+binExp IntT IteratorT   = (IntT , DS.singleton (Right $ ""))
+binExp _ _              = (TypeError , DS.singleton (Left $ "TypeError"))
 
 
 binNumExp :: Type -> Lexeme Token -> Type -> String -> (Type, DS.Seq(Binnacle))
-binNumExp IntT   _ IntT _   = (IntT , DS.singleton (Right $ ""))
-binNumExp FloatT _ FloatT _ = (FloatT , DS.singleton (Right $ ""))
-binNumExp IteratorT _ IntT _ = (IntT , DS.singleton (Right $ ""))
-binNumExp IntT _ IteratorT _ = (IntT , DS.singleton (Right $ ""))
-binNumExp t1 (Lexeme t p) t2 s = 
+binNumExp IntT   _ IntT _       = (IntT , DS.singleton (Right $ ""))
+binNumExp FloatT _ FloatT _     = (FloatT , DS.singleton (Right $ ""))
+binNumExp IteratorT _ IntT _    = (IntT , DS.singleton (Right $ ""))
+binNumExp IntT _ IteratorT _    = (IntT , DS.singleton (Right $ ""))
+binNumExp t1 (Lexeme t p) t2 s  = 
     (TypeError , DS.singleton (Left $ "TypeError " ++ show s ++ " " ++ show p 
                     ++ " given " ++ show t1 ++ show t2 
-                    ++ "expecting Int Int or Flaot Float" ))
+                    ++ "expecting Int Int or Float Float" ))
 
-}
+ifInst :: Type -> Lexeme Token -> Type -> (Type, DS.Seq(Binnacle))
+ifInst BoolT _ VoidT            = (VoidT, DS.singleton (Right $ ""))
+ifInst BoolT (Lexeme t p) t1    = (TypeError, DS.singleton(Left $ "Type Error if " 
+                                    ++ show p ++ "given " ++ show t1 ++ " expecting Void"))
+ifInst t1 (Lexeme t p) VoidT    = (TypeError, DS.singleton (Left $ "Type Error if " 
+                                    ++ show p ++ "given " ++ show t1 ++ " expecting Bool" ))
+
+ifElseInst :: Type -> Lexeme Token -> Type -> Type -> (Type, DS.Seq(Binnacle))
+ifElseInst BoolT _ VoidT VoidT          = (VoidT, DS.singleton (Right $ ""))
+ifElseInst BoolT (Lexeme t p) t1 VoidT  = (TypeError, DS.singleton(Left $ "Type Error if " 
+                                    ++ show p ++ "given " ++ show t1 ++ " expecting Void"))
+ifElseInst BoolT (Lexeme t p) VoidT t1  = (TypeError, DS.singleton(Left $ "Type Error if " 
+                                    ++ show p ++ "given " ++ show t1 ++ " expecting Void"))
+ifElseInst t1 (Lexeme t p) _ _          = (TypeError, DS.singleton(Left $ "Type Error if " 
+                                    ++ show p ++ "given " ++ show t1 ++ " expecting Bool"))
+
+whileInst :: Type -> Lexeme Token -> Type -> (Type, DS.Seq(Binnacle))
+whileInst BoolT _ VoidT         = (VoidT, DS.singleton (Right $ ""))
+whileInst BoolT (Lexeme t p) t1 = (TypeError, DS.singleton(Left $ "Type Error " 
+                                    ++ show p ++ "given " ++ show t1 ++ " expecting Void"))
+whileInst t1 (Lexeme t p) _     = (TypeError, DS.singleton(Left $ "Type Error " 
+                                    ++ show p ++ "given " ++ show t1 ++ " expecting Bool"))
+
+rangeVef :: Type -> Type -> Type -> (Type, DS.Seq(Binnacle))
+rangeVef IntT IntT IntT = (IteratorT, DS.singleton (Right $ ""))
+rangeVef IntT IntT t1   = (TypeError, DS.singleton(Left $ "Type Error given " 
+                            ++ show t1 ++ " expecting Int"))
+rangeVef IntT t1 _      = (TypeError, DS.singleton(Left $ "Type Error given " 
+                            ++ show t1 ++ " expecting Int"))
+rangeVef t1 _ _         = (TypeError, DS.singleton(Left $ "Type Error given " 
+                            ++ show t1 ++ " expecting Int"))
+
+forInst :: Type -> Type -> Lexeme Token -> (Type, DS.Seq(Binnacle))
+forInst IteratorT VoidT  _          = (VoidT, DS.singleton (Right $ ""))
+forInst IteratorT t1 (Lexeme t p)   = (TypeError, DS.singleton(Left $ "Type Error for "
+                                        ++ show p ++ " given " ++ show t1 ++ " expecting Void"))
+forInst t1 _  (Lexeme t p)          = (TypeError, DS.singleton(Left $ "Type Error for "
+                                        ++ show p ++ " given " ++ show t1 ++ " expecting Int Iterator"))
+
+freeInst :: Type -> Lexeme Token -> (Type,DS.Seq(Binnacle))
+freeInst (PointerT _) _     = (VoidT, DS.singleton (Right $ ""))
+freeInst t1 (Lexeme t p)    = (TypeError, DS.singleton(Left $ "Type Error free "
+                                ++ show p ++ " given " ++ show t1 ++ " expecting Pointer"))
+
+matchType :: Type -> [Type] -> Type
+matchType (FuncT t ts) lts = if ts == lts 
+                                then t
+                                else TypeError
+
+ifInt :: Type -> Type -> Type
+ifInt IntT StringT = StringT 
+ifInt IntT FloatT   = FloatT
+ifInt _  _          = TypeError
+
+ifFloat :: Type -> Type -> Type
+ifFloat FloatT StringT  = StringT 
+ifFloat _  _            = TypeError
+
+writeInst :: Type -> (Type, DS.Seq(Binnacle))
+writeInst IntT = (VoidT,DS.singleton (Right $ "") )
+writeInst FloatT = (VoidT, DS.singleton (Right $ ""))
+writeInst StringT = (VoidT, DS.singleton (Right $ ""))
+writeInst BoolT = (VoidT, DS.singleton (Right $ ""))
+}   
