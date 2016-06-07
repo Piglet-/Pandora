@@ -282,32 +282,32 @@ Exp : Values                { % return $1 }
                                     return (typeToken $1 z) }
     | Exp "+" Exp           { % do 
                                     (z, z') <- get 
-                                    tell (snd (binExp $1 $3))
-                                    return (fst (binExp $1 $3)) }
+                                    tell (snd (binNumExp $1 $2 $3 "+"))
+                                    return (fst (binNumExp $1 $2 $3 "+")) }
     | Exp "-" Exp           { % do 
                                     (z, z') <- get 
-                                    tell (snd (binExp $1 $3))
-                                    return (fst (binExp $1 $3)) }
+                                    tell (snd (binNumExp $1 $2 $3 "-"))
+                                    return (fst (binNumExp $1 $2 $3 "-")) }
     | Exp "/" Exp           { % do 
                                     (z, z') <- get 
-                                    tell (snd (binExp $1 $3))
-                                    return (fst (binExp $1 $3)) }
-    | Exp "^" Exp           { % do 
-                                    (z, z') <- get 
-                                    tell (snd (binExp $1 $3))
-                                    return (fst (binExp $1 $3)) }
+                                    tell (snd (binNumExp $1 $2 $3 "/"))
+                                    return (fst (binNumExp $1 $2 $3 "/")) }
+    | Exp "^" Exp           { % do  
+                                    (z, z') <- get -- No estoy seguro cuales serian los tipos
+                                    tell (snd (binNumExp $1 $2 $3 "^")) 
+                                    return (fst (binNumExp $1 $2 $3 "^")) }
     | Exp "*" Exp           { % do 
                                     (z, z') <- get 
-                                    tell (snd (binExp $1 $3))
-                                    return (fst (binExp $1 $3)) }
+                                    tell (snd (binNumExp $1 $2 $3 "*"))
+                                    return (fst (binNumExp $1 $2 $3 "*")) }
     | Exp div Exp           { % do 
-                                    (z, z') <- get 
-                                    tell (snd (binExp $1 $3))
-                                    return (fst (binExp $1 $3)) }
+                                    (z, z') <- get --Creo que oslo serian Enteros
+                                    tell (snd (binNumExp $1 $2 $3 "div"))
+                                    return (fst (binNumExp $1 $2 $3 "div")) }
     | Exp mod Exp           { % do 
                                     (z, z') <- get 
-                                    tell (snd (binExp $1 $3))
-                                    return (fst (binExp $1 $3)) }
+                                    tell (snd (binNumExp $1 $2 $3 "mod"))
+                                    return (fst (binNumExp $1 $2 $3 "mod")) }
     | Exp ">" Exp           { % do 
                                     (z, z') <- get 
                                     tell (snd (binExp $1 $3))
@@ -510,5 +510,16 @@ binExp FloatT FloatT = (FloatT , DS.singleton (Right $ ""))
 binExp IteratorT IntT = (IntT , DS.singleton (Right $ ""))
 binExp IntT IteratorT = (IntT , DS.singleton (Right $ ""))
 binExp _ _ = (TypeError , DS.singleton (Left $ "TypeError"))
+
+
+binNumExp :: Type -> Lexeme Token -> Type -> String -> (Type, DS.Seq(Binnacle))
+binNumExp IntT   _ IntT _   = (IntT , DS.singleton (Right $ ""))
+binNumExp FloatT _ FloatT _ = (FloatT , DS.singleton (Right $ ""))
+binNumExp IteratorT _ IntT _ = (IntT , DS.singleton (Right $ ""))
+binNumExp IntT _ IteratorT _ = (IntT , DS.singleton (Right $ ""))
+binNumExp t1 (Lexeme t p) t2 s = 
+    (TypeError , DS.singleton (Left $ "TypeError " ++ show s ++ " " ++ show p 
+                    ++ " given " ++ show t1 ++ show t2 
+                    ++ "expecting Int Int or Flaot Float" ))
 
 }
