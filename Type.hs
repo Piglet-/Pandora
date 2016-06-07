@@ -1,6 +1,7 @@
 module Type
 	( 
 	Type (..)
+	,ClassType (..)
 	, Binnacle(..)
 	, makeBtype
 	, makeObj
@@ -12,13 +13,18 @@ module Type
 import Tokens
 import Lexeme
 
+data ClassType = Variable Type
+				| Field	  Type
+				| Ctype   Type -- nuevos tipos (structs, unions)
+
+
 data Type = IntT
 		| FloatT 
 		| BoolT
 		| CharT	
 		| PointerT Type
 		| VoidT
-		| StructT [(String, Type)]
+		| StructT [(String, Type)] 
 		| UnionT [(String, Type)]
 		| StringT
 		| IteratorT
