@@ -344,8 +344,8 @@ Exp : Values                { % return $1 }
                                     tell (snd (numExp $1 $2 "not"))
                                     return (fst (numExp $1 $2 "not")) }
     | "->" Exp  %prec NEG   { % do 
-                                    tell (snd (numExp $1 $2 "->"))
-                                    return (fst (numExp $1 $2 "->")) }
+                                    tell (snd (pointExp $1 $2 "->"))
+                                    return (fst (pointExp $1 $2 "->")) }
     | Accesor               { % return $1 }
     | CFunctions            { % return $1 }
     | "(" Exp ")"           { % return $2 }
@@ -375,7 +375,7 @@ Accesor : id Arrays { % do
                         (z, z') <- get
                         put (fst (findId $1 z),z') 
                         tell (snd (findId $1 z))
-                        return (typeToken $1 z)}
+                        return(fst(isArray(typeToken $1 z) $2))}
         | id Accs  { % do 
                         (z, z') <- get
                         put (fst (findId $1 z),z') 
@@ -413,10 +413,10 @@ InstA : read Exp ";"    { % return $2 }
     | FuncCall ";"      { % return $1 } 
 
 Inst : InstA            { % return VoidT }
-    | Assign            { % return $1 } 
-    | Dec ";"           { % return $1 }
-    | Write             { % return $1 }
-    | Return            { % return $1 }
+    | Assign            { % return VoidT } 
+    | Dec ";"           { % return VoidT }
+    | Write             { % return VoidT }
+    | Return            { % return VoidT }
     | free Exp ";"      { % do  
                             tell (snd (freeInst $2 $1))
                             return (fst (freeInst $2 $1)) } 
@@ -427,8 +427,8 @@ InstB: If               { % return $1 }
     | Repeat            { % return $1 }
     | For               { % return $1 }
 
-Return : return Exp ";"  	{ % return $2 } --retorna el valor de la expresion?
-	|return FuncCall ";" 	{ % return $2 } -- retorna el valor de la llamada de la funcion?
+Return : return Exp ";"  	{ % return $2 } 
+	|return FuncCall ";" 	{ % return $2 } 
 
 Write : write Exp ";"       { % do 
                                 tell (snd (writeInst $2))
@@ -541,8 +541,8 @@ findFunc l@(Lexeme (TokenIdent s) p) ts z =  case lookupS s z of
                 Just ((Entry t@(FuncT ty lts) pos),scp)  -> 
                                             case matchType t ts of
                                                 TypeError -> (TypeError, DS.singleton (Left $ ("TypeError " ++ show s ++ " " 
-                                                            ++ show p ++ " expecting " ++ show lts ++ 
-                                                            " but have " ++ show ts)))
+                                                            ++ show p ++ " expecting " ++ show (reverse lts) ++ 
+                                                            " but have " ++ show (reverse ts))))
                                                 v         -> (v,DS.singleton (Right $ ""))
 
 typeToken :: Lexeme Token -> Zipper -> Type
@@ -667,10 +667,14 @@ matchType (FuncT t ts) lts = if ts == lts
                                 else TypeError
 
 matchAcc :: Type -> Type -> Lexeme Token -> (Type, DS.Seq(Binnacle))
-matchAcc t1 t2 l@(Lexeme TokenAssign p) = if (t1 == t2) 
-                    then (VoidT,DS.singleton (Right $ "") )
-                    else (TypeError, DS.singleton(Left $ "Type Error " ++ show p
-                            ++ " given " ++ show t2 ++ "expecting " ++ show t1 ))
+matchAcc t1 t2 l@(Lexeme TokenAssign p) = 
+    if (t1 /= TypeError) && (t2 /= TypeError)
+        then if (t1 == t2) 
+                then (VoidT,DS.singleton (Right $ "") )
+                else (TypeError, DS.singleton(Left $ "Type Error " ++ show p
+                        ++ " given " ++ show t2 ++ "expecting " ++ show t1 ))
+        else (TypeError, DS.singleton(Left $ "Type Error " ++ show p
+                        ++ " in assign, invalid types"))
 
 ifInt :: Type -> Type -> Type
 ifInt IntT StringT = StringT 
@@ -686,6 +690,7 @@ writeInst IntT = (VoidT,DS.singleton (Right $ "") )
 writeInst FloatT = (VoidT, DS.singleton (Right $ ""))
 writeInst StringT = (VoidT, DS.singleton (Right $ ""))
 writeInst BoolT = (VoidT, DS.singleton (Right $ ""))
+writeInst t = (TypeError, DS.singleton (Left $ "Type Error in write "))
 
 isTypeT :: Type -> [Lexeme Token] -> Zipper-> (Type, DS.Seq(Binnacle))
 isTypeT t ls z = case t of
@@ -700,7 +705,7 @@ findField t [l@(Lexeme (TokenIdent s) p) ]    =
         then case (DMap.lookup s (snd $ isStruct t)) of
             Just  ty            -> (ty, DS.singleton (Right $ ""))
             Nothing             -> (TypeError, DS.singleton (Left $ "Type Error "
-                                    ++ show (pos l) ++ " not defined " ++ show t))
+                                    ++ show (pos l) ++ " not defined field " ++ s))
         else (TypeError, DS.singleton (Left $ "Type Error "
                                     ++ show (pos l) ++ " given " ++ show t 
                                     ++ " expecting Struct or Union"))
@@ -737,13 +742,27 @@ instrucS _      = TypeError
 
 isNum :: Type -> Bool
 isNum IntT      = True
-isNum FloatT    = True
 isNum _         = False
 
-allNum :: [Type] -> Type
+allNum :: [Type] -> Bool
 allNum ts = if (all isNum ts)
-                then VoidT
-                else TypeError
+                then True
+                else False
 
+isArray :: Type -> [Type] -> (Type,DS.Seq(Binnacle))
+isArray a@(ArrayT t) []  = (TypeError, DS.singleton (Left $ "Type Error given " 
+                        ++ show a ++ " expecting a basic type"))
+isArray (ArrayT t) (ty:ts) = if allNum (ty:ts)
+                    then isArray t ts
+                    else (TypeError, DS.singleton (Left $ "Type Error given " 
+                        ++ show ts ++ "expecting list of Int fields"))
+isArray t          ts = if null ts
+                    then (t, DS.singleton (Right $ ""))
+                    else (TypeError, DS.singleton (Left $ "Type Error given " 
+                        ++ show ts ++ "expecting list of Int fields"))
+
+isTypeVoid :: Type -> Type
+isTypeVoid VoidT = VoidT
+isTypeVoid TypeError = TypeError
 
 }   
