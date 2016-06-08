@@ -46,7 +46,7 @@ instance Show Type where
 		 	FuncT t	l		-> "Function "  ++ show t ++ show l
 		 	ProcT t l	 	-> "Procedure " ++ show t ++ show l
 		 	ArrayT t 		-> "Array "  	++ show t 
-		 	TypeT s 		-> "TypeT " ++ s
+		 	TypeT s 		-> "TypeT " ++ s ++ " "
 		 	TypeError 		-> "TypeError"
 
 

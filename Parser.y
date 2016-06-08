@@ -537,7 +537,7 @@ findFunc l@(Lexeme (TokenIdent s) p) ts z =  case lookupS s z of
                                             ++ show p ++ " is not defined")))
                 Just ((Entry t@(FuncT ty lts) pos),scp)  -> 
                                             case matchType t ts of
-                                                TypeError -> (TypeError, DS.singleton (Left $ ("TypeError " ++ show s ++ " in " 
+                                                TypeError -> (TypeError, DS.singleton (Left $ ("TypeError " ++ show s ++ " " 
                                                             ++ show p ++ " expecting " ++ show lts ++ 
                                                             " but have " ++ show ts)))
                                                 v         -> (v,DS.singleton (Right $ ""))
