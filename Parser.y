@@ -364,7 +364,9 @@ Assign : id "=" Exp  ";"        { % do
                                     tell (snd (findIdA $1 $3 z))
                                     return (fst (findIdA $1 $3 z))}
 
-        | Accesor "=" Exp ";"   { % return (matchAcc $1 $3) }
+        | Accesor "=" Exp ";"   { % do
+                                    tell (snd (matchAcc $1 $3 $2))
+                                    return (fst(matchAcc $1 $3 $2)) }
 
 ListId : id                 { [$1] }
         | ListId "," id     {  $3 : $1 }
@@ -385,10 +387,10 @@ Accs: Acc       { % return [$1] }
 
 Acc : "." id        { % return $2 }
 
-Arrays : Array        { % return VoidT }
-       | Arrays Array { % return VoidT }
+Arrays : Array        { % return [$1] }
+       | Arrays Array { % return ($2:$1) }
 
-Array : "[" Exp "]"   { % return VoidT }
+Array : "[" Exp "]"   { % return $2 }
 
 FuncCall : id "(" Fields ")" { % do 
                                     (z, z') <- get 
@@ -403,8 +405,8 @@ CFunctions : inttostr "(" Exp ")"   { % return (ifInt $3 StringT ) }
             | flotostr "(" Exp ")"  { % return (ifFloat $3 StringT) } 
             | inttoflo "(" Exp ")"  { % return (ifInt $3 FloatT) } 
 
-Insts : Inst            { % return VoidT }
-        | Insts Inst    { % return VoidT }
+Insts : Inst            { % return (instrucS $1) }
+        | Insts Inst    { % return (instruc ($2:[$1])) }
 
 
 InstA : read Exp ";"    { % return $2 } 
@@ -664,10 +666,11 @@ matchType (FuncT t ts) lts = if ts == lts
                                 then t
                                 else TypeError
 
-matchAcc :: Type -> Type -> Type
-matchAcc t1 t2 = if t1 == t2 
-                    then VoidT
-                    else TypeError
+matchAcc :: Type -> Type -> Lexeme Token -> (Type, DS.Seq(Binnacle))
+matchAcc t1 t2 l@(Lexeme TokenAssign p) = if (t1 == t2) 
+                    then (VoidT,DS.singleton (Right $ "") )
+                    else (TypeError, DS.singleton(Left $ "Type Error " ++ show p
+                            ++ " given " ++ show t2 ++ "expecting " ++ show t1 ))
 
 ifInt :: Type -> Type -> Type
 ifInt IntT StringT = StringT 
@@ -688,7 +691,7 @@ isTypeT :: Type -> [Lexeme Token] -> Zipper-> (Type, DS.Seq(Binnacle))
 isTypeT t ls z = case t of
     TypeT s -> case lookupS s z of
         Just ((Entry ty pos),sc) -> findField ty ls 
-        Nothing                 ->  (TypeError, DS.singleton (Left $ "Type Error not defined " 
+        Nothing                  ->  (TypeError, DS.singleton (Left $ "Type Error not defined " 
                                     ++ show t))
 
 findField :: Type -> [Lexeme Token] -> (Type, DS.Seq(Binnacle))
@@ -712,7 +715,7 @@ findField t (l@(Lexeme (TokenIdent s) p):ls) =
                                 ++ " expecting Struct or Union")) 
             Nothing             -> (TypeError, DS.singleton (Left $ "Type Error "
                                         ++ show (pos l) ++ " not defined " ++ show t)) 
-    else (TypeError, DS.singleton (Left $ "Type Error "
+        else (TypeError, DS.singleton (Left $ "Type Error "
                                     ++ show (pos l) ++ " given " ++ show t 
                                     ++ " expecting Struct or Union"))
 
@@ -721,4 +724,26 @@ isStruct t = case t of
         UnionT m    -> (True, m)
         StructT m   -> (True, m)
         t1          -> (False, DMap.empty)
+
+
+instruc :: [Type] -> Type 
+instruc ts = if (all (==VoidT) ts) 
+                then VoidT
+                else TypeError
+
+instrucS :: Type -> Type 
+instrucS VoidT = VoidT
+instrucS _      = TypeError
+
+isNum :: Type -> Bool
+isNum IntT      = True
+isNum FloatT    = True
+isNum _         = False
+
+allNum :: [Type] -> Type
+allNum ts = if (all isNum ts)
+                then VoidT
+                else TypeError
+
+
 }   
