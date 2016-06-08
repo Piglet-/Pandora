@@ -348,16 +348,15 @@ Exp : Values                { % return $1 }
                                 }
 
 Assign : id "=" Exp  ";"        { % do 
-                                    (z, z') <- get
-                                    put (fst (findIdA $1 z),z') -- verificar tipo y devolver void
-                                    tell (snd (findIdA $1 z))
-                                    return VoidT }
+                                    (z, z') <- get 
+                                    tell (snd (findIdA $1 $3 z))
+                                    return (fst (findIdA $1 $3 z)) }
         | id "=" InstA          {% do 
-                                    (z, z') <- get
-                                    put (fst (findIdA $1 z),z') 
-                                    tell (snd (findIdA $1 z)) 
-                                    return VoidT }
-        | Accesor "=" Exp ";"   { % return VoidT }
+                                    (z, z') <- get 
+                                    tell (snd (findIdA $1 $3 z))
+                                    return (fst (findIdA $1 $3 z))}
+
+        | Accesor "=" Exp ";"   { % return (matchAcc $1 $3) }
 
 ListId : id                 { [$1] }
         | ListId "," id     {  $3 : $1 }
@@ -506,12 +505,15 @@ findId l@(Lexeme (TokenIdent s) p) z =  case lookupS s z of
                 Nothing -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " is not defined")))
                 Just v  -> (z, DS.singleton (Right $ ""))
 
-findIdA :: Lexeme Token -> Zipper -> (Zipper, DS.Seq(Binnacle))
-findIdA l@(Lexeme (TokenIdent s) p) z =  case lookupS s z of
-                Nothing -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " is not defined")))
+findIdA :: Lexeme Token -> Type -> Zipper -> (Type, DS.Seq(Binnacle))
+findIdA l@(Lexeme (TokenIdent s) p) ty z =  case lookupS s z of
+                Nothing -> (TypeError, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " is not defined")))
                 Just ((Entry t p),scp)  -> if t == IteratorT 
-                                            then (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " can't be assigned")))
-                                            else (z, DS.singleton (Right $ ""))
+                                            then (TypeError, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " can't be assigned")))
+                                            else if t == ty 
+                                                then (VoidT, DS.singleton (Right $ ""))
+                                                else (TypeError, DS.singleton (Left $ ("Error Type " ++ show s ++ " given " ++ show t 
+                                                    ++ " expecting " ++ show ty )))
 
 findFunc :: Lexeme Token -> [Type] -> Zipper -> (Type, DS.Seq(Binnacle))
 findFunc l@(Lexeme (TokenIdent s) p) ts z =  case lookupS s z of
@@ -595,6 +597,11 @@ matchType :: Type -> [Type] -> Type
 matchType (FuncT t ts) lts = if ts == lts 
                                 then t
                                 else TypeError
+
+matchAcc :: Type -> Type -> Type
+matchAcc t1 t2 = if t1 == t2 
+                    then VoidT
+                    else TypeError
 
 ifInt :: Type -> Type -> Type
 ifInt IntT StringT = StringT 
