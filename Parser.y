@@ -11,6 +11,7 @@ import Control.Monad.RWS
 import SymbolTable
 import Type
 import Data.Maybe
+import qualified Data.Map.Strict as DMap
 import qualified Data.Sequence as DS
 
 }
@@ -376,11 +377,11 @@ Accesor : id Arrays { % do
         | id Accs  { % do 
                         (z, z') <- get
                         put (fst (findId $1 z),z') 
-                        tell (snd (findId $1 z))
-                        return (typeToken $1 z)}
+                        tell (snd (isTypeT (typeToken $1 z) $2 z))
+                        return (fst(isTypeT (typeToken $1 z) $2 z))}
 
-Accs: Acc       { % return VoidT }
-    | Accs Acc  { % return VoidT }
+Accs: Acc       { % return [$1] }
+    | Accs Acc  { % return ($2:$1) }
 
 Acc : "." id        { % return $2 }
 
@@ -682,4 +683,42 @@ writeInst IntT = (VoidT,DS.singleton (Right $ "") )
 writeInst FloatT = (VoidT, DS.singleton (Right $ ""))
 writeInst StringT = (VoidT, DS.singleton (Right $ ""))
 writeInst BoolT = (VoidT, DS.singleton (Right $ ""))
+
+isTypeT :: Type -> [Lexeme Token] -> Zipper-> (Type, DS.Seq(Binnacle))
+isTypeT t ls z = case t of
+    TypeT s -> case lookupS s z of
+        Just ((Entry ty pos),sc) -> findField ty ls 
+        Nothing                 ->  (TypeError, DS.singleton (Left $ "Type Error not defined " 
+                                    ++ show t))
+
+findField :: Type -> [Lexeme Token] -> (Type, DS.Seq(Binnacle))
+findField t [l@(Lexeme (TokenIdent s) p) ]    = 
+    if (fst $ isStruct t)
+        then case (DMap.lookup s (snd $ isStruct t)) of
+            Just  ty            -> (ty, DS.singleton (Right $ ""))
+            Nothing             -> (TypeError, DS.singleton (Left $ "Type Error "
+                                    ++ show (pos l) ++ " not defined " ++ show t))
+        else (TypeError, DS.singleton (Left $ "Type Error "
+                                    ++ show (pos l) ++ " given " ++ show t 
+                                    ++ " expecting Struct or Union"))
+findField t (l@(Lexeme (TokenIdent s) p):ls) = 
+    if (fst $ isStruct t) 
+        then case (DMap.lookup s (snd $ isStruct t)) of
+            Just (ty)   -> 
+                if (fst $ isStruct ty) 
+                        then (findField ty ls)
+                        else (TypeError, DS.singleton (Left $ "Type Error "
+                                ++ show (pos l) ++ " given " ++ show ty 
+                                ++ " expecting Struct or Union")) 
+            Nothing             -> (TypeError, DS.singleton (Left $ "Type Error "
+                                        ++ show (pos l) ++ " not defined " ++ show t)) 
+    else (TypeError, DS.singleton (Left $ "Type Error "
+                                    ++ show (pos l) ++ " given " ++ show t 
+                                    ++ " expecting Struct or Union"))
+
+isStruct :: Type -> (Bool, DMap.Map String Type)
+isStruct t = case t of
+        UnionT m    -> (True, m)
+        StructT m   -> (True, m)
+        t1          -> (False, DMap.empty)
 }   
