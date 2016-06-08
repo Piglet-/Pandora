@@ -1,6 +1,5 @@
-func fibonacci(n : int) : int
-        i : int;
-        j : int;
+int : func fibonacci(int: n)
+        int : i, j;
         if (n == 0) then
             return 0;
         end
@@ -13,7 +12,7 @@ func fibonacci(n : int) : int
     end
 
     begin
-        n : int;
+        int: n;
         read n;
         write fibonacci(n);
     end

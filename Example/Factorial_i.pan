@@ -1,5 +1,5 @@
-func factorial(n : int) : int
-        f : int; 
+int : func factorial(int: n) 
+        int : f, g; 
         f = 1;
         for(i from 1 to n with i+1) do 
             f = f * i;
@@ -8,7 +8,7 @@ func factorial(n : int) : int
     end
 
     begin
-        n : int;
+        int : n;
         read n;
         write factorial(n);
     end

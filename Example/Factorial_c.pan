@@ -1,5 +1,5 @@
-func factorial(n : int, a : int) : int
-        i : int;
+int : func factorial(int: n, int: a)
+        int : i;
         if( n == 0 ) then 
             return a;
         end
@@ -7,8 +7,7 @@ func factorial(n : int, a : int) : int
 end
 
 begin
-		n : int;
-        m : int;
+		int : n,m;
         read n;
         write factorial(n,1); 
 end
