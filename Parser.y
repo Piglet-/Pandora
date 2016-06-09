@@ -379,8 +379,8 @@ Accesor : id Arrays { % do
         | id Accs  { % do 
                         (z, z') <- get
                         put (fst (findId $1 z),z') 
-                        tell (snd (isTypeT (typeToken $1 z) $2 z))
-                        return (fst(isTypeT (typeToken $1 z) $2 z))}
+                        tell (snd (isTypeT (typeToken $1 z) (reverse $2) z))
+                        return (fst(isTypeT (typeToken $1 z) (reverse $2) z))}
 
 Accs: Acc       { % return [$1] }
     | Accs Acc  { % return ($2:$1) }
@@ -695,39 +695,42 @@ writeInst t = (TypeError, DS.singleton (Left $ "Type Error in write "))
 isTypeT :: Type -> [Lexeme Token] -> Zipper-> (Type, DS.Seq(Binnacle))
 isTypeT t ls z = case t of
     TypeT s -> case lookupS s z of
-        Just ((Entry ty pos),sc) -> findField ty ls 
+        Just ((Entry ty pos),sc) -> findField ty ls z
         Nothing                  ->  (TypeError, DS.singleton (Left $ "Type Error not defined " 
                                     ++ show t))
 
-findField :: Type -> [Lexeme Token] -> (Type, DS.Seq(Binnacle))
-findField t [l@(Lexeme (TokenIdent s) p) ]    = 
-    if (fst $ isStruct t)
-        then case (DMap.lookup s (snd $ isStruct t)) of
+findField :: Type -> [Lexeme Token] -> Zipper -> (Type, DS.Seq(Binnacle))
+findField t [l@(Lexeme (TokenIdent s) p) ] z    = 
+    if (fst $ isStruct t z)
+        then case (DMap.lookup s (snd $ isStruct t z)) of
             Just  ty            -> (ty, DS.singleton (Right $ ""))
             Nothing             -> (TypeError, DS.singleton (Left $ "Type Error "
                                     ++ show (pos l) ++ " not defined field " ++ s))
         else (TypeError, DS.singleton (Left $ "Type Error "
                                     ++ show (pos l) ++ " given " ++ show t 
                                     ++ " expecting Struct or Union"))
-findField t (l@(Lexeme (TokenIdent s) p):ls) = 
-    if (fst $ isStruct t) 
-        then case (DMap.lookup s (snd $ isStruct t)) of
+findField t (l@(Lexeme (TokenIdent s) p):ls) z = 
+    if (fst $ isStruct t z)
+        then case (DMap.lookup s (snd $ isStruct t z)) of
             Just (ty)   -> 
-                if (fst $ isStruct ty) 
-                        then (findField ty ls)
+                if (fst $ isStruct ty z)
+                        then (isTypeT ty ls z)
                         else (TypeError, DS.singleton (Left $ "Type Error "
                                 ++ show (pos l) ++ " given " ++ show ty 
                                 ++ " expecting Struct or Union")) 
-            Nothing             -> (TypeError, DS.singleton (Left $ "Type Error "
+            Nothing             -> (TypeError, DS.singleton (Left $ "Type Error " -- entra aqui
                                         ++ show (pos l) ++ " not defined " ++ show t)) 
         else (TypeError, DS.singleton (Left $ "Type Error "
                                     ++ show (pos l) ++ " given " ++ show t 
                                     ++ " expecting Struct or Union"))
 
-isStruct :: Type -> (Bool, DMap.Map String Type)
-isStruct t = case t of
+isStruct :: Type -> Zipper -> (Bool, DMap.Map String Type)
+isStruct t z = case t of
         UnionT m    -> (True, m)
         StructT m   -> (True, m)
+        TypeT   s   -> case (lookupS s z) of
+                            Just ((Entry ty p),sc) -> isStruct ty z 
+                            Nothing         -> (False, DMap.empty)
         t1          -> (False, DMap.empty)
 
 
@@ -735,6 +738,10 @@ instruc :: [Type] -> Type
 instruc ts = if (all (==VoidT) ts) 
                 then VoidT
                 else TypeError
+
+typeT :: Type -> Bool
+typeT (TypeT s) = True
+typeT _       = False
 
 instrucS :: Type -> Type 
 instrucS VoidT = VoidT
