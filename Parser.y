@@ -612,7 +612,7 @@ boolExp (Lexeme t p) t1 s  =
                     ++ " given " ++ show t1 ++ "expecting Bool" ))
 
 pointExp :: Lexeme Token -> Type -> String -> (Type, DS.Seq(Binnacle))
-pointExp _ (PointerT t) _ = ((PointerT t), DS.singleton (Right $ ""))
+pointExp _ (PointerT t) _ = (t, DS.singleton (Right $ ""))
 pointExp (Lexeme t p) t1 s  = 
     (TypeError , DS.singleton (Left $ "TypeError " ++ show s ++ " " ++ show p 
                     ++ " given " ++ show t1 ++ "expecting Pointer" ))
