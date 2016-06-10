@@ -251,7 +251,7 @@ Params: Type ":" id     { % do
                                                         (z , z') <- get
                                                         tell (snd (doInsert (makeArray $6 (makeBtype $5)) (z,DS.empty) $8))
                                                         put ((fst (doInsert (makeArray $6 (makeBtype $5)) (z,DS.empty) $8)), z')
-                                                        return ((makeBtype $5):$1) } 
+                                                        return ((makeBtype $5):$1) }
 
 Type : intT     { $1 } 
     | floatT    { $1 }
@@ -399,7 +399,9 @@ FuncCall : id "(" Fields ")" { % do
 
 Fields : {- lambda -}       { % return [] }
         | Exp               { % return ([$1]) }
+        | FuncCall          { % return ([$1])}
         | Fields "," Exp    { % return ($3:$1) }
+        | Fields "," FuncCall { % return ($3:$1)}
 
 CFunctions : inttostr "(" Exp ")"   { % return (ifInt $3 StringT ) } 
             | flotostr "(" Exp ")"  { % return (ifFloat $3 StringT) } 
