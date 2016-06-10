@@ -557,6 +557,8 @@ binExp IntT   IntT      = (IntT , DS.singleton (Right $ ""))
 binExp FloatT FloatT    = (FloatT , DS.singleton (Right $ ""))
 binExp IteratorT IntT   = (IntT , DS.singleton (Right $ ""))
 binExp IntT IteratorT   = (IntT , DS.singleton (Right $ ""))
+binExp TypeError _      = (TypeError , DS.singleton (Right $ "")) --nuevo
+binExp _ TypeError      = (TypeError , DS.singleton (Right $ "")) -- nuevo
 binExp _ _              = (TypeError , DS.singleton (Left $ "TypeError"))
 
 
@@ -565,6 +567,8 @@ binNumExp IntT   _ IntT _       = (IntT , DS.singleton (Right $ ""))
 binNumExp FloatT _ FloatT _     = (FloatT , DS.singleton (Right $ ""))
 binNumExp IteratorT _ IntT _    = (IntT , DS.singleton (Right $ ""))
 binNumExp IntT _ IteratorT _    = (IntT , DS.singleton (Right $ ""))
+binNumExp TypeError _ _ _       = (TypeError,DS.singleton (Right $ "")) -- nuevo
+binNumExp _ _ TypeError _       = (TypeError,DS.singleton (Right $ "")) -- nuevo
 binNumExp t1 (Lexeme t p) t2 s  = 
     (TypeError , DS.singleton (Left $ "TypeError " ++ show s ++ " " ++ show p 
                     ++ " given " ++ show t1 ++ show t2 
@@ -574,6 +578,8 @@ relExp :: Type -> Lexeme Token -> Type -> String -> (Type, DS.Seq(Binnacle))
 relExp IntT _ IntT _ = (BoolT, DS.singleton (Right $ ""))
 relExp FloatT _ FloatT _ = (BoolT, DS.singleton (Right $ ""))
 relExp CharT _ CharT _ = (BoolT, DS.singleton (Right $ ""))
+relExp TypeError _ _ _ = (TypeError , DS.singleton (Right $ "")) -- nuevo
+relExp _ _ TypeError _ = (TypeError , DS.singleton (Right $ "")) --nuevo
 relExp t1 (Lexeme t p) t2 s  = 
     (TypeError , DS.singleton (Left $ "TypeError " ++ show s ++ " " ++ show p 
                     ++ " given " ++ show t1 ++ show t2 
@@ -587,14 +593,18 @@ eqExp (TypeT s1) (Lexeme t p) (TypeT s2) s =
                     ++ " given " ++ show s1 ++ show s2 
                     ++ "expecting T1 T2 of the same type" ))
 eqExp t1 (Lexeme t p) t2 s = 
-    if t1 == t2 
-        then (BoolT, DS.singleton (Right $ ""))
-        else (TypeError , DS.singleton (Left $ "TypeError " ++ show s ++ " " ++ show p 
+    if t1 == TypeError || t2 == TypeError --nuevo
+        then (TypeError , DS.singleton (Right $ "")) --nuevo
+        else if t1 == t2 
+            then (BoolT, DS.singleton (Right $ ""))
+            else (TypeError , DS.singleton (Left $ "TypeError " ++ show s ++ " " ++ show p 
                     ++ " given " ++ show t1 ++ show t2 
                     ++ "expecting T1 T2 of the same type" ))
 
 binBoolExp :: Type -> Lexeme Token -> Type -> String -> (Type, DS.Seq(Binnacle))
 binBoolExp BoolT _ BoolT _ = (BoolT, DS.singleton (Right $ ""))
+binBoolExp TypeError _ _ _ = (TypeError , DS.singleton (Right $ "")) --nuevo
+binBoolExp _ _ TypeError _ = (TypeError , DS.singleton (Right $ "")) -- nuevo
 binBoolExp t1 (Lexeme t p) t2 s  = 
     (TypeError , DS.singleton (Left $ "TypeError " ++ show s ++ " " ++ show p 
                     ++ " given " ++ show t1 ++ show t2 
@@ -603,24 +613,29 @@ binBoolExp t1 (Lexeme t p) t2 s  =
 numExp :: Lexeme Token -> Type -> String -> (Type, DS.Seq(Binnacle))
 numExp _ IntT _ = (IntT, DS.singleton (Right $ ""))
 numExp _ FloatT _ = (FloatT, DS.singleton (Right $ ""))
+numExp _ TypeError _ = (TypeError , DS.singleton (Right $ "")) -- nuevo
 numExp (Lexeme t p) t1 s  = 
     (TypeError , DS.singleton (Left $ "TypeError " ++ show s ++ " " ++ show p 
                     ++ " given " ++ show t1 ++ "expecting Int or Float" ))
 
 boolExp :: Lexeme Token -> Type -> String -> (Type, DS.Seq(Binnacle))
 boolExp _ BoolT _ = (BoolT, DS.singleton (Right $ ""))
+boolExp _ TypeError _ = (TypeError , DS.singleton (Right $ "")) -- nuevo
 boolExp (Lexeme t p) t1 s  = 
     (TypeError , DS.singleton (Left $ "TypeError " ++ show s ++ " " ++ show p 
                     ++ " given " ++ show t1 ++ "expecting Bool" ))
 
 pointExp :: Lexeme Token -> Type -> String -> (Type, DS.Seq(Binnacle))
 pointExp _ (PointerT t) _ = (t, DS.singleton (Right $ ""))
+pointExp _ TypeError _ = (TypeError , DS.singleton (Right $ "")) --nuevo
 pointExp (Lexeme t p) t1 s  = 
     (TypeError , DS.singleton (Left $ "TypeError " ++ show s ++ " " ++ show p 
                     ++ " given " ++ show t1 ++ "expecting Pointer" ))
 
 ifInst :: Type -> Lexeme Token -> Type -> (Type, DS.Seq(Binnacle))
 ifInst BoolT _ VoidT            = (VoidT, DS.singleton (Right $ ""))
+ifInst TypeError _ _            = (TypeError , DS.singleton (Right $ "")) -- nuevo
+ifInst _ _ TypeError            = (TypeError , DS.singleton (Right $ "")) --nuevo
 ifInst BoolT (Lexeme t p) t1    = (TypeError, DS.singleton(Left $ "Type Error if " 
                                     ++ show p ++ "given " ++ show t1 ++ " expecting Void"))
 ifInst t1 (Lexeme t p) VoidT    = (TypeError, DS.singleton (Left $ "Type Error if " 
@@ -628,6 +643,9 @@ ifInst t1 (Lexeme t p) VoidT    = (TypeError, DS.singleton (Left $ "Type Error i
 
 ifElseInst :: Type -> Lexeme Token -> Type -> Type -> (Type, DS.Seq(Binnacle))
 ifElseInst BoolT _ VoidT VoidT          = (VoidT, DS.singleton (Right $ ""))
+ifElseInst TypeError _ _ _              = (TypeError , DS.singleton (Right $ "")) -- nuevo
+ifElseInst _ _ TypeError _              = (TypeError , DS.singleton (Right $ "")) -- nuevo
+ifElseInst _ _ _ TypeError              = (TypeError , DS.singleton (Right $ "")) --nuevo
 ifElseInst BoolT (Lexeme t p) t1 VoidT  = (TypeError, DS.singleton(Left $ "Type Error if " 
                                     ++ show p ++ "given " ++ show t1 ++ " expecting Void"))
 ifElseInst BoolT (Lexeme t p) VoidT t1  = (TypeError, DS.singleton(Left $ "Type Error if " 
@@ -637,6 +655,8 @@ ifElseInst t1 (Lexeme t p) _ _          = (TypeError, DS.singleton(Left $ "Type 
 
 whileInst :: Type -> Lexeme Token -> Type -> (Type, DS.Seq(Binnacle))
 whileInst BoolT _ VoidT         = (VoidT, DS.singleton (Right $ ""))
+whileInst TypeError _ _         = (TypeError , DS.singleton (Right $ "")) --nuevo
+whileInst _ _ TypeError         = (TypeError , DS.singleton (Right $ "")) --nuevo
 whileInst BoolT (Lexeme t p) t1 = (TypeError, DS.singleton(Left $ "Type Error " 
                                     ++ show p ++ "given " ++ show t1 ++ " expecting Void"))
 whileInst t1 (Lexeme t p) _     = (TypeError, DS.singleton(Left $ "Type Error " 
@@ -644,6 +664,9 @@ whileInst t1 (Lexeme t p) _     = (TypeError, DS.singleton(Left $ "Type Error "
 
 rangeVef :: Type -> Type -> Type -> (Type, DS.Seq(Binnacle))
 rangeVef IntT IntT IntT = (IteratorT, DS.singleton (Right $ ""))
+rangeVef TypeError _ _  = (TypeError , DS.singleton (Right $ "")) --nuevo
+rangeVef _ TypeError _  = (TypeError , DS.singleton (Right $ "")) --nuevo
+rangeVef _ _ TypeError  = (TypeError , DS.singleton (Right $ "")) -- nuevo
 rangeVef IntT IntT t1   = (TypeError, DS.singleton(Left $ "Type Error given " 
                             ++ show t1 ++ " expecting Int"))
 rangeVef IntT t1 _      = (TypeError, DS.singleton(Left $ "Type Error given " 
@@ -653,6 +676,8 @@ rangeVef t1 _ _         = (TypeError, DS.singleton(Left $ "Type Error given "
 
 forInst :: Type -> Type -> Lexeme Token -> (Type, DS.Seq(Binnacle))
 forInst IteratorT VoidT  _          = (VoidT, DS.singleton (Right $ ""))
+forInst TypeError _ _               = (TypeError , DS.singleton (Right $ "")) --nuevo
+forInst _ TypeError _               = (TypeError , DS.singleton (Right $ "")) --nuevo
 forInst IteratorT t1 (Lexeme t p)   = (TypeError, DS.singleton(Left $ "Type Error for "
                                         ++ show p ++ " given " ++ show t1 ++ " expecting Void"))
 forInst t1 _  (Lexeme t p)          = (TypeError, DS.singleton(Left $ "Type Error for "
@@ -660,6 +685,7 @@ forInst t1 _  (Lexeme t p)          = (TypeError, DS.singleton(Left $ "Type Erro
 
 freeInst :: Type -> Lexeme Token -> (Type,DS.Seq(Binnacle))
 freeInst (PointerT _) _     = (VoidT, DS.singleton (Right $ ""))
+freeInst TypeError _        =(TypeError , DS.singleton (Right $ "")) --nuevo
 freeInst t1 (Lexeme t p)    = (TypeError, DS.singleton(Left $ "Type Error free "
                                 ++ show p ++ " given " ++ show t1 ++ " expecting Pointer"))
 
@@ -669,14 +695,13 @@ matchType (FuncT t ts) lts = if ts == lts
                                 else TypeError
 
 matchAcc :: Type -> Type -> Lexeme Token -> (Type, DS.Seq(Binnacle))
+matchAcc TypeError _ _ = (TypeError , DS.singleton (Right $ "")) -- nuevo
+matchAcc _ TypeError _ = (TypeError , DS.singleton (Right $ "")) --nuevo
 matchAcc t1 t2 l@(Lexeme TokenAssign p) = 
-    if (t1 /= TypeError) && (t2 /= TypeError)
-        then if (t1 == t2) 
-                then (VoidT,DS.singleton (Right $ "") )
-                else (TypeError, DS.singleton(Left $ "Type Error " ++ show p
-                        ++ " given " ++ show t2 ++ "expecting " ++ show t1 ))
+    if (t1 == t2) 
+        then (VoidT,DS.singleton (Right $ "") )
         else (TypeError, DS.singleton(Left $ "Type Error " ++ show p
-                        ++ " in assign, invalid types"))
+                        ++ " given " ++ show t2 ++ "expecting " ++ show t1 ))
 
 ifInt :: Type -> Type -> Type
 ifInt IntT StringT = StringT 
@@ -692,13 +717,17 @@ writeInst IntT = (VoidT,DS.singleton (Right $ "") )
 writeInst FloatT = (VoidT, DS.singleton (Right $ ""))
 writeInst StringT = (VoidT, DS.singleton (Right $ ""))
 writeInst BoolT = (VoidT, DS.singleton (Right $ ""))
+writeInst TypeError = (TypeError, DS.singleton(Right $""))
 writeInst t = (TypeError, DS.singleton (Left $ "Type Error in write "))
 
 isTypeT :: Type -> [Lexeme Token] -> Zipper-> (Type, DS.Seq(Binnacle))
 isTypeT t ls z = case t of
-    TypeT s -> case lookupS s z of
+    TypeT s     -> case lookupS s z of
         Just ((Entry ty pos),sc) -> findField ty ls z
         Nothing                  ->  (TypeError, DS.singleton (Left $ "Type Error not defined " 
+                                    ++ show t))
+    TypeError   -> (TypeError, DS.singleton (Right $ "")) --nuevo
+    _           -> (TypeError, DS.singleton (Left $ "Type Error not defined " --nuevo
                                     ++ show t))
 
 findField :: Type -> [Lexeme Token] -> Zipper -> (Type, DS.Seq(Binnacle))
@@ -747,7 +776,7 @@ typeT _       = False
 
 instrucS :: Type -> Type 
 instrucS VoidT = VoidT
-instrucS _      = TypeError
+instrucS _     = TypeError
 
 isNum :: Type -> Bool
 isNum IntT      = True
@@ -765,6 +794,7 @@ isArray (ArrayT t) (ty:ts) = if allNum (ty:ts)
                     then isArray t ts
                     else (TypeError, DS.singleton (Left $ "Type Error given " 
                         ++ show ts ++ "expecting list of Int fields"))
+isArray TypeError _ = (TypeError , DS.singleton (Right $ "")) --nuevo
 isArray t          ts = if null ts
                     then (t, DS.singleton (Right $ ""))
                     else (TypeError, DS.singleton (Left $ "Type Error given " 
