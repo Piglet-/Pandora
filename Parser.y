@@ -134,22 +134,24 @@ import qualified Data.Sequence as DS
 
 %%
 
-Program : Declarations Main "EOF"  { % return () }             
-	   | Main "EOF"                { % return () } 
+Program : Declarations Main "EOF"  { % return (instruc ($2:[$1])) }             
+	   | Main "EOF"                { % return  $1 } 
 
-Main : begin Insts end  { % return () } 
+Main : begin Insts end  { % return $2 } 
 
-Declaration:  FuncDec OS Insts CS end CS        {% return ()}
+Declaration:  FuncDec OS Insts CS end CS        {% return $3 }
             | struct id has OS StructObjs ";" end CS    { % do 
                                                         (z, z') <- get
                                                         tell (snd (doInsert (makeStruct $1 $5) (z,DS.empty) $2))
-                                                        put (fst (doInsert (makeStruct $1 $5) (z,DS.empty) $2), z')  }
+                                                        put (fst (doInsert (makeStruct $1 $5) (z,DS.empty) $2), z')  
+                                                        return VoidT}
             | union id like OS StructObjs ";" end CS    { % do 
                                                         (z, z') <- get
                                                         tell (snd (doInsert (makeStruct $1 $5) (z,DS.empty) $2))
-                                                        put (fst(doInsert (makeStruct $1 $5) (z,DS.empty) $2), z')  }
-            | Dec                                       { % return () }
-            | Assign                                    { % return () } 
+                                                        put (fst(doInsert (makeStruct $1 $5) (z,DS.empty) $2), z')
+                                                        return VoidT  }
+            | Dec                                       { % return $1 }
+            | Assign                                    { % return $1 } 
 
 StructObjs : StructOb                   { $1 }
             | StructObjs ";" StructOb   { $1 ++ $3 }
@@ -185,8 +187,8 @@ CS: {- Lambda -} { % do
                      put (closeScope z, z')
                  }
 
-Declarations : Declaration { % return () }
-    | Declarations Declaration  { % return () }
+Declarations : Declaration { % return (instrucS $1) }
+    | Declarations Declaration  { % return (instruc ($2:[$1])) }
 
 Dec : Type ":" ListId                      { % do 
                                             (z, z') <- get 
@@ -414,11 +416,11 @@ Insts : Inst            { % return (instrucS $1) }
 InstA : read Exp ";"    { % return $2 } 
     | FuncCall ";"      { % return $1 } 
 
-Inst : InstA            { % return VoidT }
-    | Assign            { % return VoidT } 
-    | Dec ";"           { % return VoidT }
-    | Write             { % return VoidT }
-    | Return            { % return VoidT }
+Inst : InstA            { % return $1  }
+    | Assign            { % return $1 } 
+    | Dec ";"           { % return $1 }
+    | Write             { % return $1 }
+    | Return            { % return $1 }
     | free Exp ";"      { % do  
                             tell (snd (freeInst $2 $1))
                             return (fst (freeInst $2 $1)) } 

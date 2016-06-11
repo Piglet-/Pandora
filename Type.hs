@@ -89,3 +89,17 @@ makeArray n ty 	= ArrayT t
 
 
 type Binnacle = Either String String
+
+typeSize :: Type -> Int
+typeSize IntT = 4
+typeSize FloatT = 8
+typeSize BoolT = 1
+typeSize (StringT s) = 4
+typeSize CharT = 2
+typeSize (PointerT _) = 4
+typeSize (StructT m) = 4
+typeSize (UnionT m) = 4
+typeSize IteratorT = 4
+typeSize (ArrayT t) = 
+
+-- METER VALORES EN LAS ASIGNACIONES
