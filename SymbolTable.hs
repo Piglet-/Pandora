@@ -11,6 +11,7 @@ module SymbolTable
     , insertS
     , tothetop
     , Zipper
+    , State(..)
     , Entry(..)
     , Scope(..)
     , emptyScope
@@ -27,10 +28,16 @@ import Type
 
 -- una entrada (o valor en un hash) es el tipo (en string)
 -- y la posición de una variable dentro de la tabla de símbolos
-data Entry = Entry Type Position
+data Entry = Entry Type Position Int Int
+
+data State = State {
+                    syt :: Zipper, 
+                    srt :: Zipper,
+                    off :: Int
+}
 
 instance Show Entry where
-    show (Entry t p) = show t ++ " " ++ show p
+    show (Entry t p s o) = show t ++ " " ++ show p ++ " Size : " ++ show s ++ " Offset: " ++ show o  
 -- un scope es un entero que representa el nivel de anidamiento,
 -- y una tupla con la posicion inicial y final del scope
 data Scope = Scope Int (Position, Position) deriving(Show)

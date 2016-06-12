@@ -7,6 +7,7 @@ module Type
 	, makeStruct
 	, makePointer
 	, makeArray
+	, typeSize
 	) where
 
 import Tokens
@@ -88,18 +89,25 @@ makeArray n ty 	= ArrayT t
 		where t = makeArray (n-1) ty
 
 
-type Binnacle = Either String String
+type Binnacle = Either String String		
 
 typeSize :: Type -> Int
 typeSize IntT = 4
 typeSize FloatT = 8
 typeSize BoolT = 1
-typeSize (StringT s) = 4
+typeSize StringT  = 4
 typeSize CharT = 2
 typeSize (PointerT _) = 4
-typeSize (StructT m) = 4
-typeSize (UnionT m) = 4
+typeSize (StructT m) = DMap.foldl' suma 0 m 
+typeSize (UnionT m) = DMap.foldl' suma 0 m
 typeSize IteratorT = 4
-typeSize (ArrayT t) = 
+typeSize (ArrayT t) = 4
+typeSize (FuncT t _) = typeSize t
+typeSize (ProcT t _) = typeSize t
+typeSize VoidT = 0
+typeSize (TypeT s) = 0
+
+suma :: Int -> Type -> Int
+suma n t = n + typeSize t
 
 -- METER VALORES EN LAS ASIGNACIONES
