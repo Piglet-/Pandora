@@ -502,12 +502,35 @@ doInsert (TypeT t) (z,_) l@(Lexeme (TokenIdent s) p) =
                 _ -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " in " ++ show p ++
                                       " not declared")))
 
+doInsert (StructT m) (z,_) l@(Lexeme (TokenIdent s) p) = 
+    case lookupS' s z of
+        Nothing -> (insertS s (Entry (StructT m) p (structSize m z) 0) z, DS.singleton(Right $ ""))
+        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
+                                      " already declared in " ++ show pos)))
+
+doInsert (UnionT m) (z,_) l@(Lexeme (TokenIdent s) p) = 
+    case lookupS' s z of
+        Nothing -> (insertS s (Entry (UnionT m) p (unionSize m z) 0) z, DS.singleton(Right $ ""))
+        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
+                                      " already declared in " ++ show pos)))
 
 doInsert t (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
         Nothing -> (insertS s (Entry t p (typeSize t) 0) z, DS.singleton(Right $ ""))
         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
                                       " already declared in " ++ show pos)))
+
+structSize m z = DMap.foldl (structS z) 0 m
+
+structS z n (TypeT s) = n + sm
+    where (Entry t p sm o) = fst $ fromJust $ lookupS s z
+structS z n t = n + typeSize t 
+
+unionSize m z = DMap.foldl (unionS z) 0 m
+
+unionS z n (TypeT s) = if n > sm then n else sm
+    where (Entry t p sm o) = fst $ fromJust $ lookupS s z
+unionS z n t = if n > typeSize t then n else typeSize t   
 
 doInsertFun :: Type -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq(Binnacle))
 doInsertFun t (z,_) l@(Lexeme (TokenIdent s) p) = 
