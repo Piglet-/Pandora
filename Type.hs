@@ -26,7 +26,7 @@ data Type = IntT
 		| IteratorT
 		| FuncT 	Type [Type]	
 		| ProcT 	Type [Type]	
-		| ArrayT 	Type 
+		| ArrayT 	Int  Type 
 		| TypeT 	String 
 		| TypeError
 		deriving(Eq)
@@ -46,7 +46,7 @@ instance Show Type where
 		 	IteratorT 		-> "Iterator "
 		 	FuncT t	l		-> "Function "  ++ show t ++ show l
 		 	ProcT t l	 	-> "Procedure " ++ show t ++ show l
-		 	ArrayT t 		-> "Array "  	++ show t 
+		 	ArrayT d t 		-> "Array "  	++ show t 
 		 	TypeT s 		-> "TypeT " ++ s ++ " "
 		 	TypeError 		-> "TypeError"
 
@@ -83,10 +83,10 @@ makePointer 0 ty 	= ty
 makePointer n ty 	= PointerT t
 		where t 	= makePointer (n-1) ty
 
-makeArray :: Int -> Type -> Type
-makeArray 0 ty 	= ty
-makeArray n ty 	= ArrayT t
-		where t = makeArray (n-1) ty
+makeArray :: [Lexeme Token] -> Type -> Type
+makeArray [] ty 	= ty
+makeArray ((Lexeme (TokenInt d) _):ds) ty 	= ArrayT d t
+		where t = makeArray ds ty
 
 
 type Binnacle = Either String String		
@@ -98,14 +98,11 @@ typeSize BoolT = 1
 typeSize StringT  = 4
 typeSize CharT = 2
 typeSize (PointerT _) = 4
-typeSize (StructT m) = DMap.foldl' suma 0 m 
-typeSize (UnionT m) = DMap.foldl' suma 0 m
 typeSize IteratorT = 4
-typeSize (ArrayT t) = 4
+typeSize (ArrayT d t) = d * typeSize t
 typeSize (FuncT t _) = typeSize t
 typeSize (ProcT t _) = typeSize t
 typeSize VoidT = 0
-typeSize (TypeT s) = 0
 
 suma :: Int -> Type -> Int
 suma n t = n + typeSize t

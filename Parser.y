@@ -263,8 +263,8 @@ Type : intT     { $1 }
     | voidT     { $1 }
     | id        { $1 }
 
-Dimen : "[" int "]"             { % return 1 }
-        | Dimen "[" int "]"     { % return ($1 + 1) } 
+Dimen : "[" int "]"             { % return [$2] }
+        | Dimen "[" int "]"     { % return ($3:$1) } 
 
 Values : true               { BoolT }
     | false                 { BoolT }
@@ -810,9 +810,9 @@ allNum ts = if (all isNum ts)
                 else False
 
 isArray :: Type -> [Type] -> (Type,DS.Seq(Binnacle))
-isArray a@(ArrayT t) []  = (TypeError, DS.singleton (Left $ "Type Error given " 
+isArray a@(ArrayT d t) []  = (TypeError, DS.singleton (Left $ "Type Error given " 
                         ++ show a ++ " expecting a basic type"))
-isArray (ArrayT t) (ty:ts) = if allNum (ty:ts)
+isArray (ArrayT d t) (ty:ts) = if allNum (ty:ts)
                     then isArray t ts
                     else (TypeError, DS.singleton (Left $ "Type Error given " 
                         ++ show ts ++ "expecting list of Int fields"))
