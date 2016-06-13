@@ -374,7 +374,7 @@ ListId : id                 { [$1] }
 
 Accesor : id Arrays { % do 
                         st <- get 
-                        tell (snd (findId $1 (syt st)))
+                        tell (snd(isArray(typeToken $1 (syt st)) $2))
                         return(fst(isArray(typeToken $1 (syt st)) $2))}
         | id Accs  { % do 
                         st <- get 
