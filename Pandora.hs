@@ -18,7 +18,7 @@ main = do
             if null (tail args)
                 then if any isTokenError lexs 
                         then mapM_ fPrint (filter isTokenError lexs)
-                        else do let (state, bita) = execRWS (parse lexs) "" (State emptyZipper emptyZipper 0)
+                        else do let (state, bita) = execRWS (parse lexs) "" (State emptyZipper emptyZipper)
                                 print $ defocus $ syt state
                                 putStr "Strings Symbol Table:"
                                 print $ defocus $ srt state
@@ -31,7 +31,7 @@ main = do
                                 else mapM_ fPrint lexs
                     "-p" -> if any isTokenError lexs 
                                 then mapM_ fPrint (filter isTokenError lexs)
-                                else do let (state, bita) = execRWS (parse lexs) "" (State emptyZipper emptyZipper 0)
+                                else do let (state, bita) = execRWS (parse lexs) "" (State emptyZipper emptyZipper)
                                         print $ defocus $ syt state
                                         print $ defocus $ srt state
                                         putStr (filterBit bita)

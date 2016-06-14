@@ -17,6 +17,7 @@ module SymbolTable
     , emptyScope
     , openScope
     , closeScope
+    , offScope
     ) where
 
 import Position
@@ -32,15 +33,14 @@ data Entry = Entry Type Position Int Int
 
 data State = State {
                     syt :: Zipper, 
-                    srt :: Zipper,
-                    off :: Int
+                    srt :: Zipper
 }
 
 instance Show Entry where
     show (Entry t p s o) = show t ++ " " ++ show p ++ " Size : " ++ show s ++ " Offset: " ++ show o  
 -- un scope es un entero que representa el nivel de anidamiento,
 -- y una tupla con la posicion inicial y final del scope
-data Scope = Scope Int (Position, Position) deriving(Show)
+data Scope = Scope Int Int (Position, Position) deriving(Show)
 
 -- tipo de datos para la tabla de simbolos
 
@@ -53,7 +53,7 @@ instance Show SymbolTable where
 
 -- mestra las tablas con identacion
 showTable :: SymbolTable -> String
-showTable (SymbolTable (Scope t s) maps childrens) = 
+showTable (SymbolTable (Scope t o s) maps childrens) = 
     (tabs t) ++ "Level: " ++ show t ++ "\n" ++
     (tabs t) ++ "Scope:\n" ++
     (showAux (DMap.keys maps) (DMap.elems maps) t) ++ concat (toList (fmap showTable (DS.reverse childrens))) 
@@ -114,12 +114,13 @@ lookupS' k (SymbolTable i m sts, bs) = DMap.lookup k m
 
 -- inserta un nuevo simbolo
 insertS :: String -> Entry -> Zipper -> Zipper 
-insertS k v (SymbolTable i m sts, bs) = (SymbolTable i (DMap.insert k v m) sts, bs) 
+insertS k (Entry t pos s o) (SymbolTable (Scope n off p) m sts, bs) = 
+    (SymbolTable (Scope n (o+s) p) (DMap.insert k (Entry t pos s o) m) sts, bs) 
 
 -- inserta una nueva tabla
 insertT :: Zipper -> Zipper
-insertT (SymbolTable (Scope i p) m sts, bs) = (SymbolTable (Scope i p) m (st DS.<| sts), bs)
-	where st = (SymbolTable (Scope (succ i) p) DMap.empty (DS.empty))
+insertT (SymbolTable (Scope i o p) m sts, bs) = (SymbolTable (Scope i o p) m (st DS.<| sts), bs)
+	where st = (SymbolTable (Scope (succ i) 0 p) DMap.empty (DS.empty))
 
 -- coloca una tabla en el zipper
 focus :: SymbolTable -> Zipper
@@ -142,5 +143,8 @@ openScope z = fromJust $ goDown $ insertT z
 closeScope :: Zipper -> Zipper
 closeScope z = maybe z id (goBack z)
 
+offScope :: Zipper -> Int
+offScope ((SymbolTable (Scope _ o _) _ _), _) = o
+
 emptyScope :: Scope
-emptyScope = Scope 0 (Position (0,0), Position (0,0))
+emptyScope = Scope 0 0 (Position (0,0), Position (0,0))

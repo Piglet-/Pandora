@@ -99,10 +99,10 @@ typeSize StringT  = 4
 typeSize CharT = 2
 typeSize (PointerT _) = 4
 typeSize IteratorT = 4
-typeSize (ArrayT d t) = d * typeSize t
 typeSize (FuncT t _) = typeSize t
 typeSize (ProcT t _) = typeSize t
 typeSize VoidT = 0
+typeSize TypeError = 0
 
 suma :: Int -> Type -> Int
 suma n t = n + typeSize t
