@@ -374,12 +374,12 @@ ListId : id                 { [$1] }
 
 Accesor : id Arrays { % do 
                         st <- get 
-                        tell (snd(isArray(typeToken $1 (syt st)) $2))
-                        return(fst(isArray(typeToken $1 (syt st)) $2))}
+                        tell (snd(isArray $1 (typeToken $1 (syt st)) $2))
+                        return(fst(isArray $1 (typeToken $1 (syt st)) $2))}
         | id Accs  { % do 
                         st <- get 
-                        tell (snd (isTypeT (typeToken $1 (syt st)) (reverse $2) (syt st)))
-                        return (fst(isTypeT (typeToken $1 (syt st)) (reverse $2) (syt st)))}
+                        tell (snd (isTypeT $1 (typeToken $1 (syt st)) (reverse $2) (syt st)))
+                        return (fst(isTypeT $1 (typeToken $1 (syt st)) (reverse $2) (syt st)))}
 
 Accs: Acc       { % return [$1] }
     | Accs Acc  { % return ($2:$1) }
@@ -432,11 +432,11 @@ Return : return Exp ";"  	{ % return $2 }
 	|return FuncCall ";" 	{ % return $2 } 
 
 Write : write Exp ";"       { % do 
-                                tell (snd (writeInst $2))
-                                return (fst (writeInst $2)) } -- verificar string
+                                tell (snd (writeInst $1 $2))
+                                return (fst (writeInst $1 $2)) } 
 	| write FuncCall ";"    { % do 
-                                tell (snd (writeInst $2))
-                                return (fst (writeInst $2)) } -- tampoco se
+                                tell (snd (writeInst $1 $2))
+                                return (fst (writeInst $1 $2)) } 
 
 If : if "(" Exp ")" then Block  { % do 
                                     tell (snd (ifInst $3 $1 $6))
@@ -452,8 +452,8 @@ For : for OS "(" Range ")" do Block CS  { % do
 
 Range : It from Exp to Exp with Exp  { % do 
                                         st <- get 
-                                        tell (snd (rangeVef $3 $5 $7))
-                                        return (fst (rangeVef $3 $5 $7)) }
+                                        tell (snd (rangeVef $2 $3 $5 $7))
+                                        return (fst (rangeVef $2 $3 $5 $7)) }
 It : id { % do 
                 st <- get
                 put $ State (fst $ doInsert IteratorT ((syt st),DS.empty) $1) (srt st) 
@@ -481,38 +481,38 @@ parseError l = case l of
 
 doInsert:: Type -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq(Binnacle))
 doInsert VoidT (z,_) l@(Lexeme (TokenIdent s) p) = 
-     (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
+     (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                     " can't be declared as void")))
 
 doInsert (TypeT t) (z,_) l@(Lexeme (TokenIdent s) p) =
     case lookupS t z of
-        Nothing -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " in " ++ show p ++
-                                      " not declared")))
+        Nothing -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " " ++ show p ++
+                                      " not declared ")))
         Just ((Entry st pos sz o),_) -> 
             case st of
                 StructT _ ->  
                     case lookupS' s z of
                         Nothing -> (insertS s (Entry (TypeT t) p sz (padding (TypeT t) (offScope z))) z, DS.singleton(Right $ ""))
-                        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
-                                      " already declared in " ++ show pos)))
+                        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
+                                      " already declared " ++ show pos)))
                 UnionT _ -> case lookupS' s z of
                         Nothing -> (insertS s (Entry (TypeT t) p sz (padding (TypeT t) (offScope z))) z, DS.singleton(Right $ ""))
-                        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
-                                      " already declared in " ++ show pos)))
-                _ -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " in " ++ show p ++
-                                      " not declared")))
+                        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
+                                      " already declared " ++ show pos)))
+                _ -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " " ++ show p ++
+                                      " not declared ")))
 doInsert t (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
         Nothing -> (insertS s (Entry t p (typeSize' t z) (padding t (offScope z))) z, DS.singleton(Right $ ""))
-        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
-                                      " already declared in " ++ show pos)))
+        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
+                                      " already declared " ++ show pos)))
 
 doInsertS :: (Type, Int) -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq(Binnacle))
 doInsertS (t, i) (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
         Nothing -> (insertS s (Entry t p i (padding t (offScope z))) z, DS.singleton(Right $ ""))
-        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
-                                      " already declared in " ++ show pos)))
+        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
+                                      " already declared " ++ show pos)))
 
 typeSize' (ArrayT d t) z = d * typeSize' t z
 typeSize' (FuncT t ts) z = typeSize' t z
@@ -546,14 +546,14 @@ doInsertStr t z l@(Lexeme (TokenString s) p) =
  
 findId :: Lexeme Token -> Zipper -> (Zipper, DS.Seq(Binnacle))
 findId l@(Lexeme (TokenIdent s) p) z =  case lookupS s z of
-                Nothing -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " is not defined")))
+                Nothing -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++ " is not defined")))
                 Just v  -> (z, DS.singleton (Right $ ""))
 
 findIdA :: Lexeme Token -> Type -> Zipper -> (Type, DS.Seq(Binnacle))
 findIdA l@(Lexeme (TokenIdent s) p) ty z =  case lookupS s z of
-                Nothing -> (TypeError, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " is not defined")))
+                Nothing -> (TypeError, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++ " is not defined")))
                 Just ((Entry t p sz o),scp)  -> if t == IteratorT 
-                                            then (TypeError, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++ " can't be assigned")))
+                                            then (TypeError, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++ " can't be assigned")))
                                             else if t == ty 
                                                 then (VoidT, DS.singleton (Right $ ""))
                                                 else (TypeError, DS.singleton (Left $ ("TypeError " ++ show s ++ " " ++ show p ++ " given " ++ show ty 
@@ -561,7 +561,7 @@ findIdA l@(Lexeme (TokenIdent s) p) ty z =  case lookupS s z of
 
 findFunc :: Lexeme Token -> [Type] -> Zipper -> (Type, DS.Seq(Binnacle))
 findFunc l@(Lexeme (TokenIdent s) p) ts z =  case lookupS s z of
-                Nothing                 -> (TypeError, DS.singleton (Left $ ("Variable " ++ show s ++ " in " 
+                Nothing                 -> (TypeError, DS.singleton (Left $ ("Variable " ++ show s ++ " " 
                                             ++ show p ++ " is not defined")))
                 Just ((Entry t@(FuncT ty lts) pos sz o),scp)  -> 
                                             case matchType t ts of
@@ -685,22 +685,22 @@ whileInst BoolT (Lexeme t p) t1 = (TypeError, DS.singleton(Left $ "Type Error "
 whileInst t1 (Lexeme t p) _     = (TypeError, DS.singleton(Left $ "Type Error " 
                                     ++ show p ++ "given " ++ show t1 ++ " expecting Bool"))
 
-rangeVef :: Type -> Type -> Type -> (Type, DS.Seq(Binnacle))
-rangeVef IntT IntT IntT = (IteratorT, DS.singleton (Right $ ""))
-rangeVef TypeError _ _  = (TypeError , DS.singleton (Right $ "")) --nuevo
-rangeVef _ TypeError _  = (TypeError , DS.singleton (Right $ "")) --nuevo
-rangeVef _ _ TypeError  = (TypeError , DS.singleton (Right $ "")) -- nuevo
-rangeVef IntT IntT t1   = (TypeError, DS.singleton(Left $ "Type Error given " 
-                            ++ show t1 ++ " expecting Int"))
-rangeVef IntT t1 _      = (TypeError, DS.singleton(Left $ "Type Error given " 
-                            ++ show t1 ++ " expecting Int"))
-rangeVef t1 _ _         = (TypeError, DS.singleton(Left $ "Type Error given " 
-                            ++ show t1 ++ " expecting Int"))
+rangeVef :: Lexeme Token -> Type -> Type -> Type -> (Type, DS.Seq(Binnacle))
+rangeVef l IntT IntT IntT = (IteratorT, DS.singleton (Right $ ""))
+rangeVef l TypeError _ _  = (TypeError , DS.singleton (Right $ "")) --nuevo
+rangeVef l _ TypeError _  = (TypeError , DS.singleton (Right $ "")) --nuevo
+rangeVef l _ _ TypeError  = (TypeError , DS.singleton (Right $ "")) -- nuevo
+rangeVef l IntT IntT t1   = (TypeError, DS.singleton(Left $ "Type Error given " 
+                            ++ show t1 ++ " expecting Int in for instruction " ++ show (pos l)))
+rangeVef l IntT t1 _      = (TypeError, DS.singleton(Left $ "Type Error given " 
+                            ++ show t1 ++ " expecting Int in for instruction " ++ show (pos l)))
+rangeVef l t1 _ _         = (TypeError, DS.singleton(Left $ "Type Error given " 
+                            ++ show t1 ++ " expecting Int in for instruction " ++ show (pos l)))
 
 forInst :: Type -> Type -> Lexeme Token -> (Type, DS.Seq(Binnacle))
 forInst IteratorT VoidT  _          = (VoidT, DS.singleton (Right $ ""))
-forInst TypeError _ _               = (TypeError , DS.singleton (Right $ "")) --nuevo
-forInst _ TypeError _               = (TypeError , DS.singleton (Right $ "")) --nuevo
+forInst TypeError _ _               = (TypeError , DS.singleton (Right $ ""))
+forInst _ TypeError _               = (TypeError , DS.singleton (Right $ "")) 
 forInst IteratorT t1 (Lexeme t p)   = (TypeError, DS.singleton(Left $ "Type Error for "
                                         ++ show p ++ " given " ++ show t1 ++ " expecting Void"))
 forInst t1 _  (Lexeme t p)          = (TypeError, DS.singleton(Left $ "Type Error for "
@@ -708,7 +708,7 @@ forInst t1 _  (Lexeme t p)          = (TypeError, DS.singleton(Left $ "Type Erro
 
 freeInst :: Type -> Lexeme Token -> (Type,DS.Seq(Binnacle))
 freeInst (PointerT _) _     = (VoidT, DS.singleton (Right $ ""))
-freeInst TypeError _        =(TypeError , DS.singleton (Right $ "")) --nuevo
+freeInst TypeError _        =(TypeError , DS.singleton (Right $ "")) 
 freeInst t1 (Lexeme t p)    = (TypeError, DS.singleton(Left $ "Type Error free "
                                 ++ show p ++ " given " ++ show t1 ++ " expecting Pointer"))
 
@@ -735,23 +735,23 @@ ifFloat :: Type -> Type -> Type
 ifFloat FloatT StringT  = StringT 
 ifFloat _  _            = TypeError
 
-writeInst :: Type -> (Type, DS.Seq(Binnacle))
-writeInst IntT = (VoidT,DS.singleton (Right $ "") )
-writeInst FloatT = (VoidT, DS.singleton (Right $ ""))
-writeInst StringT = (VoidT, DS.singleton (Right $ ""))
-writeInst BoolT = (VoidT, DS.singleton (Right $ ""))
-writeInst TypeError = (TypeError, DS.singleton(Right $""))
-writeInst t = (TypeError, DS.singleton (Left $ "Type Error in write "))
+writeInst :: Lexeme Token -> Type -> (Type, DS.Seq(Binnacle))
+writeInst l IntT = (VoidT,DS.singleton (Right $ "") )
+writeInst l FloatT = (VoidT, DS.singleton (Right $ ""))
+writeInst l StringT = (VoidT, DS.singleton (Right $ ""))
+writeInst l BoolT = (VoidT, DS.singleton (Right $ ""))
+writeInst l TypeError = (TypeError, DS.singleton(Right $""))
+writeInst l t = (TypeError, DS.singleton (Left $ "Type Error in write instruction " ++ show (pos l)))
 
-isTypeT :: Type -> [Lexeme Token] -> Zipper-> (Type, DS.Seq(Binnacle))
-isTypeT t ls z = case t of
+isTypeT :: Lexeme Token -> Type -> [Lexeme Token] -> Zipper-> (Type, DS.Seq(Binnacle))
+isTypeT l t ls z = case t of
     TypeT s     -> case lookupS s z of
         Just ((Entry ty pos sz o),sc) -> findField ty ls z
         Nothing                  ->  (TypeError, DS.singleton (Left $ "Type Error not defined " 
-                                    ++ show t))
+                                    ++ show t ++ " " ++ show (pos l)))
     TypeError   -> (TypeError, DS.singleton (Right $ "")) --nuevo
     _           -> (TypeError, DS.singleton (Left $ "Type Error not defined " --nuevo
-                                    ++ show t))
+                                    ++ show t ++ " " ++ show (pos l)))
 
 findField :: Type -> [Lexeme Token] -> Zipper -> (Type, DS.Seq(Binnacle))
 findField t [l@(Lexeme (TokenIdent s) p) ] z    = 
@@ -768,7 +768,7 @@ findField t (l@(Lexeme (TokenIdent s) p):ls) z =
         then case (DMap.lookup s (snd $ isStruct t z)) of
             Just (Entry ty p sz off)   -> 
                 if (fst $ isStruct ty z)
-                        then (isTypeT ty ls z)
+                        then (isTypeT l ty ls z)
                         else (TypeError, DS.singleton (Left $ "Type Error "
                                 ++ show (pos l) ++ " given " ++ show ty 
                                 ++ " expecting Struct or Union")) 
@@ -810,18 +810,25 @@ allNum ts = if (all isNum ts)
                 then True
                 else False
 
-isArray :: Type -> [Type] -> (Type,DS.Seq(Binnacle))
-isArray a@(ArrayT d t) []  = (TypeError, DS.singleton (Left $ "Type Error given " 
-                        ++ show a ++ " expecting a basic type"))
-isArray (ArrayT d t) (ty:ts) = if allNum (ty:ts)
-                    then isArray t ts
-                    else (TypeError, DS.singleton (Left $ "Type Error given " 
-                        ++ show ts ++ "expecting list of Int fields"))
-isArray TypeError _ = (TypeError , DS.singleton (Right $ "")) --nuevo
-isArray t          ts = if null ts
-                    then (t, DS.singleton (Right $ ""))
-                    else (TypeError, DS.singleton (Left $ "Type Error given " 
-                        ++ show ts ++ "expecting list of Int fields"))
+isArray :: Lexeme Token -> Type -> [Type] -> (Type,DS.Seq(Binnacle))
+isArray (Lexeme (TokenIdent s) p) a@(ArrayT d t) []  
+                        = (TypeError, DS.singleton (Left $ "Type Error given " 
+                        ++ show a ++ " expecting a basic type in array " ++ s 
+                        ++ " " ++ show p))
+isArray l@(Lexeme (TokenIdent s) p)(ArrayT d t) (ty:ts) 
+                    = if allNum (ty:ts)
+                        then isArray l t ts
+                        else (TypeError, DS.singleton (Left $ "Type Error given " 
+                        ++ show ts ++ "expecting list of Int fields in array " ++ s 
+                        ++ " " ++ show p))
+isArray (Lexeme (TokenIdent s) p) TypeError _ 
+                    = (TypeError , DS.singleton (Right $ ""))
+isArray (Lexeme (TokenIdent s) p) t ts = 
+                    if null ts
+                        then (t, DS.singleton (Right $ ""))
+                        else (TypeError, DS.singleton (Left $ "Type Error given " 
+                        ++ show ts ++ "expecting list of Int fields in array " ++ s 
+                        ++ " " ++ show p))
 
 isTypeVoid :: Type -> Type
 isTypeVoid VoidT = VoidT
