@@ -4,10 +4,12 @@ module Type
 	, Binnacle(..)
 	, makeBtype
 	, makeObj
-	, makeStruct
 	, makePointer
 	, makeArray
 	, typeSize
+	, padding
+	, padStruct
+	, Entry(..)
 	) where
 
 import Tokens
@@ -20,8 +22,8 @@ data Type = IntT
 		| CharT	
 		| PointerT 	Type
 		| VoidT
-		| StructT 	(DMap.Map String Type) 
-		| UnionT 	(DMap.Map String Type)
+		| StructT 	(DMap.Map String Entry) 
+		| UnionT 	(DMap.Map String Entry)
 		| StringT
 		| IteratorT
 		| FuncT 	Type [Type]	
@@ -46,7 +48,7 @@ instance Show Type where
 		 	IteratorT 		-> "Iterator "
 		 	FuncT t	l		-> "Function "  ++ show t ++ show l
 		 	ProcT t l	 	-> "Procedure " ++ show t ++ show l
-		 	ArrayT d t 		-> "Array "  	++ show t 
+		 	ArrayT d t 		-> "Array of "  ++ show t 
 		 	TypeT s 		-> "TypeT " ++ s ++ " "
 		 	TypeError 		-> "TypeError"
 
@@ -60,11 +62,6 @@ makeBtype l = case (token l) of
 	TokenStringT 	-> StringT
 	TokenVoid 		-> VoidT
 	TokenIdent s    -> TypeT s
-
-makeStruct :: Lexeme t -> [(Lexeme Token, Type)] -> Type
-makeStruct lex list = case (token lex) of
-	TokenStruct -> StructT 	(toMap list)
-	TokenUnion	-> UnionT 	(toMap list)
 
 aux :: [(Lexeme Token, Type)] -> [(String, Type)]
 aux [] = []
@@ -92,19 +89,31 @@ makeArray ((Lexeme (TokenInt d) _):ds) ty 	= ArrayT d t
 type Binnacle = Either String String		
 
 typeSize :: Type -> Int
-typeSize IntT = 4
-typeSize FloatT = 8
-typeSize BoolT = 1
-typeSize StringT  = 4
-typeSize CharT = 2
-typeSize (PointerT _) = 4
-typeSize IteratorT = 4
-typeSize (FuncT t _) = typeSize t
-typeSize (ProcT t _) = typeSize t
-typeSize VoidT = 0
-typeSize TypeError = 0
+typeSize IntT 			= 4
+typeSize FloatT 		= 4
+typeSize BoolT 			= 2
+typeSize StringT  		= 4
+typeSize CharT 			= 2
+typeSize (PointerT _) 	= 4
+typeSize IteratorT 		= 4
+typeSize (FuncT t _) 	= typeSize t
+typeSize (ProcT t _) 	= typeSize t
+typeSize VoidT 			= 0
+typeSize TypeError 		= 0
+
+padding :: Type -> Int -> Int
+padding (ArrayT d t) i 	= padding t i
+padding (StructT m) i  	= padStruct i
+padding (UnionT m) i   	= padStruct i
+padding (TypeT s) i 	= padStruct i
+padding t i = i + (i `mod` (typeSize t))
+
+padStruct :: Int -> Int
+padStruct i = i + (i `mod` 4)
 
 suma :: Int -> Type -> Int
 suma n t = n + typeSize t
 
--- METER VALORES EN LAS ASIGNACIONES
+data Entry = Entry Type Position Int Int deriving(Eq)
+instance Show Entry where
+    show (Entry t p s o) = show t ++ " " ++ show p ++ " Size : " ++ show s ++ " Offset: " ++ show o  

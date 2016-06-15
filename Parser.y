@@ -142,13 +142,13 @@ Main : begin Insts end  { % return $2 }
 Declaration:  FuncDec OS Insts CS end CS        {% return $3 }
             | struct id has StructObjs ";" end         { % do 
                                                         st <- get
-                                                        tell (snd (doInsert (makeStruct $1 $4) ((syt st),DS.empty) $2))
-                                                        put $ State (fst (doInsert (makeStruct $1 $4) ((syt st),DS.empty) $2)) (srt st)  
+                                                        tell (snd (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2))
+                                                        put $ State (fst (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2)) (srt st)  
                                                         return VoidT}
             | union id like StructObjs ";" end          { % do 
                                                         st <- get
-                                                        tell (snd (doInsert (makeStruct $1 $4) ((syt st),DS.empty) $2))
-                                                        put $ State (fst(doInsert (makeStruct $1 $4) ((syt st),DS.empty) $2)) (srt st)
+                                                        tell (snd (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2))
+                                                        put $ State (fst(doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2)) (srt st)
                                                         return VoidT  }
             | Dec                                       { % return $1 }
             | Assign                                    { % return $1 } 
@@ -492,31 +492,25 @@ doInsert (TypeT t) (z,_) l@(Lexeme (TokenIdent s) p) =
             case st of
                 StructT _ ->  
                     case lookupS' s z of
-                        Nothing -> (insertS s (Entry (TypeT t) p sz (offScope z)) z, DS.singleton(Right $ ""))
+                        Nothing -> (insertS s (Entry (TypeT t) p sz (padding (TypeT t) (offScope z))) z, DS.singleton(Right $ ""))
                         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
                                       " already declared in " ++ show pos)))
                 UnionT _ -> case lookupS' s z of
-                        Nothing -> (insertS s (Entry (TypeT t) p sz (offScope z)) z, DS.singleton(Right $ ""))
+                        Nothing -> (insertS s (Entry (TypeT t) p sz (padding (TypeT t) (offScope z))) z, DS.singleton(Right $ ""))
                         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
                                       " already declared in " ++ show pos)))
                 _ -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " in " ++ show p ++
                                       " not declared")))
-
-doInsert (StructT m) (z,_) l@(Lexeme (TokenIdent s) p) = 
-    case lookupS' s z of
-        Nothing -> (insertS s (Entry (StructT m) p (structSize m z) (offScope z)) z, DS.singleton(Right $ ""))
-        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
-                                      " already declared in " ++ show pos)))
-
-doInsert (UnionT m) (z,_) l@(Lexeme (TokenIdent s) p) = 
-    case lookupS' s z of
-        Nothing -> (insertS s (Entry (UnionT m) p (unionSize m z) (offScope z)) z, DS.singleton(Right $ ""))
-        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
-                                      " already declared in " ++ show pos)))
-
 doInsert t (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
-        Nothing -> (insertS s (Entry t p (typeSize' t z) (offScope z)) z, DS.singleton(Right $ ""))
+        Nothing -> (insertS s (Entry t p (typeSize' t z) (padding t (offScope z))) z, DS.singleton(Right $ ""))
+        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
+                                      " already declared in " ++ show pos)))
+
+doInsertS :: (Type, Int) -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq(Binnacle))
+doInsertS (t, i) (z,_) l@(Lexeme (TokenIdent s) p) = 
+    case lookupS' s z of
+        Nothing -> (insertS s (Entry t p i (padding t (offScope z))) z, DS.singleton(Right $ ""))
         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " in " ++ show p ++
                                       " already declared in " ++ show pos)))
 
@@ -529,15 +523,15 @@ typeSize' t z = typeSize t
 
 structSize m z = DMap.foldl (structS z) 0 m
 
-structS z n (TypeT s) = n + sm
+structS z n (Entry (TypeT s) p sz off) = n + sm
     where (Entry t p sm o) = fst $ fromJust $ lookupS s z
-structS z n t = n + typeSize' t z
+structS z n (Entry t p sz off) = n + typeSize' t z
 
 unionSize m z = DMap.foldl (unionS z) 0 m
 
-unionS z n (TypeT s) = if n > sm then n else sm
+unionS z n (Entry (TypeT s) p sz off) = if n > sm then n else sm
     where (Entry t p sm o) = fst $ fromJust $ lookupS s z
-unionS z n t = if n > typeSize' t z then n else typeSize' t z  
+unionS z n (Entry t p sz off) = if n > typeSize' t z then n else typeSize' t z  
 
 doInsertFun :: Type -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq(Binnacle))
 doInsertFun t (z,_) l@(Lexeme (TokenIdent s) p) = 
@@ -763,7 +757,7 @@ findField :: Type -> [Lexeme Token] -> Zipper -> (Type, DS.Seq(Binnacle))
 findField t [l@(Lexeme (TokenIdent s) p) ] z    = 
     if (fst $ isStruct t z)
         then case (DMap.lookup s (snd $ isStruct t z)) of
-            Just  ty            -> (ty, DS.singleton (Right $ ""))
+            Just (Entry ty p zs off) -> (ty, DS.singleton (Right $ ""))
             Nothing             -> (TypeError, DS.singleton (Left $ "Type Error "
                                     ++ show (pos l) ++ " not defined field " ++ s))
         else (TypeError, DS.singleton (Left $ "Type Error "
@@ -772,7 +766,7 @@ findField t [l@(Lexeme (TokenIdent s) p) ] z    =
 findField t (l@(Lexeme (TokenIdent s) p):ls) z = 
     if (fst $ isStruct t z)
         then case (DMap.lookup s (snd $ isStruct t z)) of
-            Just (ty)   -> 
+            Just (Entry ty p sz off)   -> 
                 if (fst $ isStruct ty z)
                         then (isTypeT ty ls z)
                         else (TypeError, DS.singleton (Left $ "Type Error "
@@ -784,7 +778,7 @@ findField t (l@(Lexeme (TokenIdent s) p):ls) z =
                                     ++ show (pos l) ++ " given " ++ show t 
                                     ++ " expecting Struct or Union"))
 
-isStruct :: Type -> Zipper -> (Bool, DMap.Map String Type)
+isStruct :: Type -> Zipper -> (Bool, DMap.Map String Entry)
 isStruct t z = case t of
         UnionT m    -> (True, m)
         StructT m   -> (True, m)
@@ -832,5 +826,19 @@ isArray t          ts = if null ts
 isTypeVoid :: Type -> Type
 isTypeVoid VoidT = VoidT
 isTypeVoid TypeError = TypeError
+
+makeStruct :: Lexeme t -> [(Lexeme Token, Type)] -> Zipper -> (Type, Int)
+makeStruct lex list z = case (token lex) of
+    TokenStruct -> (StructT $ DMap.fromList m, s)
+        where (m , s) = (foldl (makeEntry z) ([],0) list)
+    TokenStruct -> (UnionT $ DMap.fromList m, s)
+        where (m , s) = (foldl (makeUnion z) ([],0) list)
+
+
+makeEntry :: Zipper -> ([(String, Entry)], Int) -> (Lexeme Token, Type) -> ([(String, Entry)],Int)
+makeEntry z (l,n) (Lexeme (TokenIdent s) p, t) = ((s,(Entry t p (typeSize' t z) (padding t n))): l, padding t (n + (typeSize' t z)))
+
+makeUnion :: Zipper -> ([(String, Entry)], Int) -> (Lexeme Token, Type) -> ([(String, Entry)],Int)
+makeUnion z (l,n) (Lexeme (TokenIdent s) p, t) = ((s,(Entry t p (typeSize' t z) n )): l,0)
 
 }   
