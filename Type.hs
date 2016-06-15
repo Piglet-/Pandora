@@ -46,8 +46,8 @@ instance Show Type where
 		 	UnionT 	l		-> "Union " ++ show l
 		 	StringT 		-> "String "
 		 	IteratorT 		-> "Iterator "
-		 	FuncT t	l		-> "Function "  ++ show t ++ show l
-		 	ProcT t l	 	-> "Procedure " ++ show t ++ show l
+		 	FuncT t	l		-> "Function "  ++ show t ++ show (reverse l)
+		 	ProcT t l	 	-> "Procedure " ++ show t ++ show (reverse l)
 		 	ArrayT d t 		-> "Array of "  ++ show t 
 		 	TypeT s 		-> "TypeT " ++ s ++ " "
 		 	TypeError 		-> "TypeError"
@@ -117,3 +117,8 @@ suma n t = n + typeSize t
 data Entry = Entry Type Position Int Int deriving(Eq)
 instance Show Entry where
     show (Entry t p s o) = show t ++ " " ++ show p ++ " Size : " ++ show s ++ " Offset: " ++ show o  
+
+
+-- Hacer funcion del maximo tamaño para el padding de los structs
+-- o meter todo en un mapa para luego calcular el maximo
+-- funciones y tipos (structs) no tienen offset solo tamaño

@@ -137,7 +137,7 @@ import qualified Data.Sequence as DS
 Program : Declarations Main "EOF"  { % return (instruc ($2:[$1])) }             
 	   | Main "EOF"                { % return  $1 } 
 
-Main : begin Insts end  { % return $2 } 
+Main : begin OS Insts CS end  { % return $3 } 
 
 Declaration:  FuncDec OS Insts CS end CS        {% return $3 }
             | struct id has StructObjs ";" end         { % do 
