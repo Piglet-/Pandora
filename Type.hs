@@ -106,6 +106,7 @@ padding (ArrayT d t) i 	= padding t i
 padding (StructT m) i  	= padStruct i
 padding (UnionT m) i   	= padStruct i
 padding (TypeT s) i 	= padStruct i
+padding (FuncT (TypeT s) _) i = padStruct i
 padding t i = i + (i `mod` (typeSize t))
 
 padStruct :: Int -> Int

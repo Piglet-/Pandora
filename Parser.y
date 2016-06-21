@@ -10,6 +10,7 @@ import Lexer
 import Control.Monad.RWS
 import SymbolTable
 import Type
+import AST
 import Data.Maybe
 import qualified Data.Map.Strict as DMap
 import qualified Data.Sequence as DS
@@ -266,94 +267,94 @@ Type : intT     { $1 }
 Dimen : "[" int "]"             { % return [$2] }
         | Dimen "[" int "]"     { % return ($3:$1) } 
 
-Values : true               { BoolT }
-    | false                 { BoolT }
-    | null                  { VoidT }
-    | int                   { IntT }
-    | float                 { FloatT }
-    | char                  { CharT }
+Values : true               { (BoolT, BoolL True (pos $1)) }
+    | false                 { (BoolT, BoolL False (pos $1)) }
+    | null                  { (VoidT, VoidL (pos $1)) }
+    | int                   { (IntT , IntL (toint $1) (pos $1)) }
+    | float                 { (FloatT, FloatL (tofloat $1) (pos $1)) }
+    | char                  { (CharT, CharL (tochar $1) (pos $1)) }
 
 Exp : Values                { % return $1 }
     | id                    { % do
                                     st <- get
                                     tell (snd (findId $1 (syt st))) 
-                                    return (typeToken $1 (syt st)) }
+                                    return ((typeToken $1 (syt st)), IdL (tostr $1) (pos $1)) }
     | Exp "+" Exp           { % do 
                                     st <- get 
-                                    tell (snd (binNumExp $1 $2 $3 "+"))
-                                    return (fst (binNumExp $1 $2 $3 "+")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "+"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "+")), ExpBin Plus (snd $1) (snd $3) (pos $2)) }
     | Exp "-" Exp           { % do 
                                     st <- get 
-                                    tell (snd (binNumExp $1 $2 $3 "-"))
-                                    return (fst (binNumExp $1 $2 $3 "-")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "-"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "-")), ExpBin Minus (snd $1) (snd $3) (pos $2)) }
     | Exp "/" Exp           { % do 
                                     st <- get 
-                                    tell (snd (binNumExp $1 $2 $3 "/"))
-                                    return (fst (binNumExp $1 $2 $3 "/")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "/"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "/")), ExpBin Slash (snd $1) (snd $3) (pos $2)) }
     | Exp "^" Exp           { % do  
                                     st <- get -- No estoy seguro cuales serian los tipos
-                                    tell (snd (binNumExp $1 $2 $3 "^")) 
-                                    return (fst (binNumExp $1 $2 $3 "^")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "^"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "^")), ExpBin Power (snd $1) (snd $3) (pos $2)) }
     | Exp "*" Exp           { % do 
                                     st <- get 
-                                    tell (snd (binNumExp $1 $2 $3 "*"))
-                                    return (fst (binNumExp $1 $2 $3 "*")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "*"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "*")), ExpBin Mul (snd $1) (snd $3) (pos $2)) }
     | Exp div Exp           { % do 
                                     st <- get --Creo que oslo serian Enteros
-                                    tell (snd (binNumExp $1 $2 $3 "div"))
-                                    return (fst (binNumExp $1 $2 $3 "div")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "div"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "div")), ExpBin Div (snd $1) (snd $3) (pos $2)) }
     | Exp mod Exp           { % do 
                                     st <- get 
-                                    tell (snd (binNumExp $1 $2 $3 "mod"))
-                                    return (fst (binNumExp $1 $2 $3 "mod")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "mod"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "mod")), ExpBin Mod (snd $1) (snd $3) (pos $2)) }
     | Exp ">" Exp           { % do 
                                     st <- get 
-                                    tell (snd (relExp $1 $2 $3 ">"))
-                                    return (fst (relExp $1 $2 $3 ">")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) ">"))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) ">")), ExpBin Gt (snd $1) (snd $3) (pos $2)) }
     | Exp ">=" Exp          { % do 
                                     st <- get 
-                                    tell (snd (relExp $1 $2 $3 ">="))
-                                    return (fst (relExp $1 $2 $3 ">=")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) ">="))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) ">=")), ExpBin GEt (snd $1) (snd $3) (pos $2)) }
     | Exp "<" Exp           { % do 
                                     st <- get 
-                                    tell (snd (relExp $1 $2 $3 "<"))
-                                    return (fst (relExp $1 $2 $3 "<")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) "<"))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "<")), ExpBin Lt (snd $1) (snd $3) (pos $2)) }
     | Exp "<=" Exp          { % do 
                                     st <- get 
-                                    tell (snd (relExp $1 $2 $3 "<="))
-                                    return (fst (relExp $1 $2 $3 "<=")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) "<="))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "<=")), ExpBin LEt (snd $1) (snd $3) (pos $2)) }
     | Exp "==" Exp          { % do 
                                     st <- get 
-                                    tell (snd (eqExp $1 $2 $3 "=="))
-                                    return (fst (eqExp $1 $2 $3 "==")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) "=="))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "==")), ExpBin Equal (snd $1) (snd $3) (pos $2)) }
     | Exp "/=" Exp          { % do 
                                     st <- get 
-                                    tell (snd (eqExp $1 $2 $3 "/="))
-                                    return (fst (eqExp $1 $2 $3 "/=")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) "/="))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "/=")), ExpBin Inequal (snd $1) (snd $3) (pos $2)) }
     | Exp and Exp           { % do 
                                     st <- get 
-                                    tell (snd (binBoolExp $1 $2 $3 "and"))
-                                    return (fst (binBoolExp $1 $2 $3 "and")) }
+                                    tell (snd (binBoolExp (fst $1) $2 (fst $3) "and"))
+                                    return ((fst (binBoolExp (fst $1) $2 (fst $3) "and")), ExpBin And (snd $1) (snd $3) (pos $2)) }
     | Exp or Exp            { % do 
                                     st <- get 
-                                    tell (snd (binBoolExp $1 $2 $3 "or"))
-                                    return (fst (binBoolExp $1 $2 $3 "or")) }
+                                    tell (snd (binBoolExp (fst $1) $2 (fst $3) "or"))
+                                    return ((fst (binBoolExp (fst $1) $2 (fst $3) "or")), ExpBin And (snd $1) (snd $3) (pos $2)) }
     | "-" Exp   %prec NEG   { % do 
-                                    tell (snd (numExp $1 $2 "-"))
-                                    return (fst (numExp $1 $2 "-")) }
+                                    tell (snd (numExp $1 (fst $2) "-"))
+                                    return ((fst (numExp $1 (fst $2) "-")), ExpUna Minus (snd $2) (pos $2)) }
     | not Exp   %prec NEG   { % do 
-                                    tell (snd (numExp $1 $2 "not"))
-                                    return (fst (numExp $1 $2 "not")) }
+                                    tell (snd (numExp $1 (fst $2) "not"))
+                                    return ((fst (numExp $1 (fst $2) "not")), ExpUna Not (snd $2) (pos $2)) }
     | "->" Exp  %prec NEG   { % do 
-                                    tell (snd (pointExp $1 $2 "->"))
-                                    return (fst (pointExp $1 $2 "->")) }
+                                    tell (snd (pointExp $1 (fst $2) "->"))
+                                    return ((fst (pointExp $1 (fst $2) "->")), ExpUna Arrow (snd $2) (pos $2)) }
     | Accesor               { % return $1 }
     | CFunctions            { % return $1 }
     | "(" Exp ")"           { % return $2 }
     | string                { % do 
                                 st <- get
                                 put $ State (syt st) (doInsertStr StringT (srt st) $1)
-                                return StringT
+                                return (StringT, StringL (tostr $1) (pos $1))
                                 }
 
 Assign : id "=" Exp  ";"        { % do 
@@ -788,7 +789,7 @@ isStruct t z = case t of
         t1          -> (False, DMap.empty)
 
 
-instruc :: [Type] -> Type 
+instruc :: [(Type,Expression)] -> Type 
 instruc ts = if (all (==VoidT) ts) 
                 then VoidT
                 else TypeError
@@ -838,7 +839,7 @@ makeStruct :: Lexeme t -> [(Lexeme Token, Type)] -> Zipper -> (Type, Int)
 makeStruct lex list z = case (token lex) of
     TokenStruct -> (StructT $ DMap.fromList m, s)
         where (m , s) = (foldl (makeEntry z) ([],0) list)
-    TokenStruct -> (UnionT $ DMap.fromList m, s)
+    TokenUnion -> (UnionT $ DMap.fromList m, s)
         where (m , s) = (foldl (makeUnion z) ([],0) list)
 
 
@@ -847,5 +848,18 @@ makeEntry z (l,n) (Lexeme (TokenIdent s) p, t) = ((s,(Entry t p (typeSize' t z) 
 
 makeUnion :: Zipper -> ([(String, Entry)], Int) -> (Lexeme Token, Type) -> ([(String, Entry)],Int)
 makeUnion z (l,n) (Lexeme (TokenIdent s) p, t) = ((s,(Entry t p (typeSize' t z) n )): l,0)
+
+tostr :: Lexeme Token -> String
+tostr (Lexeme (TokenIdent s) _) = s
+toStr (Lexeme (TokenString s) _) = s
+
+toint :: Lexeme Token -> Int 
+toint (Lexeme (TokenInt n ) _) = n
+
+tofloat :: Lexeme Token -> Float
+tofloat (Lexeme (TokenFloat n) _) = n
+
+tochar :: Lexeme Token -> Char
+tochar (Lexeme (TokenChar c) _) = c
 
 }   

@@ -19,3 +19,5 @@ data Lexeme t = Lexeme
 -- instancia show para la información de un lexema
 instance Show t => Show (Lexeme t) where
     show (Lexeme t p) = show t ++ show p 
+
+
