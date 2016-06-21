@@ -862,4 +862,5 @@ tofloat (Lexeme (TokenFloat n) _) = n
 tochar :: Lexeme Token -> Char
 tochar (Lexeme (TokenChar c) _) = c
 
+
 }   
