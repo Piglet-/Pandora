@@ -371,12 +371,8 @@ Exp : Values                { % return $1 }
 Assign : id "=" Exp  ";"        { % do 
                                     st <- get 
                                     tell (snd (findIdA $1 (fst $3) (syt st)))
-                                    return (fst (findIdA $1 (fst $3) (syt st)), AsngL (StringL (getTkID $1) (pos $1)) (snd $3) (pos $2)) }
-       {-} | id "=" InstA          {% do 
-                                    st <- get 
-                                    tell (snd (findIdA $1 $3 (syt st)))
-                                    return (fst (findIdA $1 $3 (syt st)), AsngL (StringL (getTkID $1) (pos $1)) (snd $3) (pos $2))}-}
-
+                                    return (fst (findIdA $1 (fst $3) (syt st)), AsngL (IdL (getTkID $1) (pos $1)) (snd $3) (pos $2)) }
+                                    
         | Accesor "=" Exp ";"   { % do
                                     tell (snd (matchAcc (fst $1) (fst $3) $2))
                                     return (fst(matchAcc (fst $1) (fst $3) $2), AsngL (snd $1) (snd $3) (pos $2)) }
@@ -387,17 +383,17 @@ ListId : id                 { [$1] }
 Accesor : id Arrays { % do 
                         st <- get 
                         tell (snd(isArray $1 (typeToken $1 (syt st)) (fst $ unzip $2)))
-                        return(fst(isArray $1 (typeToken $1 (syt st)) (fst $ unzip $2)), AccsA (StringL (getTkID $1) (pos $1)) (snd $ unzip $2) (pos $1))}
+                        return(fst(isArray $1 (typeToken $1 (syt st)) (fst $ unzip $2)), AccsA (IdL (getTkID $1) (pos $1)) (snd $ unzip $2) (pos $1))}
         | id Accs  
         { % do 
             st <- get 
             tell (snd (isTypeT $1 (typeToken $1 (syt st)) (reverse $ fst $ unzip $2) (syt st)))
-            return (fst(isTypeT $1 (typeToken $1 (syt st)) (reverse $ fst $ unzip $2) (syt st)), AccsS (StringL (getTkID $1) (pos $1)) (snd $ unzip $2) (pos $1))}
+            return (fst(isTypeT $1 (typeToken $1 (syt st)) (reverse $ fst $ unzip $2) (syt st)), AccsS (IdL (getTkID $1) (pos $1)) (snd $ unzip $2) (pos $1))}
 
 Accs: Acc       { % return [$1] }
     | Accs Acc  { % return ($2:$1) }
 
-Acc : "." id        { % return ($2, StringL (getTkID $2) (pos $2)) }
+Acc : "." id        { % return ($2, IdL (getTkID $2) (pos $2)) }
 
 Arrays : Array        { % return [$1] }
        | Arrays Array { % return ($2:$1) }
@@ -407,15 +403,15 @@ Array : "[" int "]"   { % return (IntT, IntL (getTkInt $2) (pos $2)) }
 FuncCall : id "(" Fields ")" { % do 
                                     st <- get 
                                     tell (snd (findFunc $1 (fst $ unzip $3) (syt st)))
-                                    return (fst (findFunc $1 (fst $ unzip $3) (syt st)), FCall (StringL (getTkID $1) (pos $1)) (snd $ unzip $3) (pos $1)) }
+                                    return (fst (findFunc $1 (fst $ unzip $3) (syt st)), FCall (IdL (getTkID $1) (pos $1)) (snd $ unzip $3) (pos $1)) }
 
 Fields : {- lambda -}       { % return [] }
         | Exp               { % return ([$1]) }
         | Fields "," Exp    { % return ($3:$1) }
 
-CFunctions : inttostr "(" Exp ")"   { % return ((ifInt (fst $3) StringT), CFCall (StringL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
-            | flotostr "(" Exp ")"  { % return ((ifFloat (fst $3) StringT), CFCall (StringL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
-            | inttoflo "(" Exp ")"  { % return ((ifInt (fst $3) FloatT), CFCall (StringL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
+CFunctions : inttostr "(" Exp ")"   { % return ((ifInt (fst $3) StringT), CFCall (IdL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
+            | flotostr "(" Exp ")"  { % return ((ifFloat (fst $3) StringT), CFCall (IdL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
+            | inttoflo "(" Exp ")"  { % return ((ifInt (fst $3) FloatT), CFCall (IdL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
 
 Insts : Inst            { % return (instrucS (fst $1), [snd $1]) }
         | Insts Inst    { % return (instruc ((fst $2):[fst $1]), (snd $2):(snd $1)) }
