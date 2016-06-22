@@ -7,6 +7,7 @@ module Instructions
 	, treeIns
 	,filterI
 	, filterE
+	,filterIns
 )
 where
 
@@ -38,15 +39,15 @@ treeAST (AST is) = Node "AST" (map treeIns is)
 
 treeIns :: Instructions -> Tree String
 treeIns (IfL exp is p) 
-	= Node ("IF " ++ show p) ((treeExp exp): map treeIns is)
+	= Node ("IF " ++ show p) ((treeExp exp): map treeIns (reverse is))
 treeIns (IfteL exp ist ise p) 
-	= Node ("IF-Then-Else " ++ show p) ((treeExp exp):map treeIns ist ++ map treeIns ise)
+	= Node ("IF-Then-Else " ++ show p) ((treeExp exp):map treeIns (reverse ist) ++ map treeIns (reverse ise))
 treeIns (ForL exp1 exp2 exp3 is p) 
-	= Node ("For " ++ show p) ((treeExp exp1):(treeExp exp2):(treeExp exp3):map treeIns is)
+	= Node ("For " ++ show p) ((treeExp exp1):(treeExp exp2):(treeExp exp3):map treeIns (reverse is))
 treeIns (WhileL exp is p) 
-	= Node ("While " ++ show p) ((treeExp exp):map treeIns is)
+	= Node ("While " ++ show p) ((treeExp exp):map treeIns (reverse is))
 treeIns (RepeatL is exp p) 
-	= Node ("Repeat " ++ show p) ((treeExp exp):map treeIns is)
+	= Node ("Repeat " ++ show p) ((treeExp exp):map treeIns (reverse is))
 treeIns (ReadL exp p) 
 	= Node ("Read " ++ show p) [treeExp exp]
 treeIns (WriteL exp p) 
@@ -83,6 +84,9 @@ treeExp (AccsS e es p)
 
 filterI :: AST -> AST
 filterI (AST is) = AST (filter (/= DecL) is)
+
+filterIns :: [Instructions] -> [Instructions]
+filterIns l = filter (/= DecL) l
 
 filterE :: [Expression] -> [Expression]
 filterE le = filter (/= NoneE) le

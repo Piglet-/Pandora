@@ -413,9 +413,9 @@ Fields : {- lambda -}       { % return [] }
         | Exp               { % return ([$1]) }
         | Fields "," Exp    { % return ($3:$1) }
 
-CFunctions : inttostr "(" Exp ")"   { % return ((ifInt (fst $3) StringT), CFCall (IdL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
-            | flotostr "(" Exp ")"  { % return ((ifFloat (fst $3) StringT), CFCall (IdL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
-            | inttoflo "(" Exp ")"  { % return ((ifInt (fst $3) FloatT), CFCall (IdL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
+CFunctions : inttostr "(" Exp ")"   { % return ((ifInt (fst $3) StringT), CFCall (IdL ("intToString") (pos $1)) (snd $3) (pos $1)) } 
+            | flotostr "(" Exp ")"  { % return ((ifFloat (fst $3) StringT), CFCall (IdL ("floatToString") (pos $1)) (snd $3) (pos $1)) } 
+            | inttoflo "(" Exp ")"  { % return ((ifInt (fst $3) FloatT), CFCall (IdL ("intToFloat") (pos $1)) (snd $3) (pos $1)) } 
 
 Insts : Inst            { % return (instrucS (fst $1), [snd $1]) }
         | Insts Inst    { % return (instruc ((fst $2):[fst $1]), (snd $2):(snd $1)) }
@@ -900,28 +900,28 @@ isWrite t e p  = case t of
 isIf :: Type -> Expression -> [Instructions] -> Position -> Instructions
 isIf t e li p  = case t of
     TypeError -> None
-    _         -> IfL e li p
+    _         -> IfL e (filterIns li) p
 
 isIfte :: Type -> Expression -> [Instructions] -> [Instructions] -> Position -> Instructions
 isIfte t e l1 l2 p = case t of
     TypeError   -> None
-    _           -> IfteL e l1 l2 p
+    _           -> IfteL e (filterIns l1) (filterIns l2) p
 
 isFor :: Type -> Expression -> Expression -> Expression -> [Instructions] -> Position -> Instructions
 isFor t e e1 e2 l p = case t of
     TypeError   -> None
-    _           -> ForL e e1 e2 l p 
+    _           -> ForL e e1 e2 (filterIns l) p 
 
 isWhile :: Type -> Expression -> [Instructions] -> Position -> Instructions
 isWhile t e l p = case t of
     TypeError   -> None
-    _           -> WhileL e l p
+    _           -> WhileL e (filterIns l) p
                     
 
 isRepeat :: Type -> [Instructions] -> Expression -> Position -> Instructions
 isRepeat t l e p = case t of
     TypeError   -> None
-    _           -> RepeatL l e p 
+    _           -> RepeatL (filterIns l) e p 
                     
 
 isAssing :: Type -> Expression -> Expression -> Position -> Instructions
