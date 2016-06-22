@@ -155,3 +155,4 @@ instance Show Token where
         TokenFloatErrorU e  -> "\nBad float error: " ++ show e ++ " (underflow)"
         TokenBadComment     -> "\nComment not closed at end of file"
         TokenStringError    -> "\nString not closed (missing character '\"' at end of line)"   
+

@@ -136,27 +136,30 @@ import qualified Data.Sequence as DS
 
 %%
 
-Program : Declarations Main "EOF"  { % return (instruc ($2:[$1])) }             
-       | Main "EOF"                { % return  $1 } 
+Program : Declarations Main "EOF"  { % do
+                                    st <- get
+                                    put $ State (syt st) (srt st) (AST (snd $2))
+                                    return (instruc ((fst $2):[$1]), AST (snd $2)) }             
+       | Main "EOF"                { % do
+                                    st <- get
+                                    put $ State (syt st) (srt st) (AST (snd $1))
+                                    return  (fst $1, AST (snd $1)) } 
 
-Main : begin OS Insts CS end  { % return $3 } 
+Main : begin OS Insts CS end  { % return (fst $3, (reverse (snd $3))) } 
 
-Declaration:  FuncDec OS Insts CS end CS        {% do
-                                                    st <- get
-                                                    put  $ State (insertInsF (snd $ snd $1) $3 (syt st)) (srt st)-- inserta ast
-                                                    return $3 } 
+Declaration:  FuncDec OS Insts CS end CS        {% return ( fst $3) } 
             | struct id has StructObjs ";" end         { % do 
                                                         st <- get
                                                         tell (snd (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2))
-                                                        put $ State (fst (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2)) (srt st)  
+                                                        put $ State (fst (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2)) (srt st) (ast st)  
                                                         return VoidT}
             | union id like StructObjs ";" end          { % do 
                                                         st <- get
                                                         tell (snd (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2))
-                                                        put $ State (fst(doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2)) (srt st)
+                                                        put $ State (fst(doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2)) (srt st) (ast st)
                                                         return VoidT  }
-            | Dec                                       { % return $1 }
-            | Assign                                    { % return $1 } 
+            | Dec                                       { % return (fst $1) }
+            | Assign                                    { % return (fst $1) } 
 
 StructObjs : StructOb                   { $1 }
             | StructObjs ";" StructOb   { $1 ++ $3 }
@@ -168,28 +171,28 @@ StructOb : Type ":" ListId { [(x,y) | x <- $3,  y <- [(makeBtype $1)]] }
 FuncDec : TypeFunc OS "(" Param ")"  {% do 
                                         st <- get
                                         tell (snd (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) $4) ((syt st),DS.empty) (snd $1)))
-                                        put $ State (fst (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) $4) ((syt st),DS.empty) (snd $1))) (srt st) 
+                                        put $ State (fst (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) $4) ((syt st),DS.empty) (snd $1))) (srt st) (ast st)
                                         return (fst $1,($4,snd $1)) }
         
 TypeFunc :  Type ":" func id    {% do 
                                    st <- get
                                    tell( snd (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4))
-                                   put $ State (fst (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4)) (srt st) 
+                                   put $ State (fst (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4)) (srt st) (ast st)
                                    return (($3,makeBtype $1),$4) } 
         | Type ":" proc id {% do 
                               st <- get
                               tell( snd (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4))
-                              put $ State (fst (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4)) (srt st) 
+                              put $ State (fst (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4)) (srt st) (ast st)
                               return (($3,makeBtype $1),$4)} 
 
 OS: {- Lambda -} { % do 
                      st <- get 
-                     put $ State (openScope (syt st)) (srt st)
+                     put $ State (openScope (syt st)) (srt st) (ast st)
                  }
 
 CS: {- Lambda -} { % do 
                      st <- get 
-                     put $ State (closeScope (syt st)) (srt st) 
+                     put $ State (closeScope (syt st)) (srt st) (ast st)
                  }
 
 Declarations : Declaration { % return (instrucS $1) }
@@ -198,18 +201,18 @@ Declarations : Declaration { % return (instrucS $1) }
 Dec : Type ":" ListId                      { % do 
                                             st <- get 
                                             tell (snd (foldl (doInsert (makeBtype $1)) ((syt st),DS.empty)  $3))
-                                            put $ State (fst (foldl (doInsert (makeBtype $1)) ((syt st),DS.empty)  $3)) (srt st) 
-                                            return VoidT}
+                                            put $ State (fst (foldl (doInsert (makeBtype $1)) ((syt st),DS.empty)  $3)) (srt st) (ast st)
+                                            return (VoidT, None)}
     | array of Type Dimen ":" ListId       { % do
                                             st <- get
                                             tell (snd (foldl (doInsert (makeArray $4 (makeBtype $3))) ((syt st),DS.empty) $6))
-                                            put $ State (fst(foldl (doInsert (makeArray $4 (makeBtype $3))) ((syt st),DS.empty) $6)) (srt st) 
-                                            return VoidT } 
+                                            put $ State (fst(foldl (doInsert (makeArray $4 (makeBtype $3))) ((syt st),DS.empty) $6)) (srt st) (ast st)
+                                            return (VoidT, None) } 
     | Type Astk id  { % do 
                         st <- get 
                         tell (snd (doInsert (makePointer $2 (makeBtype $1)) ((syt st),DS.empty) $3))
-                        put $ State (fst (doInsert (makePointer $2 (makeBtype $1)) ((syt st),DS.empty) $3)) (srt st) 
-                        return VoidT 
+                        put $ State (fst (doInsert (makePointer $2 (makeBtype $1)) ((syt st),DS.empty) $3)) (srt st) (ast st)
+                        return (VoidT, None) 
                         }
 
 Astk : "*"     {% return 1}
@@ -222,42 +225,42 @@ Param: {- lambda -}     { % return [] }
 Params: Type ":" id     { % do
                             st <- get
                             tell (snd (doInsert (makeBtype $1) ((syt st),DS.empty) $3))
-                            put $ State (fst (doInsert (makeBtype $1) ((syt st),DS.empty) $3)) (srt st) 
+                            put $ State (fst (doInsert (makeBtype $1) ((syt st),DS.empty) $3)) (srt st) (ast st)
                             return [(makeBtype $1)]} 
         | array of Type Dimen ":" id    {% do
                                             st <- get
                                             tell (snd (doInsert (makeArray $4 (makeBtype $3)) ((syt st),DS.empty) $6))
-                                            put $ State (fst (doInsert (makeArray $4 (makeBtype $3)) ((syt st),DS.empty) $6)) (srt st) 
+                                            put $ State (fst (doInsert (makeArray $4 (makeBtype $3)) ((syt st),DS.empty) $6)) (srt st) (ast st)
                                             return [(makeBtype $3)]} 
         | var Type ":" id   { % do
                                 st <- get
                                 tell (snd (doInsert (makeBtype $2) ((syt st),DS.empty) $4))
-                                put $ State (fst (doInsert (makeBtype $2) ((syt st),DS.empty) $4)) (srt st) 
+                                put $ State (fst (doInsert (makeBtype $2) ((syt st),DS.empty) $4)) (srt st) (ast st)
                                 return [(makeBtype $2)]} 
         | var array of Type Dimen ":" id    { % do
                                                 st <- get
                                                 tell (snd (doInsert (makeArray $5 (makeBtype $4)) ((syt st),DS.empty) $7))
-                                                put $ State (fst (doInsert (makeArray $5 (makeBtype $4)) ((syt st),DS.empty) $7)) (srt st) 
+                                                put $ State (fst (doInsert (makeArray $5 (makeBtype $4)) ((syt st),DS.empty) $7)) (srt st) (ast st)
                                                 return [(makeBtype $4)]} 
         | Params "," var Type ":" id    {% do
                                             st <- get
                                             tell (snd (doInsert (makeBtype $4) ((syt st),DS.empty) $6))
-                                            put $ State (fst (doInsert (makeBtype $4) ((syt st),DS.empty) $6)) (srt st) 
+                                            put $ State (fst (doInsert (makeBtype $4) ((syt st),DS.empty) $6)) (srt st) (ast st)
                                             return ((makeBtype $4):$1)} 
         | Params "," var array of Type Dimen ":" id     {% do
                                                             st <- get
                                                             tell (snd (doInsert (makeArray $7 (makeBtype $6)) ((syt st),DS.empty) $9))
-                                                            put $ State (fst (doInsert (makeArray $7 (makeBtype $6)) ((syt st),DS.empty) $9)) (srt st) 
+                                                            put $ State (fst (doInsert (makeArray $7 (makeBtype $6)) ((syt st),DS.empty) $9)) (srt st) (ast st)
                                                             return ((makeBtype $6):$1)} 
         | Params "," Type ":" id    { % do
                                         st <- get
                                         tell (snd (doInsert (makeBtype $3) ((syt st),DS.empty) $5))
-                                        put $ State (fst (doInsert (makeBtype $3) ((syt st),DS.empty) $5)) (srt st) 
+                                        put $ State (fst (doInsert (makeBtype $3) ((syt st),DS.empty) $5)) (srt st) (ast st)
                                         return ((makeBtype $3):$1)} 
         | Params "," array of Type Dimen ":" id     { % do
                                                         st <- get
                                                         tell (snd (doInsert (makeArray $6 (makeBtype $5)) ((syt st),DS.empty) $8))
-                                                        put $ State (fst (doInsert (makeArray $6 (makeBtype $5)) ((syt st),DS.empty) $8)) (srt st)
+                                                        put $ State (fst (doInsert (makeArray $6 (makeBtype $5)) ((syt st),DS.empty) $8)) (srt st) (ast st)
                                                         return ((makeBtype $5):$1) }
 
 Type : intT     { $1 } 
@@ -271,150 +274,151 @@ Type : intT     { $1 }
 Dimen : "[" int "]"             { % return [$2] }
         | Dimen "[" int "]"     { % return ($3:$1) } 
 
-Values : true               { BoolT }
-    | false                 { BoolT }
-    | null                  { VoidT }
-    | int                   { IntT }
-    | float                 { FloatT }
-    | char                  { CharT }
+Values : true               { (BoolT, BoolL True (pos $1)) }
+    | false                 { (BoolT, BoolL False (pos $1)) }
+    | null                  { (VoidT, VoidL (pos $1)) }
+    | int                   { (IntT , IntL (getTkInt $1) (pos $1)) }
+    | float                 { (FloatT, FloatL (getTkFloat $1) (pos $1)) }
+    | char                  { (CharT, CharL (getTkChar $1) (pos $1)) }
 
 Exp : Values                { % return $1 }
     | id                    { % do
                                     st <- get
                                     tell (snd (findId $1 (syt st))) 
-                                    return (typeToken $1 (syt st)) }
+                                    return ((typeToken $1 (syt st)), IdL (getTkID $1) (pos $1)) }
     | Exp "+" Exp           { % do 
                                     st <- get 
-                                    tell (snd (binNumExp $1 $2 $3 "+"))
-                                    return (fst (binNumExp $1 $2 $3 "+")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "+"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "+")), ExpBin Plus (snd $1) (snd $3) (pos $2)) }
     | Exp "-" Exp           { % do 
                                     st <- get 
-                                    tell (snd (binNumExp $1 $2 $3 "-"))
-                                    return (fst (binNumExp $1 $2 $3 "-")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "-"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "-")), ExpBin Minus (snd $1) (snd $3) (pos $2)) }
     | Exp "/" Exp           { % do 
                                     st <- get 
-                                    tell (snd (binNumExp $1 $2 $3 "/"))
-                                    return (fst (binNumExp $1 $2 $3 "/")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "/"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "/")), ExpBin Slash (snd $1) (snd $3) (pos $2)) }
     | Exp "^" Exp           { % do  
                                     st <- get -- No estoy seguro cuales serian los tipos
-                                    tell (snd (binNumExp $1 $2 $3 "^")) 
-                                    return (fst (binNumExp $1 $2 $3 "^")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "^"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "^")), ExpBin Power (snd $1) (snd $3) (pos $2)) }
     | Exp "*" Exp           { % do 
                                     st <- get 
-                                    tell (snd (binNumExp $1 $2 $3 "*"))
-                                    return (fst (binNumExp $1 $2 $3 "*")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "*"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "*")), ExpBin Mul (snd $1) (snd $3) (pos $2)) }
     | Exp div Exp           { % do 
                                     st <- get --Creo que oslo serian Enteros
-                                    tell (snd (binNumExp $1 $2 $3 "div"))
-                                    return (fst (binNumExp $1 $2 $3 "div")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "div"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "div")), ExpBin Div (snd $1) (snd $3) (pos $2)) }
     | Exp mod Exp           { % do 
                                     st <- get 
-                                    tell (snd (binNumExp $1 $2 $3 "mod"))
-                                    return (fst (binNumExp $1 $2 $3 "mod")) }
+                                    tell (snd (binNumExp (fst $1) $2 (fst $3) "mod"))
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "mod")), ExpBin Mod (snd $1) (snd $3) (pos $2)) }
     | Exp ">" Exp           { % do 
                                     st <- get 
-                                    tell (snd (relExp $1 $2 $3 ">"))
-                                    return (fst (relExp $1 $2 $3 ">")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) ">"))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) ">")), ExpBin Gt (snd $1) (snd $3) (pos $2)) }
     | Exp ">=" Exp          { % do 
                                     st <- get 
-                                    tell (snd (relExp $1 $2 $3 ">="))
-                                    return (fst (relExp $1 $2 $3 ">=")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) ">="))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) ">=")), ExpBin GEt (snd $1) (snd $3) (pos $2)) }
     | Exp "<" Exp           { % do 
                                     st <- get 
-                                    tell (snd (relExp $1 $2 $3 "<"))
-                                    return (fst (relExp $1 $2 $3 "<")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) "<"))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "<")), ExpBin Lt (snd $1) (snd $3) (pos $2)) }
     | Exp "<=" Exp          { % do 
                                     st <- get 
-                                    tell (snd (relExp $1 $2 $3 "<="))
-                                    return (fst (relExp $1 $2 $3 "<=")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) "<="))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "<=")), ExpBin LEt (snd $1) (snd $3) (pos $2)) }
     | Exp "==" Exp          { % do 
                                     st <- get 
-                                    tell (snd (eqExp $1 $2 $3 "=="))
-                                    return (fst (eqExp $1 $2 $3 "==")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) "=="))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "==")), ExpBin Equal (snd $1) (snd $3) (pos $2)) }
     | Exp "/=" Exp          { % do 
                                     st <- get 
-                                    tell (snd (eqExp $1 $2 $3 "/="))
-                                    return (fst (eqExp $1 $2 $3 "/=")) }
+                                    tell (snd (relExp (fst $1) $2 (fst $3) "/="))
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "/=")), ExpBin Inequal (snd $1) (snd $3) (pos $2)) }
     | Exp and Exp           { % do 
                                     st <- get 
-                                    tell (snd (binBoolExp $1 $2 $3 "and"))
-                                    return (fst (binBoolExp $1 $2 $3 "and")) }
+                                    tell (snd (binBoolExp (fst $1) $2 (fst $3) "and"))
+                                    return ((fst (binBoolExp (fst $1) $2 (fst $3) "and")), ExpBin And (snd $1) (snd $3) (pos $2)) }
     | Exp or Exp            { % do 
                                     st <- get 
-                                    tell (snd (binBoolExp $1 $2 $3 "or"))
-                                    return (fst (binBoolExp $1 $2 $3 "or")) }
+                                    tell (snd (binBoolExp (fst $1) $2 (fst $3) "or"))
+                                    return ((fst (binBoolExp (fst $1) $2 (fst $3) "or")), ExpBin And (snd $1) (snd $3) (pos $2)) }
     | "-" Exp   %prec NEG   { % do 
-                                    tell (snd (numExp $1 $2 "-"))
-                                    return (fst (numExp $1 $2 "-")) }
+                                    tell (snd (numExp $1 (fst $2) "-"))
+                                    return ((fst (numExp $1 (fst $2) "-")), ExpUna Minus (snd $2) (pos $1)) }
     | not Exp   %prec NEG   { % do 
-                                    tell (snd (numExp $1 $2 "not"))
-                                    return (fst (numExp $1 $2 "not")) }
+                                    tell (snd (numExp $1 (fst $2) "not"))
+                                    return ((fst (numExp $1 (fst $2) "not")), ExpUna Not (snd $2) (pos $1)) }
     | "->" Exp  %prec NEG   { % do 
-                                    tell (snd (pointExp $1 $2 "->"))
-                                    return (fst (pointExp $1 $2 "->")) }
+                                    tell (snd (pointExp $1 (fst $2) "->"))
+                                    return ((fst (pointExp $1 (fst $2) "->")), ExpUna Arrow (snd $2) (pos $1)) }
     | Accesor               { % return $1 }
     | CFunctions            { % return $1 }
     | "(" Exp ")"           { % return $2 }
     | string                { % do 
                                 st <- get
-                                put $ State (syt st) (doInsertStr StringT (srt st) $1)
-                                return StringT
+                                put $ State (syt st) (doInsertStr StringT (srt st) $1) (ast st)
+                                return (StringT, StringL (getTkID $1) (pos $1))
                                 }
     |FuncCall               { % return $1 } 
 
 Assign : id "=" Exp  ";"        { % do 
                                     st <- get 
-                                    tell (snd (findIdA $1 $3 (syt st)))
-                                    return (fst (findIdA $1 $3 (syt st))) }
-        | id "=" InstA          {% do 
+                                    tell (snd (findIdA $1 (fst $3) (syt st)))
+                                    return (fst (findIdA $1 (fst $3) (syt st)), AsngL (StringL (getTkID $1) (pos $1)) (snd $3) (pos $2)) }
+       {-} | id "=" InstA          {% do 
                                     st <- get 
                                     tell (snd (findIdA $1 $3 (syt st)))
-                                    return (fst (findIdA $1 $3 (syt st)))}
+                                    return (fst (findIdA $1 $3 (syt st)), AsngL (StringL (getTkID $1) (pos $1)) (snd $3) (pos $2))}-}
 
         | Accesor "=" Exp ";"   { % do
-                                    tell (snd (matchAcc $1 $3 $2))
-                                    return (fst(matchAcc $1 $3 $2)) }
+                                    tell (snd (matchAcc (fst $1) (fst $3) $2))
+                                    return (fst(matchAcc (fst $1) (fst $3) $2), AsngL (snd $1) (snd $3) (pos $2)) }
 
 ListId : id                 { [$1] }
         | ListId "," id     {  $3 : $1 }
 
 Accesor : id Arrays { % do 
                         st <- get 
-                        tell (snd(isArray $1 (typeToken $1 (syt st)) $2))
-                        return(fst(isArray $1 (typeToken $1 (syt st)) $2))}
-        | id Accs  { % do 
-                        st <- get 
-                        tell (snd (isTypeT $1 (typeToken $1 (syt st)) (reverse $2) (syt st)))
-                        return (fst(isTypeT $1 (typeToken $1 (syt st)) (reverse $2) (syt st)))}
+                        tell (snd(isArray $1 (typeToken $1 (syt st)) (fst $ unzip $2)))
+                        return(fst(isArray $1 (typeToken $1 (syt st)) (fst $ unzip $2)), AccsA (StringL (getTkID $1) (pos $1)) (snd $ unzip $2) (pos $1))}
+        | id Accs  
+        { % do 
+            st <- get 
+            tell (snd (isTypeT $1 (typeToken $1 (syt st)) (reverse $ fst $ unzip $2) (syt st)))
+            return (fst(isTypeT $1 (typeToken $1 (syt st)) (reverse $ fst $ unzip $2) (syt st)), AccsS (StringL (getTkID $1) (pos $1)) (snd $ unzip $2) (pos $1))}
 
 Accs: Acc       { % return [$1] }
     | Accs Acc  { % return ($2:$1) }
 
-Acc : "." id        { % return $2 }
+Acc : "." id        { % return ($2, StringL (getTkID $2) (pos $2)) }
 
 Arrays : Array        { % return [$1] }
        | Arrays Array { % return ($2:$1) }
 
-Array : "[" int "]"   { % return IntT }
+Array : "[" int "]"   { % return (IntT, IntL (getTkInt $2) (pos $2)) }
 
 FuncCall : id "(" Fields ")" { % do 
                                     st <- get 
-                                    tell (snd (findFunc $1 $3 (syt st)))
-                                    return (fst (findFunc $1 $3 (syt st))) }
+                                    tell (snd (findFunc $1 (fst $ unzip $3) (syt st)))
+                                    return (fst (findFunc $1 (fst $ unzip $3) (syt st)), FCall (StringL (getTkID $1) (pos $1)) (snd $ unzip $3) (pos $1)) }
 
 Fields : {- lambda -}       { % return [] }
         | Exp               { % return ([$1]) }
         | Fields "," Exp    { % return ($3:$1) }
 
-CFunctions : inttostr "(" Exp ")"   { % return (ifInt $3 StringT ) } 
-            | flotostr "(" Exp ")"  { % return (ifFloat $3 StringT) } 
-            | inttoflo "(" Exp ")"  { % return (ifInt $3 FloatT) } 
+CFunctions : inttostr "(" Exp ")"   { % return ((ifInt (fst $3) StringT), CFCall (StringL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
+            | flotostr "(" Exp ")"  { % return ((ifFloat (fst $3) StringT), CFCall (StringL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
+            | inttoflo "(" Exp ")"  { % return ((ifInt (fst $3) FloatT), CFCall (StringL (show $ token $1) (pos $1)) (snd $3) (pos $1)) } 
 
-Insts : Inst            { % return (instrucS $1) }
-        | Insts Inst    { % return (instruc ($2:[$1])) }
+Insts : Inst            { % return (instrucS (fst $1), [snd $1]) }
+        | Insts Inst    { % return (instruc ((fst $2):[fst $1]), (snd $2):(snd $1)) }
 
 
-InstA : read Exp ";"    { % return $2 } 
+InstA : read Exp ";"    { % return (fst $2, ReadL (snd $2) (pos $1)) } 
 
 Inst : InstA            { % return $1  }
     | Assign            { % return $1 } 
@@ -422,8 +426,8 @@ Inst : InstA            { % return $1  }
     | Write             { % return $1 }
     | Return            { % return $1 }
     | free Exp ";"      { % do  
-                            tell (snd (freeInst $2 $1))
-                            return (fst (freeInst $2 $1)) } 
+                            tell (snd (freeInst (fst $2) $1))
+                            return (fst (freeInst (fst $2) $1), FreeL (snd $2) (pos $1)) } 
     | InstB             { % return $1 }
 
 InstB: If               { % return $1 }
@@ -431,44 +435,45 @@ InstB: If               { % return $1 }
     | Repeat            { % return $1 }
     | For               { % return $1 }
 
-Return : return Exp ";"     { % return $2 } 
+Return : return Exp ";"     { % return (fst $2, ReturnL (snd $2) (pos $1)) } 
 
 Write : write Exp ";"       { % do 
-                                tell (snd (writeInst $1 $2))
-                                return (fst (writeInst $1 $2)) } 
+                                tell (snd (writeInst $1 (fst $2)))
+                                return (fst (writeInst $1 (fst $2)), WriteL (snd $2) (pos $1)) } 
 
 If : if "(" Exp ")" then Block  { % do 
-                                    tell (snd (ifInst $3 $1 $6))
-                                    return (fst (ifInst $3 $1 $6)) } 
+                                    tell (snd (ifInst (fst $3) $1 (fst $6)))
+                                    return (fst (ifInst (fst $3) $1 (fst $6)), IfL (snd $3) (snd $6) (pos $1)) } 
     | if "(" Exp ")" then Block else Insts end  {% do 
-                                                    tell (snd (ifElseInst $3 $1 $6 $8))
-                                                    return (fst (ifElseInst $3 $1 $6 $8)) }
+                                                    tell (snd (ifElseInst (fst $3) $1 (fst $6) (fst $8)))
+                                                    return (fst (ifElseInst (fst $3) $1 (fst $6) (fst $8)), IfteL (snd $3) (snd $6) (snd $8) (pos $1)) }
 
-For : for OS "(" Range ")" do Block CS  { % do 
-                                        st <- get 
-                                        tell (snd (forInst $4 $7 $1))
-                                        return (fst (forInst $4 $7 $1)) } 
+For : for OS "(" Range ")" do Block CS  
+{ % do 
+    st <- get 
+    tell (snd (forInst (fst $4) (fst $7) $1))
+    return (fst (forInst (fst $4) (fst $7) $1), ForL (head $ snd $4) (head $ tail $ snd $4) (last $ snd $4) (snd $7) (pos $1)) } 
 
 Range : It from Exp to Exp with Exp  { % do 
                                         st <- get 
-                                        tell (snd (rangeVef $2 $3 $5 $7))
-                                        return (fst (rangeVef $2 $3 $5 $7)) }
+                                        tell (snd (rangeVef $2 (fst $3) (fst $5) (fst $7)))
+                                        return (fst (rangeVef $2 (fst $3) (fst $5) (fst $7)), [(snd $3), (snd $5), (snd $7)]) }
 It : id { % do 
                 st <- get
-                put $ State (fst $ doInsert IteratorT ((syt st),DS.empty) $1) (srt st) 
+                put $ State (fst $ doInsert IteratorT ((syt st),DS.empty) $1) (srt st) (ast st)
                 tell (snd (doInsert IteratorT ((syt st),DS.empty) $1)) }
 
 While : while "(" Exp ")" do Block  { % do
                                         st <- get
-                                        tell (snd (whileInst $3 $1 $6))
-                                        return (fst (whileInst $3 $1 $6)) }
+                                        tell (snd (whileInst (fst $3) $1 (fst $6)))
+                                        return (fst (whileInst (fst $3) $1 (fst $6)), WhileL (snd $3) (snd $6) (pos $1)) }
 
 Repeat : repeat OS Insts until Exp CS  { % do
                                         st <- get
-                                        tell (snd (whileInst $5 $1 $3))
-                                        return (fst (whileInst $5 $1 $3)) }
+                                        tell (snd (whileInst (fst $5) $1 (fst $3)))
+                                        return (fst (whileInst (fst $5) $1 (fst $3)), RepeatL (snd $3) (snd $5) (pos $1)) }
 
-Block : OS Insts end CS { % return $2 } 
+Block : OS Insts end CS { % return (fst $2, snd $2) } 
 
 {
 
@@ -837,7 +842,7 @@ makeStruct :: Lexeme t -> [(Lexeme Token, Type)] -> Zipper -> (Type, Int)
 makeStruct lex list z = case (token lex) of
     TokenStruct -> (StructT $ DMap.fromList m, s)
         where (m , s) = (foldl (makeEntry z) ([],0) list)
-    TokenStruct -> (UnionT $ DMap.fromList m, s)
+    TokenUnion -> (UnionT $ DMap.fromList m, s)
         where (m , s) = (foldl (makeUnion z) ([],0) list)
 
 
@@ -848,10 +853,9 @@ makeUnion :: Zipper -> ([(String, Entry)], Int) -> (Lexeme Token, Type) -> ([(St
 makeUnion z (l,n) (Lexeme (TokenIdent s) p, t) = ((s,(Entry t p (typeSize' t z) n )): l,0)
 
 insertInsF :: Lexeme Token -> [Instructions] -> Zipper -> Zipper
-insertInsF (TokenIdent s) l z = doInsertS s entry z
-    where entry = case lookupS s z of
-        Just (Entry (FuncT t lt _) p i1 i2) -> Entry (FuncT t lt (AST l) p i1 i2)
-        Just (Entry (ProcT t lt _) p i1 i2) -> Entry (ProcT t lt (AST l) p i1 i2)
+insertInsF (Lexeme (TokenIdent s) p) l z = case (lookupS s z) of
+        Just (Entry (FuncT t lt _) pos i1 i2, sc) -> insertS s (Entry (FuncT t lt (AST l)) pos i1 i2) z
+        Just (Entry (ProcT t lt _) pos i1 i2, sc) -> insertS s (Entry (ProcT t lt (AST l)) pos i1 i2) z
 
 
 }   

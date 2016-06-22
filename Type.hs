@@ -14,6 +14,7 @@ module Type
 
 import Tokens
 import Lexeme
+import Instructions
 import qualified Data.Map.Strict as DMap
 
 data Type = IntT
@@ -26,8 +27,8 @@ data Type = IntT
 		| UnionT 	(DMap.Map String Entry)
 		| StringT
 		| IteratorT
-		| FuncT 	Type [Type]	
-		| ProcT 	Type [Type]	
+		| FuncT 	Type [Type]	AST
+		| ProcT 	Type [Type]	AST
 		| ArrayT 	Int  Type 
 		| TypeT 	String 
 		| TypeError
@@ -46,8 +47,8 @@ instance Show Type where
 		 	UnionT 	l		-> "Union " ++ show l
 		 	StringT 		-> "String "
 		 	IteratorT 		-> "Iterator "
-		 	FuncT t	l		-> "Function "  ++ show t ++ show (reverse l)
-		 	ProcT t l	 	-> "Procedure " ++ show t ++ show (reverse l)
+		 	FuncT t	l ast	-> "Function "  ++ show t ++ show (reverse l)
+		 	ProcT t l ast 	-> "Procedure " ++ show t ++ show (reverse l)
 		 	ArrayT d t 		-> "Array of "  ++ show t 
 		 	TypeT s 		-> "TypeT " ++ s ++ " "
 		 	TypeError 		-> "TypeError"
@@ -72,8 +73,8 @@ toMap l = DMap.fromList (aux l)
 
 makeObj :: Lexeme t -> Type -> [Type]-> Type
 makeObj l bt lt = case (token l) of
-	TokenProc		-> ProcT bt lt
-	TokenFunc		-> FuncT bt lt
+	TokenProc		-> ProcT bt lt (AST [])
+	TokenFunc		-> FuncT bt lt (AST [])
 
 makePointer :: Int -> Type -> Type 
 makePointer 0 ty 	= ty
@@ -96,18 +97,19 @@ typeSize StringT  		= 4
 typeSize CharT 			= 2
 typeSize (PointerT _) 	= 4
 typeSize IteratorT 		= 4
-typeSize (FuncT t _) 	= typeSize t
-typeSize (ProcT t _) 	= typeSize t
+typeSize (FuncT t _ _) 	= typeSize t
+typeSize (ProcT t _ _) 	= typeSize t
 typeSize VoidT 			= 0
 typeSize TypeError 		= 0
 
 padding :: Type -> Int -> Int
-padding (ArrayT d t) i 	= padding t i
-padding (StructT m) i  	= padStruct i
-padding (UnionT m) i   	= padStruct i
-padding (TypeT s) i 	= padStruct i
-padding (FuncT (TypeT s) _) i = padStruct i
-padding t i = i + (i `mod` (typeSize t))
+padding (ArrayT d t) i 			= padding t i
+padding (StructT m) i  			= padStruct i
+padding (UnionT m) i   			= padStruct i
+padding (TypeT s) i 			= padStruct i
+padding (FuncT (TypeT s) _ _) i = padStruct i
+padding (ProcT (TypeT s) _ _) i = padStruct i
+padding t i 					= i + (i `mod` (typeSize t))
 
 padStruct :: Int -> Int
 padStruct i = i + (i `mod` 4)

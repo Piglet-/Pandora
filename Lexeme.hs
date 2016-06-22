@@ -3,6 +3,10 @@ module Lexeme
     ( Lexeme(..)
     , module Position 
     , module Tokens
+    , getTkChar
+    ,getTkID
+    ,getTkInt
+    ,getTkFloat
     ) where
 
 import Position
@@ -20,4 +24,15 @@ data Lexeme t = Lexeme
 instance Show t => Show (Lexeme t) where
     show (Lexeme t p) = show t ++ show p 
 
+getTkID :: Lexeme Token -> String
+getTkID (Lexeme (TokenIdent s) p) = s
+getTkID (Lexeme (TokenString s) p)= s
 
+getTkInt :: Lexeme Token -> Int
+getTkInt (Lexeme (TokenInt i) p) = i 
+
+getTkFloat :: Lexeme Token -> Float 
+getTkFloat (Lexeme (TokenFloat f) p) = f
+
+getTkChar :: Lexeme Token -> Char 
+getTkChar (Lexeme (TokenChar c) p) = c
