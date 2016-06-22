@@ -8,6 +8,7 @@ import qualified Data.Sequence as DS
 import Instructions
 import qualified Data.Foldable as FB
 import Control.Monad.RWS
+import Data.Tree
 
 main = do
     args <- getArgs
@@ -23,7 +24,7 @@ main = do
                                 print $ defocus $ syt state
                                 putStr "Strings Symbol Table:"
                                 print $ defocus $ srt state
-                                print $ ast state
+                                putStr $ drawTree (treeAST (ast state))
                                 putStr "\nErrors: \n"
                                 putStr (filterBit bita)
                             --print $ drop 2 (show (parse lexs) ++ "Accepted") 
