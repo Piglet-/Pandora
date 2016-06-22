@@ -20,6 +20,7 @@ module SymbolTable
     ) where
 
 import Position
+import Instructions
 import qualified Data.Map.Strict as DMap
 import qualified Data.Sequence   as DS
 import Data.Foldable (toList)
@@ -31,7 +32,8 @@ import Type
 
 data State = State {
                     syt :: Zipper, 
-                    srt :: Zipper
+                    srt :: Zipper,
+                    ast :: AST
 }
 
 -- un scope es un entero que representa el nivel de anidamiento,

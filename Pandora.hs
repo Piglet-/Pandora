@@ -5,6 +5,7 @@ import SymbolTable
 import Type
 import Data.Either (lefts)
 import qualified Data.Sequence as DS
+import Instructions
 import qualified Data.Foldable as FB
 import Control.Monad.RWS
 
@@ -18,10 +19,11 @@ main = do
             if null (tail args)
                 then if any isTokenError lexs 
                         then mapM_ fPrint (filter isTokenError lexs)
-                        else do let (state, bita) = execRWS (parse lexs) "" (State emptyZipper emptyZipper)
+                        else do let (state, bita) = execRWS (parse lexs) "" (State emptyZipper emptyZipper (AST []))
                                 print $ defocus $ syt state
                                 putStr "Strings Symbol Table:"
                                 print $ defocus $ srt state
+                                print $ ast state
                                 putStr "\nErrors: \n"
                                 putStr (filterBit bita)
                             --print $ drop 2 (show (parse lexs) ++ "Accepted") 
@@ -31,7 +33,7 @@ main = do
                                 else mapM_ fPrint lexs
                     "-p" -> if any isTokenError lexs 
                                 then mapM_ fPrint (filter isTokenError lexs)
-                                else do let (state, bita) = execRWS (parse lexs) "" (State emptyZipper emptyZipper)
+                                else do let (state, bita) = execRWS (parse lexs) "" (State emptyZipper emptyZipper (AST []))
                                         print $ defocus $ syt state
                                         print $ defocus $ srt state
                                         putStr (filterBit bita)
