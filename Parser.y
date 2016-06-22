@@ -179,8 +179,8 @@ FuncDec : TypeFunc OS "(" Param ")"  {% do
         
 TypeFunc :  Type ":" func id    {% do 
                                    st <- get
-                                   tell( snd (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4))
-                                   put $ State (fst (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4)) (srt st) (ast st)
+                                   tell( snd (doInsertF (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4))
+                                   put $ State (fst (doInsertF (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4)) (srt st) (ast st)
                                    return (($3,makeBtype $1),$4) } 
         | Type ":" proc id {% do 
                               st <- get
@@ -510,10 +510,19 @@ doInsert t (z,_) l@(Lexeme (TokenIdent s) p) =
         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                       " already declared " ++ show pos)))
 
+--Funcion para agregar la funcion y procedimiento sin el offset ya que no lleva
+doInsertF:: Type -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq(Binnacle))
+doInsertF t (z,_) l@(Lexeme (TokenIdent s) p) = 
+    case lookupS' s z of
+        Nothing -> (insertS s (Entry t p (typeSize' t z) 0) z, DS.singleton(Right $ ""))
+        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
+                                      " already declared " ++ show pos)))
+
+
 doInsertS :: (Type, Int) -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq(Binnacle))
 doInsertS (t, i) (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
-        Nothing -> (insertS s (Entry t p i (padding t (offScope z))) z, DS.singleton(Right $ ""))
+        Nothing -> (insertS s (Entry t p i 0) z, DS.singleton(Right $ ""))
         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                       " already declared " ++ show pos)))
 
@@ -849,7 +858,7 @@ makeEntry :: Zipper -> ([(String, Entry)], Int) -> (Lexeme Token, Type) -> ([(St
 makeEntry z (l,n) (Lexeme (TokenIdent s) p, t) = ((s,(Entry t p (typeSize' t z) (padding t n))): l, padding t (n + (typeSize' t z)))
 
 makeUnion :: Zipper -> ([(String, Entry)], Int) -> (Lexeme Token, Type) -> ([(String, Entry)],Int)
-makeUnion z (l,n) (Lexeme (TokenIdent s) p, t) = ((s,(Entry t p (typeSize' t z) n )): l,0)
+makeUnion z (l,n) (Lexeme (TokenIdent s) p, t) = ((s,(Entry t p (typeSize' t z) 0 )): l,if n > (typeSize' t z) then n else (typeSize' t z))
 
 insertInsF :: Lexeme Token -> [Instructions] -> Zipper -> Zipper
 insertInsF (Lexeme (TokenIdent s) p) l z = case (lookupS s z) of
