@@ -147,7 +147,10 @@ Program : Declarations Main "EOF"  { % do
 
 Main : begin OS Insts CS end  { % return (fst $3, (reverse (snd $3))) } 
 
-Declaration:  FuncDec OS Insts CS end CS        {% return ( fst $3) } 
+Declaration:  FuncDec OS Insts CS end CS    {% do
+                                                st <- get
+                                                put $ State (insertInsF (snd $ snd $1) (snd $3) (syt st)) (srt st) (ast st)
+                                                return (fst $3) } 
             | struct id has StructObjs ";" end         { % do 
                                                         st <- get
                                                         tell (snd (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2))

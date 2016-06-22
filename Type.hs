@@ -47,8 +47,8 @@ instance Show Type where
 		 	UnionT 	l		-> "Union " ++ show l
 		 	StringT 		-> "String "
 		 	IteratorT 		-> "Iterator "
-		 	FuncT t	l ast	-> "Function "  ++ show t ++ show (reverse l)
-		 	ProcT t l ast 	-> "Procedure " ++ show t ++ show (reverse l)
+		 	FuncT t	l ast	-> "Function "  ++ show t ++ show (reverse l) ++ show ast
+		 	ProcT t l ast 	-> "Procedure " ++ show t ++ show (reverse l) ++ show ast
 		 	ArrayT d t 		-> "Array of "  ++ show t 
 		 	TypeT s 		-> "TypeT " ++ s ++ " "
 		 	TypeError 		-> "TypeError"
