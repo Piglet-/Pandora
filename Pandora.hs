@@ -24,7 +24,7 @@ main = do
                                 print $ defocus $ syt state
                                 putStr "Strings Symbol Table:"
                                 print $ defocus $ srt state
-                                putStr $ drawTree (treeAST (ast state))
+                                putStr $ drawTree (treeAST (filterI (ast state)))
                                 putStr "\nErrors: \n"
                                 putStr (filterBit bita)
                             --print $ drop 2 (show (parse lexs) ++ "Accepted") 

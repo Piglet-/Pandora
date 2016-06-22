@@ -20,6 +20,7 @@ data Expression
     | CFCall    Expression  Expression      Position
     | AccsA     Expression  [Expression]    Position
     | AccsS     Expression  [Expression]    Position
+    | NoneE
     deriving(Show, Eq)
 
 data Operator 

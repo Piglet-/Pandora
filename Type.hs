@@ -48,8 +48,8 @@ instance Show Type where
 		 	UnionT 	l		-> "Union " ++ show l
 		 	StringT 		-> "String "
 		 	IteratorT 		-> "Iterator "
-		 	FuncT t	l ast	-> "Function "  ++ show t ++ show (reverse l) ++ "\n" ++ drawTree (treeAST ast)
-		 	ProcT t l ast 	-> "Procedure " ++ show t ++ show (reverse l) ++ "\n" ++ drawTree (treeAST ast)
+		 	FuncT t	l ast	-> "Function "  ++ show t ++ show (reverse l) ++ "\n" ++ drawTree (treeAST (filterI ast))
+		 	ProcT t l ast 	-> "Procedure " ++ show t ++ show (reverse l) ++ "\n" ++ drawTree (treeAST (filterI ast))
 		 	ArrayT d t 		-> "Array of "  ++ show t 
 		 	TypeT s 		-> "TypeT " ++ s ++ " "
 		 	TypeError 		-> "TypeError"

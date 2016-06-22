@@ -5,6 +5,8 @@ module Instructions
 	, treeExp
 	, treeAST
 	, treeIns
+	,filterI
+	, filterE
 )
 where
 
@@ -64,7 +66,7 @@ treeExp (FloatL f p) = Node ("Float " ++ show p) [Node (show f) []]
 treeExp (CharL c p) = Node ("Char " ++ show p) [Node (show c) []]
 treeExp (StringL s p) = Node ("String " ++ show p) [Node (show s) []]
 treeExp (VoidL p) = Node ("Void " ++ show p) []
-treeExp (IdL s p) = Node ("String " ++ show p) [Node (show s) []]
+treeExp (IdL s p) = Node ("Variable " ++ show p) [Node (show s) []]
 treeExp (ExpBin op exp1 exp2 p) 
 	= Node ("ExpBin: " ++ show op ++ " " ++ show p) [treeExp exp1, treeExp exp2]
 treeExp (ExpUna op exp p) 
@@ -78,3 +80,8 @@ treeExp (AccsA e es p)
 treeExp (AccsS e es p) 
 	= Node ("Accesor " ++ show p) ((treeExp e):map treeExp es)
 
+filterI :: AST -> AST
+filterI (AST is) = AST (filter (/= None) is)
+
+filterE :: [Expression] -> [Expression]
+filterE le = filter (/= NoneE) le

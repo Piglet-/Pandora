@@ -287,8 +287,10 @@ Values : true               { (BoolT, BoolL True (pos $1)) }
 Exp : Values                { % return $1 }
     | id                    { % do
                                     st <- get
-                                    tell (snd (findId $1 (syt st))) 
-                                    return ((typeToken $1 (syt st)), IdL (getTkID $1) (pos $1)) }
+                                    tell (snd (findId $1 (syt st)))
+                                    case DS.index (snd (findId $1 (syt st))) 0 of
+                                        Left _ -> return ((typeToken $1 (syt st)), NoneE)
+                                        _      -> return ((typeToken $1 (syt st)), IdL (getTkID $1) (pos $1)) }
     | Exp "+" Exp           { % do 
                                     st <- get 
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "+"))
@@ -372,7 +374,7 @@ Assign : id "=" Exp  ";"        { % do
                                     st <- get 
                                     tell (snd (findIdA $1 (fst $3) (syt st)))
                                     return (fst (findIdA $1 (fst $3) (syt st)), AsngL (IdL (getTkID $1) (pos $1)) (snd $3) (pos $2)) }
-                                    
+
         | Accesor "=" Exp ";"   { % do
                                     tell (snd (matchAcc (fst $1) (fst $3) $2))
                                     return (fst(matchAcc (fst $1) (fst $3) $2), AsngL (snd $1) (snd $3) (pos $2)) }
@@ -855,6 +857,5 @@ insertInsF :: Lexeme Token -> [Instructions] -> Zipper -> Zipper
 insertInsF (Lexeme (TokenIdent s) p) l z = case (lookupS s z) of
         Just (Entry (FuncT t lt _) pos i1 i2, sc) -> insertS s (Entry (FuncT t lt (AST l)) pos i1 i2) z
         Just (Entry (ProcT t lt _) pos i1 i2, sc) -> insertS s (Entry (ProcT t lt (AST l)) pos i1 i2) z
-
 
 }   
