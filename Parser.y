@@ -145,7 +145,7 @@ Program : Declarations Main "EOF"  { % do
                                     put $ State (syt st) (srt st) (AST (snd $1))
                                     return  (fst $1, AST (snd $1)) } 
 
-Main : begin OS Insts CS end  { % return (fst $3, (reverse (snd $3))) } 
+Main : begin OS Insts CS end  { % return (fst $3, (isNoneA (reverse (snd $3)))) } 
 
 Declaration:  FuncDec OS Insts CS end CS    {% do
                                                 st <- get
@@ -205,17 +205,17 @@ Dec : Type ":" ListId                      { % do
                                             st <- get 
                                             tell (snd (foldl (doInsert (makeBtype $1)) ((syt st),DS.empty)  $3))
                                             put $ State (fst (foldl (doInsert (makeBtype $1)) ((syt st),DS.empty)  $3)) (srt st) (ast st)
-                                            return (VoidT, None)}
+                                            return (VoidT, DecL)}
     | array of Type Dimen ":" ListId       { % do
                                             st <- get
                                             tell (snd (foldl (doInsert (makeArray $4 (makeBtype $3))) ((syt st),DS.empty) $6))
                                             put $ State (fst(foldl (doInsert (makeArray $4 (makeBtype $3))) ((syt st),DS.empty) $6)) (srt st) (ast st)
-                                            return (VoidT, None) } 
+                                            return (VoidT, DecL) } 
     | Type Astk id  { % do 
                         st <- get 
                         tell (snd (doInsert (makePointer $2 (makeBtype $1)) ((syt st),DS.empty) $3))
                         put $ State (fst (doInsert (makePointer $2 (makeBtype $1)) ((syt st),DS.empty) $3)) (srt st) (ast st)
-                        return (VoidT, None) 
+                        return (VoidT, DecL) 
                         }
 
 Astk : "*"     {% return 1}
@@ -370,14 +370,16 @@ Exp : Values                { % return $1 }
                                 }
     |FuncCall               { % return $1 } 
 
-Assign : id "=" Exp  ";"        { % do 
-                                    st <- get 
-                                    tell (snd (findIdA $1 (fst $3) (syt st)))
-                                    return (fst (findIdA $1 (fst $3) (syt st)), AsngL (IdL (getTkID $1) (pos $1)) (snd $3) (pos $2)) }
+Assign : id "=" Exp  ";"        
+{ % do 
+    st <- get 
+    tell (snd (findIdA $1 (fst $3) (syt st)))
+    return (fst (findIdA $1 (fst $3) (syt st)), isAssing (fst (findIdA $1 (fst $3) (syt st))) (IdL (getTkID $1) (pos $1)) (snd $3) (pos $2)) }
 
-        | Accesor "=" Exp ";"   { % do
-                                    tell (snd (matchAcc (fst $1) (fst $3) $2))
-                                    return (fst(matchAcc (fst $1) (fst $3) $2), AsngL (snd $1) (snd $3) (pos $2)) }
+        | Accesor "=" Exp ";"   
+        { % do
+            tell (snd (matchAcc (fst $1) (fst $3) $2))
+            return (fst(matchAcc (fst $1) (fst $3) $2), isAssing (fst(matchAcc (fst $1) (fst $3) $2)) (snd $1) (snd $3) (pos $2)) }
 
 ListId : id                 { [$1] }
         | ListId "," id     {  $3 : $1 }
@@ -419,7 +421,7 @@ Insts : Inst            { % return (instrucS (fst $1), [snd $1]) }
         | Insts Inst    { % return (instruc ((fst $2):[fst $1]), (snd $2):(snd $1)) }
 
 
-InstA : read Exp ";"    { % return (fst $2, ReadL (snd $2) (pos $1)) } 
+InstA : read Exp ";"    { % return (fst $2, isRead (fst $2) (snd $2) (pos $1)) } 
 
 Inst : InstA            { % return $1  }
     | Assign            { % return $1 } 
@@ -428,7 +430,7 @@ Inst : InstA            { % return $1  }
     | Return            { % return $1 }
     | free Exp ";"      { % do  
                             tell (snd (freeInst (fst $2) $1))
-                            return (fst (freeInst (fst $2) $1), FreeL (snd $2) (pos $1)) } 
+                            return (fst (freeInst (fst $2) $1), isFree (fst (freeInst (fst $2) $1)) (snd $2) (pos $1)) } 
     | InstB             { % return $1 }
 
 InstB: If               { % return $1 }
@@ -436,24 +438,30 @@ InstB: If               { % return $1 }
     | Repeat            { % return $1 }
     | For               { % return $1 }
 
-Return : return Exp ";"     { % return (fst $2, ReturnL (snd $2) (pos $1)) } 
+Return : return Exp ";"     { % return(fst $2, isReturn (fst $2) (snd $2) (pos $1))}
+                    --return (fst $2, ReturnL (snd $2) (pos $1)) 
+               -- } 
 
-Write : write Exp ";"       { % do 
-                                tell (snd (writeInst $1 (fst $2)))
-                                return (fst (writeInst $1 (fst $2)), WriteL (snd $2) (pos $1)) } 
+Write : write Exp ";"       
+{ % do 
+    tell (snd (writeInst $1 (fst $2)))
+    return (fst (writeInst $1 (fst $2)), isWrite (fst (writeInst $1 (fst $2))) (snd $2) (pos $1)) } 
 
-If : if "(" Exp ")" then Block  { % do 
-                                    tell (snd (ifInst (fst $3) $1 (fst $6)))
-                                    return (fst (ifInst (fst $3) $1 (fst $6)), IfL (snd $3) (snd $6) (pos $1)) } 
-    | if "(" Exp ")" then Block else Insts end  {% do 
-                                                    tell (snd (ifElseInst (fst $3) $1 (fst $6) (fst $8)))
-                                                    return (fst (ifElseInst (fst $3) $1 (fst $6) (fst $8)), IfteL (snd $3) (snd $6) (snd $8) (pos $1)) }
+If : if "(" Exp ")" then Block  
+    { % do 
+        tell (snd (ifInst (fst $3) $1 (fst $6)))
+        return (fst (ifInst (fst $3) $1 (fst $6)), isIf (fst (ifInst (fst $3) $1 (fst $6))) (snd $3) (snd $6) (pos $1)) } 
+
+    | if "(" Exp ")" then Block else Insts end  
+    {% do 
+        tell (snd (ifElseInst (fst $3) $1 (fst $6) (fst $8)))
+        return (fst (ifElseInst (fst $3) $1 (fst $6) (fst $8)), isIfte (fst (ifElseInst (fst $3) $1 (fst $6) (fst $8))) (snd $3) (snd $6) (snd $8) (pos $1)) }
 
 For : for OS "(" Range ")" do Block CS  
 { % do 
     st <- get 
     tell (snd (forInst (fst $4) (fst $7) $1))
-    return (fst (forInst (fst $4) (fst $7) $1), ForL (head $ snd $4) (head $ tail $ snd $4) (last $ snd $4) (snd $7) (pos $1)) } 
+    return (fst (forInst (fst $4) (fst $7) $1), isFor (fst (forInst (fst $4) (fst $7) $1)) (head $ snd $4) (head $ tail $ snd $4) (last $ snd $4) (snd $7) (pos $1)) } 
 
 Range : It from Exp to Exp with Exp  { % do 
                                         st <- get 
@@ -464,15 +472,17 @@ It : id { % do
                 put $ State (fst $ doInsert IteratorT ((syt st),DS.empty) $1) (srt st) (ast st)
                 tell (snd (doInsert IteratorT ((syt st),DS.empty) $1)) }
 
-While : while "(" Exp ")" do Block  { % do
-                                        st <- get
-                                        tell (snd (whileInst (fst $3) $1 (fst $6)))
-                                        return (fst (whileInst (fst $3) $1 (fst $6)), WhileL (snd $3) (snd $6) (pos $1)) }
+While : while "(" Exp ")" do Block  
+{ % do
+    st <- get
+    tell (snd (whileInst (fst $3) $1 (fst $6)))
+    return (fst (whileInst (fst $3) $1 (fst $6)), isWhile (fst (whileInst (fst $3) $1 (fst $6))) (snd $3) (snd $6) (pos $1)) }
 
-Repeat : repeat OS Insts until Exp CS  { % do
-                                        st <- get
-                                        tell (snd (whileInst (fst $5) $1 (fst $3)))
-                                        return (fst (whileInst (fst $5) $1 (fst $3)), RepeatL (snd $3) (snd $5) (pos $1)) }
+Repeat : repeat OS Insts until Exp CS  
+{ % do
+    st <- get
+    tell (snd (whileInst (fst $5) $1 (fst $3)))
+    return (fst (whileInst (fst $5) $1 (fst $3)), isRepeat (fst (whileInst (fst $5) $1 (fst $3))) (snd $3) (snd $5) (pos $1)) }
 
 Block : OS Insts end CS { % return (fst $2, snd $2) } 
 
@@ -867,4 +877,66 @@ insertInsF (Lexeme (TokenIdent s) p) l z = case (lookupS s z) of
         Just (Entry (FuncT t lt _) pos i1 i2, sc) -> insertS s (Entry (FuncT t lt (AST l)) pos i1 i2) z
         Just (Entry (ProcT t lt _) pos i1 i2, sc) -> insertS s (Entry (ProcT t lt (AST l)) pos i1 i2) z
 
+isReturn :: Type -> Expression -> Position -> Instructions
+isReturn t e p  = case t of
+    TypeError -> None
+    _         -> ReturnL e p
+
+isFree :: Type -> Expression -> Position -> Instructions
+isFree t e p  = case t of
+    TypeError -> None
+    _         -> FreeL e p
+
+isRead :: Type -> Expression -> Position -> Instructions
+isRead t e p  = case t of
+    TypeError -> None
+    _         -> ReadL e p
+
+isWrite :: Type -> Expression -> Position -> Instructions
+isWrite t e p  = case t of
+    TypeError -> None
+    _         -> WriteL e p
+
+isIf :: Type -> Expression -> [Instructions] -> Position -> Instructions
+isIf t e li p  = case t of
+    TypeError -> None
+    _         -> IfL e li p
+
+isIfte :: Type -> Expression -> [Instructions] -> [Instructions] -> Position -> Instructions
+isIfte t e l1 l2 p = case t of
+    TypeError   -> None
+    _           -> IfteL e l1 l2 p
+
+isFor :: Type -> Expression -> Expression -> Expression -> [Instructions] -> Position -> Instructions
+isFor t e e1 e2 l p = case t of
+    TypeError   -> None
+    _           -> ForL e e1 e2 l p 
+
+isWhile :: Type -> Expression -> [Instructions] -> Position -> Instructions
+isWhile t e l p = case t of
+    TypeError   -> None
+    _           -> WhileL e l p
+                    
+
+isRepeat :: Type -> [Instructions] -> Expression -> Position -> Instructions
+isRepeat t l e p = case t of
+    TypeError   -> None
+    _           -> RepeatL l e p 
+                    
+
+isAssing :: Type -> Expression -> Expression -> Position -> Instructions
+isAssing t e e1 p = case t of
+    TypeError   -> None
+    _           -> AsngL e e1 p 
+
+isNone :: [Instructions] -> Maybe Instructions
+isNone l = if (all (/= None) l) 
+                then Nothing
+                else Just None
+
+isNoneA :: [Instructions] -> [Instructions]
+isNoneA l = 
+    case isNone l of
+        Nothing -> l
+        _       -> [None]
 }   

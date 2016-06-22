@@ -24,9 +24,9 @@ data Instructions
 	| WriteL	Expression 		Position
 	| ReturnL 	Expression		Position
 	| AsngL 	Expression 		Expression		Position
---	| NewL 		Expression
 	| FreeL 	Expression		Position
 	| None
+	| DecL
 	deriving(Show, Eq)
 
 data AST = AST [Instructions] deriving (Eq, Show)
@@ -58,6 +58,7 @@ treeIns (AsngL exp1 exp2 p)
 treeIns (FreeL exp p) 
 	= Node ("Free " ++ show p) [treeExp exp]
 treeIns None = Node "" []
+treeIns DecL = Node "" []
 
 treeExp :: Expression -> Tree String
 treeExp (BoolL b p) = Node ("Bool " ++ show p) [Node (show b) []]
@@ -81,7 +82,7 @@ treeExp (AccsS e es p)
 	= Node ("Accesor " ++ show p) ((treeExp e):map treeExp es)
 
 filterI :: AST -> AST
-filterI (AST is) = AST (filter (/= None) is)
+filterI (AST is) = AST (filter (/= DecL) is)
 
 filterE :: [Expression] -> [Expression]
 filterE le = filter (/= NoneE) le
