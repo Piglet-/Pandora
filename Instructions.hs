@@ -71,12 +71,12 @@ treeExp (ExpBin op exp1 exp2 p)
 	= Node ("ExpBin: " ++ show op ++ " " ++ show p) [treeExp exp1, treeExp exp2]
 treeExp (ExpUna op exp p) 
 	= Node ("ExpUn: " ++ show op ++ " " ++ show p) [treeExp exp]
-treeExp (FCall e es p) 
-	= Node ("Function " ++ show p) ((treeExp e):map treeExp es)
+treeExp (FCall e es p)    -- Era lo que estaba al revez y no se si sea lo mejor poner una variable.
+	= Node ("Function " ++ show p) ((treeExp e):map treeExp (reverse es)) 
 treeExp (CFCall exp1 exp2 p) 
-	= Node ("Function " ++ show p) [treeExp exp1,treeExp exp2]
+	= Node ("Function " ++ show p) [treeExp exp1,treeExp exp2] -- No estoy seguro si esta bien
 treeExp (AccsA e es p) 
-	= Node ("Array " ++ show p) ((treeExp e):map treeExp es)
+	= Node ("Array " ++ show p) ((treeExp e):map treeExp (reverse es)) -- Era lo que estaba al revez
 treeExp (AccsS e es p) 
 	= Node ("Accesor " ++ show p) ((treeExp e):map treeExp es)
 
