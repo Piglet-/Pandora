@@ -40,6 +40,7 @@ import qualified Data.Sequence as DS
 
     -- acceso a campos --
     "."         { Lexeme TokenPoint _ }
+    "@"         { Lexeme TokenAt _}
 
     -- instrucciones --
     "="         { Lexeme TokenAssign _ }
@@ -132,7 +133,7 @@ import qualified Data.Sequence as DS
 %left     "+" "-"
 %left     "*" "/" mod div
 %left     "^"
-%right    NEG
+%right    NEG "@"
 
 %%
 
@@ -149,7 +150,7 @@ Main : begin OS Insts CS end  { % return (fst $3, (isNoneA (reverse (snd $3)))) 
 
 Declaration:  FuncDec OS Insts CS end CS    {% do
                                                 st <- get
-                                                put $ State (insertInsF (snd $ snd $1) (snd $3) (syt st)) (srt st) (ast st)
+                                                put $ State (insertInsF (snd $ snd $1) (isNoneA (reverse(snd $3))) (syt st)) (srt st) (ast st)
                                                 return (fst $3) } 
             | struct id has StructObjs ";" end         { % do 
                                                         st <- get
@@ -211,15 +212,15 @@ Dec : Type ":" ListId                      { % do
                                             tell (snd (foldl (doInsert (makeArray $4 (makeBtype $3))) ((syt st),DS.empty) $6))
                                             put $ State (fst(foldl (doInsert (makeArray $4 (makeBtype $3))) ((syt st),DS.empty) $6)) (srt st) (ast st)
                                             return (VoidT, DecL) } 
-    | Type Astk id  { % do 
+    | Type ":" Astk id  { % do 
                         st <- get 
-                        tell (snd (doInsert (makePointer $2 (makeBtype $1)) ((syt st),DS.empty) $3))
-                        put $ State (fst (doInsert (makePointer $2 (makeBtype $1)) ((syt st),DS.empty) $3)) (srt st) (ast st)
+                        tell (snd (doInsert (makePointer $3 (makeBtype $1)) ((syt st),DS.empty) $4))
+                        put $ State (fst (doInsert (makePointer $3 (makeBtype $1)) ((syt st),DS.empty) $4)) (srt st) (ast st)
                         return (VoidT, DecL) 
                         }
 
-Astk : "*"     {% return 1}
-    | Astk "*" {% return ($1 + 1)}
+Astk : "@"     {% return 1}
+    | Astk "@" {% return ($1 + 1)}
 
 
 Param: {- lambda -}     { % return [] } 
@@ -350,7 +351,7 @@ Exp : Values                { % return $1 }
     | Exp or Exp            { % do 
                                     st <- get 
                                     tell (snd (binBoolExp (fst $1) $2 (fst $3) "or"))
-                                    return ((fst (binBoolExp (fst $1) $2 (fst $3) "or")), ExpBin And (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (binBoolExp (fst $1) $2 (fst $3) "or")), ExpBin Or (snd $1) (snd $3) (pos $2)) }
     | "-" Exp   %prec NEG   { % do 
                                     tell (snd (numExp $1 (fst $2) "-"))
                                     return ((fst (numExp $1 (fst $2) "-")), ExpUna Minus (snd $2) (pos $1)) }
@@ -380,6 +381,17 @@ Assign : id "=" Exp  ";"
         { % do
             tell (snd (matchAcc (fst $1) (fst $3) $2))
             return (fst(matchAcc (fst $1) (fst $3) $2), isAssing (fst(matchAcc (fst $1) (fst $3) $2)) (snd $1) (snd $3) (pos $2)) }
+        
+        | Point "=" Exp ";"
+        { % do
+            tell (snd (matchAcc (fst $1) (fst $3) $2))
+            return (fst(matchAcc (fst $1) (fst $3) $2), isAssing (fst(matchAcc (fst $1) (fst $3) $2)) (snd $1) (snd $3) (pos $2)) }    
+
+Point : Astk id { % do
+                    st <- get
+                    tell(snd(isPointer $2 (typeToken $2 (syt st)) $1))
+                    return (fst (isPointer $2 (typeToken $2 (syt st)) $1), AccsP (IdL (getTkID $2) (pos $2)) $1 (pos $2))
+                }
 
 ListId : id                 { [$1] }
         | ListId "," id     {  $3 : $1 }
@@ -393,6 +405,9 @@ Accesor : id Arrays { % do
             st <- get 
             tell (snd (isTypeT $1 (typeToken $1 (syt st)) (reverse $ fst $ unzip $2) (syt st)))
             return (fst(isTypeT $1 (typeToken $1 (syt st)) (reverse $ fst $ unzip $2) (syt st)), AccsS (IdL (getTkID $1) (pos $1)) (snd $ unzip $2) (pos $1))}
+
+        
+
 
 Accs: Acc       { % return [$1] }
     | Accs Acc  { % return ($2:$1) }
@@ -853,6 +868,18 @@ isArray (Lexeme (TokenIdent s) p) t ts =
                         else (TypeError, DS.singleton (Left $ "Type Error given " 
                         ++ show ts ++ "expecting list of Int fields in array " ++ s 
                         ++ " " ++ show p))
+
+isPointer :: Lexeme Token -> Type -> Int -> (Type, DS.Seq(Binnacle))
+isPointer (Lexeme (TokenIdent s) p) point@(PointerT t) 0 
+            = (TypeError, DS.singleton (Left $ "Type Error given " 
+                        ++ show point ++ " expecting a basic type in pointer " ++ s
+                        ++ " " ++ show p)) 
+isPointer (Lexeme (TokenIdent s) p) TypeError _ 
+            = (TypeError, DS.singleton (Right $ "")) 
+isPointer (Lexeme (TokenIdent s) p) point@(PointerT t) 1
+            = (t, DS.singleton(Right $ ""))
+isPointer l@(Lexeme (TokenIdent s) p) point@(PointerT t) i 
+            = isPointer l t (i-1)
 
 isTypeVoid :: Type -> Type
 isTypeVoid VoidT = VoidT

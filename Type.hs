@@ -31,7 +31,7 @@ data Type = IntT
 		| FuncT 	Type [Type]	AST
 		| ProcT 	Type [Type]	AST
 		| ArrayT 	Int  Type 
-		| TypeT 	String 
+		| TypeT 	String -- cambiar esto por un Entry o un String y Entry
 		| TypeError
 		deriving(Eq)
 
@@ -55,6 +55,7 @@ instance Show Type where
 		 	TypeError 		-> "TypeError"
 
 
+-- convierten lexemas en tipos del lenguaje
 makeBtype :: Lexeme t -> Type
 makeBtype l = case (token l) of
 	TokenIntT 		-> IntT
@@ -63,7 +64,7 @@ makeBtype l = case (token l) of
 	TokenCharT 		-> CharT
 	TokenStringT 	-> StringT
 	TokenVoid 		-> VoidT
-	TokenIdent s    -> TypeT s
+	TokenIdent s    -> TypeT s 
 
 aux :: [(Lexeme Token, Type)] -> [(String, Type)]
 aux [] = []
@@ -88,8 +89,10 @@ makeArray ((Lexeme (TokenInt d) _):ds) ty 	= ArrayT d t
 		where t = makeArray ds ty
 
 
+-- bitacora de errores de parsing 
 type Binnacle = Either String String		
 
+-- calcula el tamaño de un objeto
 typeSize :: Type -> Int
 typeSize IntT 			= 4
 typeSize FloatT 		= 4
@@ -103,6 +106,7 @@ typeSize (ProcT t _ _) 	= typeSize t
 typeSize VoidT 			= 0
 typeSize TypeError 		= 0
 
+-- calculo del padding de un objeto
 padding :: Type -> Int -> Int
 padding (ArrayT d t) i 			= padding t i
 padding (StructT m) i  			= padStruct i
@@ -118,6 +122,7 @@ padStruct i = i + (i `mod` 4)
 suma :: Int -> Type -> Int
 suma n t = n + typeSize t
 
+-- tipo de dato que representa una entrada en la tabla de simbolos
 data Entry = Entry Type Position Int Int deriving(Eq)
 instance Show Entry where
     show (Entry t p s o) = show t ++ " " ++ show p ++ " Size : " ++ show s ++ " Offset: " ++ show o  

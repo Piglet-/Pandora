@@ -53,7 +53,7 @@ data Token
     | TokenDivInt    | TokenDivFloat  | TokenMod 
     | TokenGT        | TokenGE        | TokenLT  
     | TokenLE        | TokenCircum    | TokenAnd 
-    | TokenOr       
+    | TokenOr        | TokenAt
 
     -- unarios --
     | TokenNot  | TokenArrow  
@@ -131,6 +131,7 @@ instance Show Token where
         TokenPlus           -> "\nToken: PLUS \nLexeme: +"
         TokenMinus          -> "\nToken: MINUS \nLexeme: -"
         TokenAsterisk       -> "\nToken: ASTERISK \nLexeme: *"
+        TokenAt             -> "\nToken: AT \nLexeme: @"
         TokenDivInt         -> "\nToken: DIV \nLexeme: div"
         TokenDivFloat       -> "\nToken: SLASH \nLexeme: /"
         TokenMod            -> "\nToken: MOD \nLexeme: mod"

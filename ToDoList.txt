@@ -2,11 +2,11 @@ Cosas por hacer en Pandora antes de Lenguajes 3:
 
 - muchos muchos ejemplos de prueba.
 
-- apuntadores como l-values.
+- apuntadores como l-values. LISTO
 
 - tipo para operadores de expresiones (sumas y eso).
 
-- while y repeat como lo mismo pero con un booleano que diga si se chequea de primero o de último.
+- while y repeat como lo mismo pero con un booleano que diga si se chequea de primero o de último.*opcional* 
 
 - return de procedimientos gramaticalmente (maybe expresion en el arbol) (return void).
 
@@ -15,3 +15,5 @@ Cosas por hacer en Pandora antes de Lenguajes 3:
 - usar multiples constructores para los tipos de los operadores.
 
 - revisar que la verificación de tipos esté PERFECTA
+
+pointer p;

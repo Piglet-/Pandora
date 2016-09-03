@@ -27,7 +27,7 @@ data Instructions
 	| AsngL 	Expression 		Expression		Position
 	| FreeL 	Expression		Position
 	| None
-	| DecL
+	| DecL -- aqui la relacion con la ST?
 	deriving(Show, Eq)
 
 data AST = AST [Instructions] deriving (Eq, Show)
@@ -81,6 +81,10 @@ treeExp (AccsA e es p)
 	= Node ("Array " ++ show p) ((treeExp e):map treeExp (reverse es)) -- Era lo que estaba al revez
 treeExp (AccsS e es p) 
 	= Node ("Accesor " ++ show p) ((treeExp e):map treeExp es)
+treeExp (AccsP e 1 p) 
+	= Node ("Accesor " ++ show p) [treeExp e]
+treeExp (AccsP e i p) 
+	= Node ("Accesor " ++ show p) [treeExp (AccsP e (i-1) p)]
 
 filterI :: AST -> AST
 filterI (AST is) = AST (filter (/= DecL) is)

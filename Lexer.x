@@ -117,6 +117,7 @@ tokens :-
     <0> "+"             { tok' TokenPlus }
     <0> "-"             { tok' TokenMinus }
     <0> "*"             { tok' TokenAsterisk }
+    <0> "@"             { tok' TokenAt }
     <0> "div"           { tok' TokenDivInt }
     <0> "/"             { tok' TokenDivFloat }
     <0> "mod"           { tok' TokenMod }

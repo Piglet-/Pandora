@@ -12,7 +12,7 @@ data Expression
     | CharL     Char        Position
     | StringL   String      Position
     | VoidL     Position
-    | IdL       String      Position
+    | IdL       String      Position -- aqui agregar entry?
     | ExpBin    Operator    Expression      Expression Position
     | ExpUna    Operator    Expression      Position
     | Index     Expression  [Expression]    Position
@@ -20,6 +20,7 @@ data Expression
     | CFCall    Expression  Expression      Position
     | AccsA     Expression  [Expression]    Position
     | AccsS     Expression  [Expression]    Position
+    | AccsP     Expression  Int Position
     | NoneE
     deriving(Show, Eq)
 
