@@ -20,7 +20,7 @@ module SymbolTable
     ) where
 
 import Position
-import Instructions
+--import Instructions
 import qualified Data.Map.Strict as DMap
 import qualified Data.Sequence   as DS
 import Data.Foldable (toList)
@@ -146,3 +146,4 @@ offScope ((SymbolTable (Scope _ o _) _ _), _) = o
 
 emptyScope :: Scope
 emptyScope = Scope 0 0 (Position (0,0), Position (0,0))
+

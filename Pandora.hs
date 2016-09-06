@@ -5,7 +5,7 @@ import SymbolTable
 import Type
 import Data.Either (lefts)
 import qualified Data.Sequence as DS
-import Instructions
+--import Instructions
 import qualified Data.Foldable as FB
 import Control.Monad.RWS
 import Data.Tree
