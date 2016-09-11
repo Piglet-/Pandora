@@ -1,19 +1,19 @@
 module Instructions 
 	( Instructions(..)
 	, AST(..)
-	, module Expression
 	, treeExp
 	, treeAST
 	, treeIns
-	,filterI
+	, filterI
 	, filterE
-	,filterIns
+	, filterIns
 )
 where
 
 import Position
-import Expression
+import Expression (Expression(..))
 import Data.Tree
+
 
 data Instructions
 	= IfL 		Expression 		[Instructions]  Position
@@ -68,7 +68,7 @@ treeExp (FloatL f p) = Node ("Float " ++ show p) [Node (show f) []]
 treeExp (CharL c p) = Node ("Char " ++ show p) [Node (show c) []]
 treeExp (StringL s p) = Node ("String " ++ show p) [Node (show s) []]
 treeExp (VoidL p) = Node ("Void " ++ show p) []
-treeExp (IdL s p) = Node ("Variable " ++ show p) [Node (show s) []]
+treeExp (IdL s e p) = Node ("Variable " ++ show p ++ show e) [Node (show s) []]
 treeExp (ExpBin op exp1 exp2 p) 
 	= Node ("ExpBin: " ++ show op ++ " " ++ show p) [treeExp exp1, treeExp exp2]
 treeExp (ExpUna op exp p) 
@@ -94,4 +94,6 @@ filterIns l = filter (/= DecL) l
 
 filterE :: [Expression] -> [Expression]
 filterE le = filter (/= NoneE) le
+
+
 

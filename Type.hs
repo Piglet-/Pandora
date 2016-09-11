@@ -40,7 +40,7 @@ data Type = IntT
 		| FuncT 	Type [Type]	AST
 		| ProcT 	Type [Type]	AST
 		| ArrayT 	Int  Type 
-		| TypeT 	String -- cambiar esto por un Entry o un String y Entry
+		| TypeT 	String 
 		| TypeError
 		deriving(Eq)
 
@@ -148,7 +148,7 @@ data Expression
     | CharL     Char        Position
     | StringL   String      Position
     | VoidL     Position
-    | IdL       String      Entry           Position -- aqui agregar entry?
+    | IdL       String      Entry           Position 
     | ExpBin    Operator    Expression      Expression Position
     | ExpUna    Operator    Expression      Position
     | Index     Expression  [Expression]    Position
@@ -211,7 +211,7 @@ data Instructions
 	| AsngL 	Expression 		Expression		Position
 	| FreeL 	Expression		Position
 	| None
-	| DecL -- aqui la relacion con la ST?
+	| DecL 
 	deriving(Show, Eq)
 
 data AST = AST [Instructions] deriving (Eq, Show)
