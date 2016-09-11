@@ -403,8 +403,8 @@ Accesor : id Arrays { % do
         | id Accs  
         { % do 
             st <- get 
-            tell (snd (isTypeT $1 (typeToken $1 (syt st)) (reverse $ fst $ unzip $2) (syt st)))
-            return (fst(isTypeT $1 (typeToken $1 (syt st)) (reverse $ fst $ unzip $2) (syt st)), AccsS (IdL (getTkID $1) (fst (fromJust (lookupS (getTkID $1) (syt st)))) (pos $1)) (snd $ unzip $2) (pos $1))}
+            tell (snd (isTypeT $1 (typeToken $1 (syt st)) (reverse $2) (syt st)))
+            return (fst(isTypeT $1 (typeToken $1 (syt st)) (reverse $2) (syt st)), AccsS (IdL (getTkID $1) (fst (fromJust (lookupS (getTkID $1) (syt st)))) (pos $1)) (createTree (syt st) (getTkID $1) (reverse $2)) (pos $1))}
 
         
 
@@ -412,9 +412,7 @@ Accesor : id Arrays { % do
 Accs: Acc       { % return [$1] }
     | Accs Acc  { % return ($2:$1) }
 
-Acc : "." id        { % do 
-                        st <- get 
-                        return ($2, IdL (getTkID $2) (Entry StringT (pos $2) 0 0) (pos $2)) }
+Acc : "." id        { % return $2 }
 
 Arrays : Array        { % return [$1] }
        | Arrays Array { % return ($2:$1) }
@@ -430,9 +428,17 @@ Fields : {- lambda -}       { % return [] }
         | Exp               { % return ([$1]) }
         | Fields "," Exp    { % return ($3:$1) }
 
-CFunctions : inttostr "(" Exp ")"   { % return ((ifInt (fst $3) StringT), CFCall (IdL ("intToString") (Entry StringT (pos $1) 0 0) (pos $1)) (snd $3) (pos $1)) } 
-            | flotostr "(" Exp ")"  { % return ((ifFloat (fst $3) StringT), CFCall (IdL ("floatToString") (Entry StringT (pos $1) 0 0) (pos $1)) (snd $3) (pos $1)) } 
-            | inttoflo "(" Exp ")"  { % return ((ifInt (fst $3) FloatT), CFCall (IdL ("intToFloat") (Entry FloatT (pos $1) 0 0) (pos $1)) (snd $3) (pos $1)) } 
+CFunctions : inttostr "(" Exp ")"   { % do 
+                                        st <- get 
+                                        return ((ifInt (fst $3) StringT), CFCall (IdL "intToString" (fst (fromJust (lookupS "intToString" (syt st)))) (pos $1)) (snd $3) (pos $1)) } 
+
+            | flotostr "(" Exp ")"  { % do 
+                                        st <- get  
+                                        return ((ifFloat (fst $3) StringT), CFCall (IdL "floatToString" (fst (fromJust (lookupS "floatToString" (syt st)))) (pos $1)) (snd $3) (pos $1)) } 
+            
+            | inttoflo "(" Exp ")"  { % do 
+                                        st <- get 
+                                        return ((ifInt (fst $3) FloatT), CFCall (IdL "intToFloat" (fst (fromJust (lookupS "intToFloat" (syt st)))) (pos $1)) (snd $3) (pos $1)) } 
 
 Insts : Inst            { % return (instrucS (fst $1), [snd $1]) }
         | Insts Inst    { % return (instruc ((fst $2):[fst $1]), (snd $2):(snd $1)) }
@@ -968,4 +974,17 @@ isNoneA l =
     case isNone l of
         Nothing -> l
         _       -> [None]
+
+createTree :: Zipper -> String -> [Lexeme Token] -> [Expression]
+createTree z s1 [typ@(Lexeme (TokenIdent s2) p)] = 
+    if fst $ isStruct (typeToken typ z) z 
+        then [IdL s2 (fst $ fromJust $ lookupS s2 z) p]
+        else [IdL s2 (fromJust $ DMap.lookup s2 (snd $ isStruct ty z)) p]
+        where (Entry ty pos size off) = fst $ fromJust $ lookupS s1 z
+createTree z s1 (typ@(Lexeme (TokenIdent s2) p):ts) =
+    (IdL s2 a p:createTree z str ts)
+    where (Entry ty pos size off) = fst $ fromJust $ lookupS s1 z
+          (Entry (TypeT str) pos2 size2 o) = fromJust $ DMap.lookup s2 (snd $ isStruct ty z)
+          a@(Entry tyd posd sized offd) = fst $ fromJust $ lookupS str z
+
 }   

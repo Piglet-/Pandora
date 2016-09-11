@@ -20,7 +20,7 @@ main = do
             if null (tail args)
                 then if any isTokenError lexs 
                         then mapM_ fPrint (filter isTokenError lexs)
-                        else do let (state, bita) = execRWS (parse lexs) "" (State emptyZipper emptyZipper (AST []))
+                        else do let (state, bita) = execRWS (parse lexs) "" (State initZipper emptyZipper (AST []))
                                 print $ defocus $ syt state
                                 putStr "Strings Symbol Table:"
                                 print $ defocus $ srt state
@@ -47,6 +47,15 @@ help = "Los flags permitidos por ahora son -l (lexer) y -p (parser)"
 
 emptyZipper :: Zipper
 emptyZipper = focus $ emptyST emptyScope
+
+insertITS :: Zipper
+insertITS = insertS "intToString" (Entry (FuncT StringT [IntT] (AST [])) (Position (0,0)) 0 0) emptyZipper
+
+insertFTS :: Zipper
+insertFTS = insertS "floatToString" (Entry (FuncT StringT [FloatT] (AST [])) (Position (0,0)) 0 0) insertITS
+
+initZipper :: Zipper
+initZipper = insertS "intToFloat" (Entry (FuncT FloatT [IntT] (AST [])) (Position (0,0)) 0 0) insertFTS
 
 filterBit :: DS.Seq(Binnacle) -> String
 filterBit bs = unlines (lefts (FB.toList bs))

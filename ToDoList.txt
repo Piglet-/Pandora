@@ -10,7 +10,7 @@ Cosas por hacer en Pandora antes de Lenguajes 3:
 
 - return de procedimientos gramaticalmente (maybe expresion en el arbol) (return void).
 
-- conexion del árbol con la tabla de simbolo (identificador en lugar de string que sea la entrada en la tabla se simbolos, para no buscar de nuevo en la tabla, aplica para funciones y todos los identificadores). (Parcialmente listo, falta agregar los accesos y decidir las funciones de conversion, tambien que todo este un solo archivo que es type)
+- conexion del árbol con la tabla de simbolo (identificador en lugar de string que sea la entrada en la tabla se simbolos, para no buscar de nuevo en la tabla, aplica para funciones y todos los identificadores). Listo (ver que todo no este un solo archivo que es type)
 
 - usar multiples constructores para los tipos de los operadores.
 
