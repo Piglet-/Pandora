@@ -161,43 +161,45 @@ data Expression
     deriving(Show, Eq)
 
 data Operator 
-    = Plus 
-    | Minus
-    | Mul 
-    | Slash 
-    | Div
-    | Mod 
+    = Plus Type
+    | Minus Type
+    | Mul   Type
+    | Slash Type
+    | Div Type
+    | Mod Type
     | Power 
     | Arrow
-    | Gt
-    | Lt
-    | GEt
-    | LEt
-    | Equal
-    | Inequal
+    | Gt Type
+    | Lt Type 
+    | GEt Type
+    | LEt Type
+    | Equal Type
+    | Inequal Type
     | And 
     | Or 
     | Not
     deriving(Eq)
 
 instance Show Operator where 
-    show Plus       = "+"
-    show Minus      = "-"
-    show Mul        = "*"
-    show Slash      = "/"
-    show Div        = "div"
-    show Mod        = "mod"
-    show Power      = "^"
-    show Arrow      = "->"
-    show Gt         = ">"
-    show Lt         = "<"
-    show GEt        = ">="
-    show LEt        = "<="
-    show Equal      = "=="
-    show Inequal    = "/="
-    show And        = "and"
-    show Or         = "or"
-    show Not        = "not"
+	show o =
+		case o of 
+    		Plus t      -> "+ " ++ show t 
+    		Minus t     -> "- " ++ show t
+    		Mul t       -> "* " ++ show t
+    		Slash t     -> "/ " ++ show t
+    		Div t       -> "div " ++ show t
+    		Mod t       -> "mod " ++ show t
+    		Power      -> "^"
+    		Arrow      -> "->"
+    		Gt t        -> "> " ++ show t
+    		Lt t        -> "< " ++ show t
+    		GEt t       -> ">= " ++ show t
+    		LEt t       -> "<= " ++ show t
+    		Equal t     -> "== " ++ show t
+    		Inequal t   -> "/= " ++ show t
+    		And        -> "and"
+    		Or         -> "or"
+    		Not        -> "not"
 
 data Instructions
 	= IfL 		Expression 		[Instructions]  Position

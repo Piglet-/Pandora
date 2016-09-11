@@ -295,15 +295,15 @@ Exp : Values                { % return $1 }
     | Exp "+" Exp           { % do 
                                     st <- get 
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "+"))
-                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "+")), ExpBin Plus (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "+")), ExpBin (Plus (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp "-" Exp           { % do 
                                     st <- get 
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "-"))
-                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "-")), ExpBin Minus (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "-")), ExpBin (Minus (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp "/" Exp           { % do 
                                     st <- get 
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "/"))
-                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "/")), ExpBin Slash (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "/")), ExpBin (Slash (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp "^" Exp           { % do  
                                     st <- get -- No estoy seguro cuales serian los tipos
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "^"))
@@ -311,39 +311,39 @@ Exp : Values                { % return $1 }
     | Exp "*" Exp           { % do 
                                     st <- get 
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "*"))
-                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "*")), ExpBin Mul (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "*")), ExpBin (Mul (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp div Exp           { % do 
                                     st <- get --Creo que oslo serian Enteros
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "div"))
-                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "div")), ExpBin Div (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "div")), ExpBin (Div (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp mod Exp           { % do 
                                     st <- get 
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "mod"))
-                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "mod")), ExpBin Mod (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "mod")), ExpBin (Mod (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp ">" Exp           { % do 
                                     st <- get 
                                     tell (snd (relExp (fst $1) $2 (fst $3) ">"))
-                                    return ((fst (relExp (fst $1) $2 (fst $3) ">")), ExpBin Gt (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (relExp (fst $1) $2 (fst $3) ">")), ExpBin (Gt (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp ">=" Exp          { % do 
                                     st <- get 
                                     tell (snd (relExp (fst $1) $2 (fst $3) ">="))
-                                    return ((fst (relExp (fst $1) $2 (fst $3) ">=")), ExpBin GEt (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (relExp (fst $1) $2 (fst $3) ">=")), ExpBin (GEt (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp "<" Exp           { % do 
                                     st <- get 
                                     tell (snd (relExp (fst $1) $2 (fst $3) "<"))
-                                    return ((fst (relExp (fst $1) $2 (fst $3) "<")), ExpBin Lt (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "<")), ExpBin (Lt (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp "<=" Exp          { % do 
                                     st <- get 
                                     tell (snd (relExp (fst $1) $2 (fst $3) "<="))
-                                    return ((fst (relExp (fst $1) $2 (fst $3) "<=")), ExpBin LEt (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "<=")), ExpBin (LEt (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp "==" Exp          { % do 
                                     st <- get 
                                     tell (snd (relExp (fst $1) $2 (fst $3) "=="))
-                                    return ((fst (relExp (fst $1) $2 (fst $3) "==")), ExpBin Equal (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "==")), ExpBin (Equal (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp "/=" Exp          { % do 
                                     st <- get 
                                     tell (snd (relExp (fst $1) $2 (fst $3) "/="))
-                                    return ((fst (relExp (fst $1) $2 (fst $3) "/=")), ExpBin Inequal (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (relExp (fst $1) $2 (fst $3) "/=")), ExpBin (Inequal (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp and Exp           { % do 
                                     st <- get 
                                     tell (snd (binBoolExp (fst $1) $2 (fst $3) "and"))
@@ -354,7 +354,7 @@ Exp : Values                { % return $1 }
                                     return ((fst (binBoolExp (fst $1) $2 (fst $3) "or")), ExpBin Or (snd $1) (snd $3) (pos $2)) }
     | "-" Exp   %prec NEG   { % do 
                                     tell (snd (numExp $1 (fst $2) "-"))
-                                    return ((fst (numExp $1 (fst $2) "-")), ExpUna Minus (snd $2) (pos $1)) }
+                                    return ((fst (numExp $1 (fst $2) "-")), ExpUna (Minus (unaTypeOp (fst $2))) (snd $2) (pos $1)) }
     | not Exp   %prec NEG   { % do 
                                     tell (snd (numExp $1 (fst $2) "not"))
                                     return ((fst (numExp $1 (fst $2) "not")), ExpUna Not (snd $2) (pos $1)) }
@@ -986,5 +986,20 @@ createTree z s1 (typ@(Lexeme (TokenIdent s2) p):ts) =
     where (Entry ty pos size off) = fst $ fromJust $ lookupS s1 z
           (Entry (TypeT str) pos2 size2 o) = fromJust $ DMap.lookup s2 (snd $ isStruct ty z)
           a@(Entry tyd posd sized offd) = fst $ fromJust $ lookupS str z
+
+binTypeOp :: Type -> Type -> Type
+binTypeOp IntT IntT = IntT
+binTypeOp FloatT FloatT = FloatT
+binTypeOp IntT IteratorT = IntT
+binTypeOp IteratorT IntT = IntT
+binTypeOp CharT CharT = CharT
+binTypeOp BoolT BoolT = BoolT
+binTypeOp _ _ = TypeError
+
+unaTypeOp :: Type -> Type
+unaTypeOp IntT = IntT
+unaTypeOp IteratorT = IntT
+unaTypeOp FloatT = FloatT
+unaTypeOp _ = TypeError
 
 }   
