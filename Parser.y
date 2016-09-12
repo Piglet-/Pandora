@@ -315,7 +315,7 @@ Exp : Values                { % return $1 }
     | Exp div Exp           { % do 
                                     st <- get --Creo que oslo serian Enteros
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "div"))
-                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "div")), ExpBin (Div (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "div")), ExpBin Div (snd $1) (snd $3) (pos $2)) }
     | Exp mod Exp           { % do 
                                     st <- get 
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "mod"))

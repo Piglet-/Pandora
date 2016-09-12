@@ -165,7 +165,7 @@ data Operator
     | Minus Type
     | Mul   Type
     | Slash Type
-    | Div Type
+ 	| Div
     | Mod Type
     | Power 
     | Arrow
@@ -183,20 +183,20 @@ data Operator
 instance Show Operator where 
 	show o =
 		case o of 
-    		Plus t      -> "+ " ++ show t 
-    		Minus t     -> "- " ++ show t
-    		Mul t       -> "* " ++ show t
-    		Slash t     -> "/ " ++ show t
-    		Div t       -> "div " ++ show t
-    		Mod t       -> "mod " ++ show t
+    		Plus t      -> "+"  
+    		Minus t     -> "-" 
+    		Mul t       -> "*" 
+    		Slash t     -> "/" 
+    		Div        -> "div" 
+    		Mod t       -> "mod" 
     		Power      -> "^"
     		Arrow      -> "->"
-    		Gt t        -> "> " ++ show t
-    		Lt t        -> "< " ++ show t
-    		GEt t       -> ">= " ++ show t
-    		LEt t       -> "<= " ++ show t
-    		Equal t     -> "== " ++ show t
-    		Inequal t   -> "/= " ++ show t
+    		Gt t        -> ">" 
+    		Lt t        -> "<" 
+    		GEt t       -> ">=" 
+    		LEt t       -> "<=" 
+    		Equal t     -> "==" 
+    		Inequal t   -> "/=" 
     		And        -> "and"
     		Or         -> "or"
     		Not        -> "not"
@@ -254,7 +254,7 @@ treeExp (FloatL f p) = Node ("Float " ++ show p) [Node (show f) []]
 treeExp (CharL c p) = Node ("Char " ++ show p) [Node (show c) []]
 treeExp (StringL s p) = Node ("String " ++ show p) [Node (show s) []]
 treeExp (VoidL p) = Node ("Void " ++ show p) []
-treeExp (IdL s e p) = Node ("Variable " ++ show p ++ show e) [Node (show s) []]
+treeExp (IdL s e p) = Node ("Variable " ++ show p) [Node (show s) []]
 treeExp (ExpBin op exp1 exp2 p) 
 	= Node ("ExpBin: " ++ show op ++ " " ++ show p) [treeExp exp1, treeExp exp2]
 treeExp (ExpUna op exp p) 
