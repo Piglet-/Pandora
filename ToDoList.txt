@@ -4,16 +4,12 @@ Cosas por hacer en Pandora antes de Lenguajes 3:
 
 - apuntadores como l-values. LISTO
 
-- tipo para operadores de expresiones (sumas y eso).
+- tipo para operadores de expresiones (sumas y eso) LISTO
 
 - while y repeat como lo mismo pero con un booleano que diga si se chequea de primero o de último.*opcional* 
 
 - return de procedimientos gramaticalmente (maybe expresion en el arbol) (return void).
 
-- conexion del árbol con la tabla de simbolo (identificador en lugar de string que sea la entrada en la tabla se simbolos, para no buscar de nuevo en la tabla, aplica para funciones y todos los identificadores). Listo (ver que todo no este un solo archivo que es type)
-
-- usar multiples constructores para los tipos de los operadores.
+- conexion del árbol con la tabla de simbolo (identificador en lugar de string que sea la entrada en la tabla se simbolos, para no buscar de nuevo en la tabla, aplica para funciones y todos los identificadores). LISTO
 
 - revisar que la verificación de tipos esté PERFECTA
-
-pointer p;

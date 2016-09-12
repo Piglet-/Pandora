@@ -31,9 +31,11 @@ begin
     persona : per;
     per.mujer = true;
     int : n;
+    float :notro;
     array of int[10][20][3] : a;
     bool : b1,b2;
 
+    notro = 3^(2.1);
     n = 3;
     c.peso = intToFloat(2);
     a[2][8][1] = 9;

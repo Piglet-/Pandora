@@ -167,7 +167,7 @@ data Operator
     | Slash Type
  	| Div
     | Mod Type
-    | Power 
+    | Power Type
     | Arrow
     | Gt Type
     | Lt Type 
@@ -189,7 +189,7 @@ instance Show Operator where
     		Slash t     -> "/" 
     		Div        -> "div" 
     		Mod t       -> "mod" 
-    		Power      -> "^"
+    		Power t      -> "^"
     		Arrow      -> "->"
     		Gt t        -> ">" 
     		Lt t        -> "<" 

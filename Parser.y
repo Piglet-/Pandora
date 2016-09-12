@@ -307,7 +307,7 @@ Exp : Values                { % return $1 }
     | Exp "^" Exp           { % do  
                                     st <- get -- No estoy seguro cuales serian los tipos
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "^"))
-                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "^")), ExpBin Power (snd $1) (snd $3) (pos $2)) }
+                                    return ((fst (binNumExp (fst $1) $2 (fst $3) "^")), ExpBin (Power (binTypeOp (fst $1) (fst $3))) (snd $1) (snd $3) (pos $2)) }
     | Exp "*" Exp           { % do 
                                     st <- get 
                                     tell (snd (binNumExp (fst $1) $2 (fst $3) "*"))
@@ -633,6 +633,7 @@ binExp _ _              = (TypeError , DS.singleton (Left $ "TypeError"))
 
 
 binNumExp :: Type -> Lexeme Token -> Type -> String -> (Type, DS.Seq(Binnacle))
+binNumExp FloatT (Lexeme TokenCircum p) IntT _ = (FloatT , DS.singleton (Right $ ""))
 binNumExp IntT   _ IntT _       = (IntT , DS.singleton (Right $ ""))
 binNumExp FloatT _ FloatT _     = (FloatT , DS.singleton (Right $ ""))
 binNumExp IteratorT _ IntT _    = (IntT , DS.singleton (Right $ ""))
@@ -994,6 +995,7 @@ binTypeOp IntT IteratorT = IntT
 binTypeOp IteratorT IntT = IntT
 binTypeOp CharT CharT = CharT
 binTypeOp BoolT BoolT = BoolT
+binTypeOp FloatT IntT = FloatT
 binTypeOp _ _ = TypeError
 
 unaTypeOp :: Type -> Type
