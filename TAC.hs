@@ -1,13 +1,9 @@
 module TAC where
 
 import qualified Data.Sequence as DS
-import System.IO 
-import Control.Monad
-import Prelude hiding(foldr)
 import qualified Data.Foldable as FB
-import Data.Binary as Bin(get)
-import Data.Binary hiding(get)
-import Control.Monad(liftM2,liftM3, liftM)
+import Data.Binary as Bin
+import Control.Monad 
 
 type TAC = DS.Seq Ins
 
@@ -21,13 +17,14 @@ data Ins =
 	| IfTrueGt	Reference (Maybe Label)
 	| IfFalseGt	Reference (Maybe Label)
 	| Param 	Reference
-	| Call 		(Maybe Reference) String Int 
+	| Call 		Reference String Int 
+	| CallP		String Int
 	| PrintT	Reference
 	deriving (Eq,Read)
 
 instance Show Ins where
 	show a = case a of
-		Comment s 			-> "# " ++ (show s)
+		Comment s 			-> "# " ++ s
 		AssingB re o l r 	-> (show re) ++ " := " ++ (show l) ++ (show o) ++ (show r)
 		AssingU r o op 		-> (show r) ++ " := " ++ (show o) ++ (show op)
 		Assing 	l r 		-> (show l) ++ " := " ++ (show r)
@@ -35,7 +32,9 @@ instance Show Ins where
 		IfGoto	o r1 r2	l	-> "If " ++ show r1 ++ " " ++ show o ++ " " ++ show r2 ++ " Goto " ++ showJ l
 		IfTrueGt r l 		-> "If " ++ show r ++ " Goto " ++ showJ l
 		IfFalseGt r l 		-> "If Not " ++ show r ++ " Goto " ++ showJ l
-		Call r s i			-> showR r ++ " := " ++ "call " ++ s ++ "," ++ show i 
+		Param r 			-> "Param " ++ show r
+		Call r s i			-> show r ++ " := " ++ "call " ++ s ++ "," ++ show i 
+		CallP s i 			-> "call " ++ s ++ "," ++ show i 
 		PrintT r 			-> "Print " ++ show r 
 
 instance Binary Ins where
@@ -47,7 +46,9 @@ instance Binary Ins where
 	put (IfGoto	o r1 r2	l) 	= putWord8 5 >> put o >> put r1 >> put r2 >> put l
 	put (IfTrueGt r l) 		= putWord8 6 >> put r >> put l
 	put (IfFalseGt r l) 	= putWord8 7 >> put r >> put l
+	put (Param r)			= putWord8 39 >> put r
 	put (Call r s i) 		= putWord8 8 >> put r >> put s >> put i
+	put (CallP s i)			= putWord8 41 >> put s >> put i
 	put (PrintT r) 			= putWord8 9 >> put r
 
 	get = do 
@@ -62,6 +63,8 @@ instance Binary Ins where
 		    	6  ->  makeT2 IfTrueGt
 		    	7  ->  makeT2 IfFalseGt
 		    	8  ->  makeT3 Call
+		    	41 ->  makeT2 CallP
+		    	39 ->  Bin.get >>= return . Param
 		    	9  ->  Bin.get >>= return . PrintT 
 
 makeT2::(Binary a1, Binary a2) => (a1 -> a2 -> r) -> Get r
@@ -86,7 +89,8 @@ instance Binary Label where
 data Reference = 
 	Address 	String Reference
 	| Constant 	Value
-	| Temp 		Int 
+	| Temp 		Int       
+	| Array     String Reference
 	deriving(Eq, Read)
 
 instance Show Reference where
@@ -94,11 +98,13 @@ instance Show Reference where
 		Address 	s r 	-> s ++ " " ++ show r
 		Constant 	v  		-> show v
 		Temp 		i 		-> "T" ++ show i
+		Array 		s r  	-> s ++ "[" ++ show r ++ "]"
 
 instance Binary Reference where
 	put (Address s r ) 	= putWord8 10 >> put s >> put r
 	put (Constant v) 	= putWord8 11 >> put v
 	put (Temp i) 		= putWord8 12 >> put i
+	put (Array s r) 	= putWord8 40 >> put s >> put r
 
 	get = do 
 		w <- getWord8
@@ -106,6 +112,7 @@ instance Binary Reference where
 			10  -> makeT2 Address
 			11 	-> Bin.get >>= return . Constant
 			12	-> Bin.get >>= return . Temp
+			40 	-> makeT2 Array
 
 data Value =
 	ValInt 		Int
@@ -121,7 +128,7 @@ instance Show Value where
 		ValFloat 	f 	-> show f
 		ValChar 	c 	-> show c
 		ValBool 	b 	-> show b
-		ValString 	s	-> show s 
+		ValString 	s	-> s 
 
 instance Binary Value where
 	put (ValInt i) 		= putWord8 13 >> put i 
@@ -257,8 +264,7 @@ instance Binary Relation where
 			35 -> return Lt
 			36 -> return Ne
 			37 -> return Ge
-			38 -> return Le
-		
+			38 -> return Le		
 
 newLabel :: Int -> Label
 newLabel i = (Label i)
@@ -277,28 +283,18 @@ showJ :: (Maybe Label) -> String
 showJ (Nothing) = "_"
 showJ (Just i) 	= show i
 
-showR :: (Maybe Reference) -> String
-showR (Nothing) 	= "_"
-showR (Just r) 		= show r
+tac = DS.fromList [(Assing (Temp 1) (Constant (ValInt 3))), 
+		(IfGoto (Gt) (Constant (ValInt 2)) (Constant (ValInt 5)) (Just (Label 1))),
+		(Comment "Hola Mundo!"),
+		(Call (Constant (ValString "qux")) "bar" 3),
+		(Assing (Array "a" (Constant (ValInt 2))) (Constant (ValFloat 5.1))),
+		(CallP "baz" 2)]
 
-writeF :: TAC -> IO()
-writeF cont = do
-	Prelude.writeFile "test.txt" (show cont)
+writeTac :: FilePath -> TAC -> IO()
+writeTac = encodeFile
 
-tac = (DS.empty DS.|> (Assing (Temp 1) (Constant (ValInt 3))) DS.|> (IfGoto (Gt) (Constant (ValInt 2)) (Constant (ValInt 5)) (Just (Label 1))))
-tac2 = (DS.empty DS.|> (Comment "Hola Mundo!"))
---main = do
---	writeF tac
-
-saveProgram :: FilePath -> TAC -> IO()
-saveProgram = encodeFile
---main = do 
---	cont <- Prelude.readFile "test1.txt"
---	writeF (read $ cont)
-
---Binary load
-loadProgram :: FilePath -> IO(TAC)
-loadProgram fp = 
+readTac :: FilePath -> IO(TAC)
+readTac fp = 
 	do 	res <- decodeFile fp
 		Prelude.putStrLn (unlines $ Prelude.map show (FB.toList res))
 		return res
