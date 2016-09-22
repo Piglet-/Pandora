@@ -1,15 +1,4 @@
-Cosas por hacer en Pandora antes de Lenguajes 3:
-
-- muchos muchos ejemplos de prueba.
-
-- apuntadores como l-values. LISTO
-
-- tipo para operadores de expresiones (sumas y eso) LISTO
-
-- while y repeat como lo mismo pero con un booleano que diga si se chequea de primero o de último.*opcional* 
-
-- return de procedimientos gramaticalmente (maybe expresion en el arbol) (return void).
-
-- conexion del árbol con la tabla de simbolo (identificador en lugar de string que sea la entrada en la tabla se simbolos, para no buscar de nuevo en la tabla, aplica para funciones y todos los identificadores). LISTO
-
-- revisar que la verificación de tipos esté PERFECTA
+- agregar instruccion Return LISTO
+- agregar ifnotGoto
+- agregar arreglos
+- agregar apuntadores

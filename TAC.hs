@@ -9,9 +9,9 @@ type TAC = DS.Seq Ins
 
 data Ins =  
 	Comment 	String
-	| AssingB 	BinOp Reference Reference Reference
-	| AssingU 	UnOp Reference Reference
-	| Assing 	Reference Reference
+	| AssignB 	BinOp Reference Reference Reference
+	| AssignU 	UnOp Reference Reference
+	| Assign 	Reference Reference
 	| Goto 		(Maybe Label)
 	| IfGoto 	Relation Reference Reference (Maybe Label)
 	| IfTrueGt	Reference (Maybe Label)
@@ -19,15 +19,16 @@ data Ins =
 	| Param 	Reference
 	| Call 		Reference String Int 
 	| CallP		String Int
+	| Return 	(Maybe Reference)
 	| PrintT	Reference
 	deriving (Eq,Read)
 
 instance Show Ins where
 	show a = case a of
 		Comment s 			-> "# " ++ s
-		AssingB re o l r 	-> (show re) ++ " := " ++ (show l) ++ (show o) ++ (show r)
-		AssingU r o op 		-> (show r) ++ " := " ++ (show o) ++ (show op)
-		Assing 	l r 		-> (show l) ++ " := " ++ (show r)
+		AssignB re o l r 	-> (show re) ++ " := " ++ (show l) ++ (show o) ++ (show r)
+		AssignU r o op 		-> (show r) ++ " := " ++ (show o) ++ (show op)
+		Assign 	l r 		-> (show l) ++ " := " ++ (show r)
 		Goto 	l 			-> "Goto " ++  showJ l
 		IfGoto	o r1 r2	l	-> "If " ++ show r1 ++ " " ++ show o ++ " " ++ show r2 ++ " Goto " ++ showJ l
 		IfTrueGt r l 		-> "If " ++ show r ++ " Goto " ++ showJ l
@@ -35,13 +36,14 @@ instance Show Ins where
 		Param r 			-> "Param " ++ show r
 		Call r s i			-> show r ++ " := " ++ "call " ++ s ++ "," ++ show i 
 		CallP s i 			-> "call " ++ s ++ "," ++ show i 
+		Return r 			-> "Return " ++ showR r
 		PrintT r 			-> "Print " ++ show r 
 
 instance Binary Ins where
 	put (Comment s) 		= putWord8 0 >> put s
-	put (AssingB re o l r) 	= putWord8 1 >> put re >> put o >> put l >> put r
-	put (AssingU r o op) 	= putWord8 2 >> put r >> put o >> put op
-	put (Assing l r) 		= putWord8 3 >> put l >> put r
+	put (AssignB re o l r) 	= putWord8 1 >> put re >> put o >> put l >> put r
+	put (AssignU r o op) 	= putWord8 2 >> put r >> put o >> put op
+	put (Assign l r) 		= putWord8 3 >> put l >> put r
 	put (Goto 	l)	 		= putWord8 4 >> put l
 	put (IfGoto	o r1 r2	l) 	= putWord8 5 >> put o >> put r1 >> put r2 >> put l
 	put (IfTrueGt r l) 		= putWord8 6 >> put r >> put l
@@ -49,15 +51,16 @@ instance Binary Ins where
 	put (Param r)			= putWord8 39 >> put r
 	put (Call r s i) 		= putWord8 8 >> put r >> put s >> put i
 	put (CallP s i)			= putWord8 41 >> put s >> put i
+	put (Return r)			= putWord8 42 >> put r 
 	put (PrintT r) 			= putWord8 9 >> put r
 
 	get = do 
 		    w <- getWord8
 		    case w of
 		       	0  ->  Bin.get >>= return . Comment
-		       	1  ->  makeT4 AssingB
-		       	2  ->  makeT3 AssingU
-		       	3  ->  makeT2  Assing
+		       	1  ->  makeT4 AssignB
+		       	2  ->  makeT3 AssignU
+		       	3  ->  makeT2  Assign
 		       	4  ->  Bin.get >>= return .  Goto
 		    	5  ->  makeT4 IfGoto
 		    	6  ->  makeT2 IfTrueGt
@@ -65,6 +68,7 @@ instance Binary Ins where
 		    	8  ->  makeT3 Call
 		    	41 ->  makeT2 CallP
 		    	39 ->  Bin.get >>= return . Param
+		    	42 ->  Bin.get >>= return . Return
 		    	9  ->  Bin.get >>= return . PrintT 
 
 makeT2::(Binary a1, Binary a2) => (a1 -> a2 -> r) -> Get r
@@ -90,7 +94,7 @@ data Reference =
 	Address 	String Reference
 	| Constant 	Value
 	| Temp 		Int       
-	| Array     String Reference
+--	| Array     String Reference
 	deriving(Eq, Read)
 
 instance Show Reference where
@@ -98,13 +102,13 @@ instance Show Reference where
 		Address 	s r 	-> s ++ " " ++ show r
 		Constant 	v  		-> show v
 		Temp 		i 		-> "T" ++ show i
-		Array 		s r  	-> s ++ "[" ++ show r ++ "]"
+	-- 	Array 		s r  	-> s ++ "[" ++ show r ++ "]"
 
 instance Binary Reference where
 	put (Address s r ) 	= putWord8 10 >> put s >> put r
 	put (Constant v) 	= putWord8 11 >> put v
 	put (Temp i) 		= putWord8 12 >> put i
-	put (Array s r) 	= putWord8 40 >> put s >> put r
+	-- put (Array s r) 	= putWord8 40 >> put s >> put r
 
 	get = do 
 		w <- getWord8
@@ -112,7 +116,7 @@ instance Binary Reference where
 			10  -> makeT2 Address
 			11 	-> Bin.get >>= return . Constant
 			12	-> Bin.get >>= return . Temp
-			40 	-> makeT2 Array
+		--	40 	-> makeT2 Array
 
 data Value =
 	ValInt 		Int
@@ -283,11 +287,16 @@ showJ :: (Maybe Label) -> String
 showJ (Nothing) = "_"
 showJ (Just i) 	= show i
 
-tac = DS.fromList [(Assing (Temp 1) (Constant (ValInt 3))), 
+showR :: (Maybe Reference) -> String
+showR (Nothing) = ""
+showR (Just r) 	= show r
+
+
+tac = DS.fromList [(Assign (Temp 1) (Constant (ValInt 3))), 
 		(IfGoto (Gt) (Constant (ValInt 2)) (Constant (ValInt 5)) (Just (Label 1))),
 		(Comment "Hola Mundo!"),
 		(Call (Constant (ValString "qux")) "bar" 3),
-		(Assing (Array "a" (Constant (ValInt 2))) (Constant (ValFloat 5.1))),
+	--	(Assing (Array "a" (Constant (ValInt 2))) (Constant (ValFloat 5.1))),
 		(CallP "baz" 2)]
 
 writeTac :: FilePath -> TAC -> IO()
