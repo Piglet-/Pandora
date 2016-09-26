@@ -15,8 +15,6 @@ data Ins =
 	| Goto 		(Maybe Label)
 	| IfGoto 	Relation Reference Reference (Maybe Label)
 	| IfNotGoto	Relation Reference Reference (Maybe Label)
-	| IfTrueGt	Reference (Maybe Label)
-	| IfFalseGt	Reference (Maybe Label)
 	| Param 	Reference
 	| Call 		Reference String Int 
 	| CallP		String Int
@@ -33,8 +31,6 @@ instance Show Ins where
 		Goto 	l 			-> "Goto " ++  showJ l
 		IfGoto	o r1 r2	l	-> "If " ++ show r1 ++ " " ++ show o ++ " " ++ show r2 ++ " Goto " ++ showJ l
 		IfNotGoto o r1 r2 l	-> "If not " ++  show r1 ++ " " ++ show o ++ " " ++ show r2 ++ " Goto " ++ showJ l
-		IfTrueGt r l 		-> "If " ++ show r ++ " Goto " ++ showJ l
-		IfFalseGt r l 		-> "If Not " ++ show r ++ " Goto " ++ showJ l
 		Param r 			-> "Param " ++ show r
 		Call r s i			-> show r ++ " := " ++ "call " ++ s ++ "," ++ show i 
 		CallP s i 			-> "call " ++ s ++ "," ++ show i 
@@ -49,8 +45,6 @@ instance Binary Ins where
 	put (Goto 	l)	 			= putWord8 4 >> put l
 	put (IfGoto	o r1 r2	l) 		= putWord8 5 >> put o >> put r1 >> put r2 >> put l
 	put (IfNotGoto o r1 r2 l) 	= putWord8 43 >> put o >> put r1 >> put r2 >> put l
-	put (IfTrueGt r l) 			= putWord8 6 >> put r >> put l
-	put (IfFalseGt r l) 		= putWord8 7 >> put r >> put l
 	put (Param r)				= putWord8 39 >> put r
 	put (Call r s i) 			= putWord8 8 >> put r >> put s >> put i
 	put (CallP s i)				= putWord8 41 >> put s >> put i
@@ -67,8 +61,6 @@ instance Binary Ins where
 		       	4  ->  Bin.get >>= return .  Goto
 		    	5  ->  makeT4 IfGoto
 		    	43 ->  makeT4 IfNotGoto
-		    	6  ->  makeT2 IfTrueGt
-		    	7  ->  makeT2 IfFalseGt
 		    	8  ->  makeT3 Call
 		    	41 ->  makeT2 CallP
 		    	39 ->  Bin.get >>= return . Param
@@ -296,8 +288,6 @@ newTemp i = (Temp i)
 patch :: Ins -> Label -> Ins
 patch (Goto Nothing) l 				= Goto (Just l)
 patch (IfGoto 	r0 r1 r2 Nothing) l = IfGoto r0 r1 r2 (Just l)
-patch (IfTrueGt	r Nothing) l 		= IfTrueGt r (Just l)
-patch (IfFalseGt r Nothing) l 		= IfFalseGt r (Just l)
 patch i _ 							= i 
 
 showJ :: (Maybe Label) -> String
