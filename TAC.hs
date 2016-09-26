@@ -22,7 +22,7 @@ data Ins =
 	| CallP		String Int
 	| Return 	(Maybe Reference)
 	| PrintT	Reference
-	deriving (Eq,Read)
+	deriving (Eq)
 
 instance Show Ins where
 	show a = case a of
@@ -42,20 +42,20 @@ instance Show Ins where
 		PrintT r 			-> "Print " ++ show r 
 
 instance Binary Ins where
-	put (Comment s) 		= putWord8 0 >> put s
-	put (AssignB re o l r) 	= putWord8 1 >> put re >> put o >> put l >> put r
-	put (AssignU r o op) 	= putWord8 2 >> put r >> put o >> put op
-	put (Assign l r) 		= putWord8 3 >> put l >> put r
-	put (Goto 	l)	 		= putWord8 4 >> put l
-	put (IfGoto	o r1 r2	l) 	= putWord8 5 >> put o >> put r1 >> put r2 >> put l
-	put (IfNotGoto o r1 r2 l) = putWord8 43 >> put o >> put r1 >> put r2 >> put l
-	put (IfTrueGt r l) 		= putWord8 6 >> put r >> put l
-	put (IfFalseGt r l) 	= putWord8 7 >> put r >> put l
-	put (Param r)			= putWord8 39 >> put r
-	put (Call r s i) 		= putWord8 8 >> put r >> put s >> put i
-	put (CallP s i)			= putWord8 41 >> put s >> put i
-	put (Return r)			= putWord8 42 >> put r 
-	put (PrintT r) 			= putWord8 9 >> put r
+	put (Comment s) 			= putWord8 0 >> put s
+	put (AssignB re o l r) 		= putWord8 1 >> put re >> put o >> put l >> put r
+	put (AssignU r o op) 		= putWord8 2 >> put r >> put o >> put op
+	put (Assign l r) 			= putWord8 3 >> put l >> put r
+	put (Goto 	l)	 			= putWord8 4 >> put l
+	put (IfGoto	o r1 r2	l) 		= putWord8 5 >> put o >> put r1 >> put r2 >> put l
+	put (IfNotGoto o r1 r2 l) 	= putWord8 43 >> put o >> put r1 >> put r2 >> put l
+	put (IfTrueGt r l) 			= putWord8 6 >> put r >> put l
+	put (IfFalseGt r l) 		= putWord8 7 >> put r >> put l
+	put (Param r)				= putWord8 39 >> put r
+	put (Call r s i) 			= putWord8 8 >> put r >> put s >> put i
+	put (CallP s i)				= putWord8 41 >> put s >> put i
+	put (Return r)				= putWord8 42 >> put r 
+	put (PrintT r) 				= putWord8 9 >> put r
 
 	get = do 
 		    w <- getWord8
@@ -85,7 +85,7 @@ makeT4::(Binary a1, Binary a2, Binary a3, Binary a4) => (a1 -> a2 -> a3 -> a4 ->
 makeT4 t = liftM4 t Bin.get Bin.get Bin.get Bin.get
 
 
-newtype Label = Label Int deriving (Eq, Read)
+newtype Label = Label Int deriving (Eq)
 
 instance Show Label where
 	show (Label i) = "L" ++ show i
@@ -97,22 +97,19 @@ instance Binary Label where
 data Reference = 
 	Address 	String Reference
 	| Constant 	Value
-	| Temp 		Int       
---	| Array     String Reference
-	deriving(Eq, Read)
+	| Temp 		Int
+	deriving(Eq)
 
 instance Show Reference where
 	show a = case a of
 		Address 	s r 	-> s ++ " " ++ show r
 		Constant 	v  		-> show v
 		Temp 		i 		-> "T" ++ show i
-	-- 	Array 		s r  	-> s ++ "[" ++ show r ++ "]"
 
 instance Binary Reference where
 	put (Address s r ) 	= putWord8 10 >> put s >> put r
 	put (Constant v) 	= putWord8 11 >> put v
 	put (Temp i) 		= putWord8 12 >> put i
-	-- put (Array s r) 	= putWord8 40 >> put s >> put r
 
 	get = do 
 		w <- getWord8
@@ -120,7 +117,6 @@ instance Binary Reference where
 			10  -> makeT2 Address
 			11 	-> Bin.get >>= return . Constant
 			12	-> Bin.get >>= return . Temp
-		--	40 	-> makeT2 Array
 
 data Value =
 	ValInt 		Int
@@ -128,7 +124,7 @@ data Value =
 	| ValChar	Char 
 	| ValBool	Bool 
 	| ValString String
-	deriving(Eq, Read)
+	deriving(Eq)
 
 instance Show Value where
 	show a = case a of
@@ -167,22 +163,26 @@ data BinOp =
 	| Pow
 	| And 
 	| Or
-	deriving (Eq,Read)
+	| LArray
+	| RArray
+	deriving (Eq)
 
 instance Show BinOp where
 	show a = case a of 
-		AddI -> "+i"
-		AddF -> "+f"
-		SubI -> "-i"
-		SubF -> "-f"
-		MulI -> "*i"
-		MulF -> "*f"
-		DivI -> "/i"
-		DivF -> "/f"
-		Mod  -> "%"
-		Pow  -> "^"
-		And  -> "and"
-		Or   -> "or"
+		AddI 	-> "+i"
+		AddF 	-> "+f"
+		SubI 	-> "-i"
+		SubF 	-> "-f"
+		MulI 	-> "*i"
+		MulF 	-> "*f"
+		DivI 	-> "/i"
+		DivF 	-> "/f"
+		Mod  	-> "%"
+		Pow  	-> "^"
+		And  	-> "and"
+		Or   	-> "or"
+		LArray 	-> "[]="
+		RArray 	-> "=[]"
 
 instance Binary BinOp where
 	put AddI 	= putWord8 18
@@ -197,6 +197,9 @@ instance Binary BinOp where
 	put Pow 	= putWord8 27
 	put And 	= putWord8 28
 	put Or 		= putWord8 29
+	put LArray 	= putWord8 44
+	put RArray	= putWord8 45
+	
 
 	get = do 
 		w <- getWord8
@@ -213,23 +216,31 @@ instance Binary BinOp where
 			27 -> return Pow
 			28 -> return And
 			29 -> return Or
+			44 -> return LArray
+			45 -> return RArray
 
 data UnOp =
 	Not
 	| NegI
 	| NegF
-	deriving(Eq, Read)
+	| LPoint
+	| RPoint
+	deriving(Eq)
 
 instance Show UnOp where
 	show a = case a of
-		Not  -> "not"
-		NegI -> "-i"
-		NegF -> "-f"
+		Not  	-> "not"
+		NegI 	-> "-i"
+		NegF 	-> "-f"
+		LPoint 	-> "*="
+		RPoint 	-> "=*"
 
 instance Binary UnOp where
 	put Not 	= putWord8 30
 	put NegI 	= putWord8 31
 	put NegF 	= putWord8 32
+	put LPoint	= putWord8 46
+	put RPoint	= putWord8 47
 
 	get = do 
 		w <- getWord8
@@ -237,6 +248,8 @@ instance Binary UnOp where
 			30 -> return Not
 			31 -> return NegI
 			32 -> return NegF
+			46 -> return LPoint
+			47 -> return RPoint
 
 data Relation = 
 	Eq
@@ -245,7 +258,7 @@ data Relation =
 	| Ne 
 	| Ge
 	| Le 
-	deriving(Eq, Read)
+	deriving(Eq)
 
 instance Show Relation where
 	show a = case a of
@@ -300,7 +313,6 @@ tac = DS.fromList [(Assign (Temp 1) (Constant (ValInt 3))),
 		(IfGoto (Gt) (Constant (ValInt 2)) (Constant (ValInt 5)) (Just (Label 1))),
 		(Comment "Hola Mundo!"),
 		(Call (Constant (ValString "qux")) "bar" 3),
-	--	(Assing (Array "a" (Constant (ValInt 2))) (Constant (ValFloat 5.1))),
 		(CallP "baz" 2)]
 
 writeTac :: FilePath -> TAC -> IO()
