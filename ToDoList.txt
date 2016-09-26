@@ -1,4 +1,4 @@
 - agregar instruccion Return LISTO
-- agregar ifnotGoto
+- agregar ifnotGoto LISTO
 - agregar arreglos
 - agregar apuntadores

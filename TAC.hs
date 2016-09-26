@@ -14,6 +14,7 @@ data Ins =
 	| Assign 	Reference Reference
 	| Goto 		(Maybe Label)
 	| IfGoto 	Relation Reference Reference (Maybe Label)
+	| IfNotGoto	Relation Reference Reference (Maybe Label)
 	| IfTrueGt	Reference (Maybe Label)
 	| IfFalseGt	Reference (Maybe Label)
 	| Param 	Reference
@@ -31,6 +32,7 @@ instance Show Ins where
 		Assign 	l r 		-> (show l) ++ " := " ++ (show r)
 		Goto 	l 			-> "Goto " ++  showJ l
 		IfGoto	o r1 r2	l	-> "If " ++ show r1 ++ " " ++ show o ++ " " ++ show r2 ++ " Goto " ++ showJ l
+		IfNotGoto o r1 r2 l	-> "If not " ++  show r1 ++ " " ++ show o ++ " " ++ show r2 ++ " Goto " ++ showJ l
 		IfTrueGt r l 		-> "If " ++ show r ++ " Goto " ++ showJ l
 		IfFalseGt r l 		-> "If Not " ++ show r ++ " Goto " ++ showJ l
 		Param r 			-> "Param " ++ show r
@@ -46,6 +48,7 @@ instance Binary Ins where
 	put (Assign l r) 		= putWord8 3 >> put l >> put r
 	put (Goto 	l)	 		= putWord8 4 >> put l
 	put (IfGoto	o r1 r2	l) 	= putWord8 5 >> put o >> put r1 >> put r2 >> put l
+	put (IfNotGoto o r1 r2 l) = putWord8 43 >> put o >> put r1 >> put r2 >> put l
 	put (IfTrueGt r l) 		= putWord8 6 >> put r >> put l
 	put (IfFalseGt r l) 	= putWord8 7 >> put r >> put l
 	put (Param r)			= putWord8 39 >> put r
@@ -63,6 +66,7 @@ instance Binary Ins where
 		       	3  ->  makeT2  Assign
 		       	4  ->  Bin.get >>= return .  Goto
 		    	5  ->  makeT4 IfGoto
+		    	43 ->  makeT4 IfNotGoto
 		    	6  ->  makeT2 IfTrueGt
 		    	7  ->  makeT2 IfFalseGt
 		    	8  ->  makeT3 Call
