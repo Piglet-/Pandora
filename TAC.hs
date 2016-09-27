@@ -1,4 +1,10 @@
-module TAC where
+module TAC 
+	( TAC (..)
+	, Label (..)
+	, Reference (..)
+	, Value (..)
+	, Ins (..)
+	) where
 
 import qualified Data.Sequence as DS
 import qualified Data.Foldable as FB
