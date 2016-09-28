@@ -319,3 +319,15 @@ readTac fp =
 	do 	res <- decodeFile fp
 		Prelude.putStrLn (unlines $ Prelude.map show (FB.toList res))
 		return res
+
+makeBOpp :: Operator -> BinOp
+makeBOpp op = case op of
+    Plus t  -> if t == IntT then AddI else AddF 
+    Minus t -> if t == IntT then SubI else SubF
+    Mul t   -> if t == IntT then MultI else MultF
+    Slash t -> if t == IntT then DivI else DivF
+    Div     -> DivI
+    Mod t   -> Mod
+    Power t -> Pow
+    And     -> And
+    Or      -> Or
