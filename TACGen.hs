@@ -14,7 +14,7 @@ import qualified Data.Sequence as DS
 
 type TACMonad = RWS TACReader TAC TACState 
 
-type TACReader = ()
+type TACReader = String
 
 data TACState = 
     TACState 
@@ -58,6 +58,8 @@ getAssign ins = case ins of
         tell $ DS.singleton assgn
         return $ assgn
 
+
+
 getReference :: Expression -> TACMonad Reference
 getReference exp = case exp of
     BoolL  b p -> return $ Constant $ ValBool  b
@@ -65,16 +67,36 @@ getReference exp = case exp of
     FloatL f p -> return $ Constant $ ValFloat f
     CharL  c p -> return $ Constant $ ValChar  c 
 
-assing = AsngL (StringL "x" (Position (4,2))) (IntL 5 (Position(4,5))) (Position (4,3))
+    ExpBin op e1 e2 p -> do 
+        const1 <- getReference e1
+        const2 <- getReference e2
+        nt <- newTemp
+        let assgn = AssignB (makeBOpp op) nt const1 const2
+        tell $ DS.singleton assgn
+        return $ nt
 
-makeBOpp :: Operator -> BinOp
+  --  ExpUna op e1 p -> do
+    --    const1 <- getReference e1
+      --  let assgn = AssignU 
+
+
+assing = AsngL (StringL "x" (Position (4,2))) (IntL 5 (Position(4,5))) (Position (4,3))
+assing2 = AsngL (StringL "x" (Position (4,2))) (ExpBin (Minus IntT) (ExpBin (Minus IntT) (IntL 5 (Position(4,5))) (IntL 5 (Position(4,5))) (Position(4,4))) (IntL 5 (Position(4,5))) (Position(4,4))) (Position (4,3))
+
+printTac = do 
+    let (state, bita) = execRWS (getAssign assing2) "" (TACState emptyZipper emptyZipper (AST []) 0 0)
+    putStrLn $ show bita
+
+emptyZipper :: Zipper
+emptyZipper = focus $ emptyST emptyScope
+
 makeBOpp op = case op of
     Plus t  -> if t == IntT then AddI else AddF 
     Minus t -> if t == IntT then SubI else SubF
-    Mul t   -> if t == IntT then MultI else MultF
+    Mul t   -> if t == IntT then MulI else MulF
     Slash t -> if t == IntT then DivI else DivF
     Div     -> DivI
-    Mod t   -> Mod
-    Power t -> Pow
-    And     -> And
-    Or      -> Or
+    Mod t   -> ModT
+    Power t -> PowT
+    And     -> AndT
+    Or      -> OrT
