@@ -4,6 +4,7 @@ module TAC
 	, Reference (..)
 	, Value (..)
 	, Ins (..)
+	, BinOp (..)
 	) where
 
 import qualified Data.Sequence as DS
@@ -31,8 +32,8 @@ data Ins =
 instance Show Ins where
 	show a = case a of
 		Comment s 			-> "# " ++ s
-		AssignB re o l r 	-> (show re) ++ " := " ++ (show l) ++ (show o) ++ (show r)
-		AssignU r o op 		-> (show r) ++ " := " ++ (show o) ++ (show op)
+		AssignB o re l r 	-> (show re) ++ " := " ++ (show l) ++ (show o) ++ (show r)
+		AssignU o r  op 	-> (show r) ++ " := " ++ (show o) ++ (show op)
 		Assign 	l r 		-> (show l) ++ " := " ++ (show r)
 		Goto 	l 			-> "Goto " ++  showJ l
 		IfGoto	o r1 r2	l	-> "If " ++ show r1 ++ " " ++ show o ++ " " ++ show r2 ++ " Goto " ++ showJ l
@@ -157,30 +158,30 @@ data BinOp =
 	| MulF 
 	| DivI 
 	| DivF 
-	| Mod 
-	| Pow
-	| And 
-	| Or
+	| ModT 
+	| PowT
+	| AndT 
+	| OrT
 	| LArray
 	| RArray
 	deriving (Eq)
 
 instance Show BinOp where
 	show a = case a of 
-		AddI 	-> "+i"
-		AddF 	-> "+f"
-		SubI 	-> "-i"
-		SubF 	-> "-f"
-		MulI 	-> "*i"
-		MulF 	-> "*f"
-		DivI 	-> "/i"
-		DivF 	-> "/f"
-		Mod  	-> "%"
-		Pow  	-> "^"
-		And  	-> "and"
-		Or   	-> "or"
-		LArray 	-> "[]="
-		RArray 	-> "=[]"
+		AddI 	-> " +i "
+		AddF 	-> " +f "
+		SubI 	-> " -i "
+		SubF 	-> " -f "
+		MulI 	-> " *i "
+		MulF 	-> " *f "
+		DivI 	-> " /i "
+		DivF 	-> " /f "
+		ModT  	-> " % "
+		PowT  	-> " ^ "
+		AndT  	-> " and "
+		OrT   	-> " or "
+		LArray 	-> " []= "
+		RArray 	-> " =[] "
 
 instance Binary BinOp where
 	put AddI 	= putWord8 18
@@ -191,10 +192,10 @@ instance Binary BinOp where
 	put MulF 	= putWord8 23
 	put DivI 	= putWord8 24
 	put DivF 	= putWord8 25
-	put Mod 	= putWord8 26
-	put Pow 	= putWord8 27
-	put And 	= putWord8 28
-	put Or 		= putWord8 29
+	put ModT 	= putWord8 26
+	put PowT 	= putWord8 27
+	put AndT 	= putWord8 28
+	put OrT 		= putWord8 29
 	put LArray 	= putWord8 44
 	put RArray	= putWord8 45
 	
@@ -210,10 +211,10 @@ instance Binary BinOp where
 			23 -> return MulF
 			24 -> return DivI
 			25 -> return DivF
-			26 -> return Mod
-			27 -> return Pow
-			28 -> return And
-			29 -> return Or
+			26 -> return ModT
+			27 -> return PowT
+			28 -> return AndT
+			29 -> return OrT
 			44 -> return LArray
 			45 -> return RArray
 
