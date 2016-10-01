@@ -156,7 +156,7 @@ data Expression
     | CFCall    Expression  Expression      Position
     | AccsA     Expression  [Expression]    Position
     | AccsS     Expression  [Expression]    Position
-    | AccsP     Expression  Int Position
+    | AccsP     Expression  Int Position	
     | NoneE
     deriving(Show, Eq)
 
@@ -281,3 +281,60 @@ filterIns l = filter (/= DecL) l
 filterE :: [Expression] -> [Expression]
 filterE le = filter (/= NoneE) le
 
+{-data Access = VariableAcc String
+			| ArrayAcc (Access) (Expression)
+			| StructAcc (Access) String 
+
+instance Show Access where
+	show a = case a of
+		VariableAcc s 	-> s 
+		ArrayAcc a e 	-> show a ++ "[" ++ show e ++ "]"
+		StructAcc a s 	-> show a ++ "." ++ s 
+
+
+data AccHist = HistA Expression
+			| HistS String
+
+type Thread = [AccHist]
+
+type AccZipper = (Access, Thread)
+
+focusAcc:: Access -> AccZipper
+focusAcc acc = (acc, [])
+
+defocusAcc :: AccZipper -> Maybe (AccZipper)
+defocusAcc = fst 
+
+inAcc :: AccZipper -> Maybe (AccZipper)
+inAcc accz = case (fst accz) of 
+	VariableAcc _ 	-> Nothing
+	ArrayAcc _ _ 	-> inArrayAcc accz
+	StructAcc _ _ 	-> inStructAcc accz 
+
+inArrayAcc :: AccZipper -> Maybe (AccZipper)
+inArrayAcc (acc, h) = case acc of 
+	ArrayAcc a e 	-> Just(acc, (HistA e):h)
+	_				-> Nothing
+
+inStructAcc :: AccZipper -> Maybe (AccZipper)
+inStructAcc (acc, h) = case acc of
+	StructAcc a s 	-> Just (acc, (HistS s):h)
+	_				-> Nothing
+
+backAcc :: AccZipper -> Maybe (AccZipper)
+backAcc (acc, h) = case h of
+	[]		-> Nothing
+	(hi:hs) -> case hi of
+		HistA e -> Just (ArrayAcc acc e , hs)
+		HistS s -> Just (StructAcc acc s , hs)
+
+topAcc :: AccZipper -> AccZipper
+topAcc accz = case (snd accz) of
+	[]	-> accz
+	_:_	-> topAcc $ fromJust $ backAcc accz
+
+deepAcc :: AccZipper -> AccZipper
+deepAcc accz = case (fst accz) of
+	VariableAcc _ 	-> accz
+	_				-> deepAcc $ fromJust $ inAcc accz
+-}

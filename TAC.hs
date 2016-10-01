@@ -5,6 +5,7 @@ module TAC
 	, Value (..)
 	, Ins (..)
 	, BinOp (..)
+	, UnOp (..)
 	) where
 
 import qualified Data.Sequence as DS
@@ -219,7 +220,7 @@ instance Binary BinOp where
 			45 -> return RArray
 
 data UnOp =
-	Not
+	NotT
 	| NegI
 	| NegF
 	| LPoint
@@ -228,14 +229,14 @@ data UnOp =
 
 instance Show UnOp where
 	show a = case a of
-		Not  	-> "not"
+		NotT  	-> "not"
 		NegI 	-> "-i"
 		NegF 	-> "-f"
 		LPoint 	-> "*="
 		RPoint 	-> "=*"
 
 instance Binary UnOp where
-	put Not 	= putWord8 30
+	put NotT 	= putWord8 30
 	put NegI 	= putWord8 31
 	put NegF 	= putWord8 32
 	put LPoint	= putWord8 46
@@ -244,7 +245,7 @@ instance Binary UnOp where
 	get = do 
 		w <- getWord8
 		case w of 
-			30 -> return Not
+			30 -> return NotT
 			31 -> return NegI
 			32 -> return NegF
 			46 -> return LPoint
@@ -320,15 +321,3 @@ readTac fp =
 	do 	res <- decodeFile fp
 		Prelude.putStrLn (unlines $ Prelude.map show (FB.toList res))
 		return res
-
-makeBOpp :: Operator -> BinOp
-makeBOpp op = case op of
-    Plus t  -> if t == IntT then AddI else AddF 
-    Minus t -> if t == IntT then SubI else SubF
-    Mul t   -> if t == IntT then MultI else MultF
-    Slash t -> if t == IntT then DivI else DivF
-    Div     -> DivI
-    Mod t   -> Mod
-    Power t -> Pow
-    And     -> And
-    Or      -> Or
