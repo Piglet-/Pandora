@@ -417,7 +417,7 @@ Acc : "." id        { % return $2 }
 Arrays : Array        { % return [$1] }
        | Arrays Array { % return ($2:$1) }
 
-Array : "[" int "]"   { % return (IntT, IntL (getTkInt $2) (pos $2)) }
+Array : "[" Exp "]"   { % return (isTypeInt (fst $2), snd $2) }
 
 FuncCall : id "(" Fields ")" { % do 
                                     st <- get 
@@ -893,6 +893,10 @@ isPointer l@(Lexeme (TokenIdent s) p) point@(PointerT t) i
 isTypeVoid :: Type -> Type
 isTypeVoid VoidT = VoidT
 isTypeVoid TypeError = TypeError
+
+isTypeInt :: Type -> Type
+isTypeInt IntT  = IntT
+isTypeInt _     = TypeError
 
 makeStruct :: Lexeme t -> [(Lexeme Token, Type)] -> Zipper -> (Type, Int)
 makeStruct lex list z = case (token lex) of

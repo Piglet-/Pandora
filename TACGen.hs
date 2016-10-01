@@ -68,8 +68,13 @@ getReference exp = case exp of
     CharL  c p  -> return $ Constant $ ValChar  c 
     StringL s p -> return $ Constant $ ValString s
 
-   -- IdL s e p   -> do 
-     --   add <- getAddr exp 
+    ex@(AccsA s e p) -> do 
+        add <- getAddr ex
+        return $ add 
+
+    ex@(AccsS s e p) -> do 
+        add <- getAddr ex
+        return $ add 
 
     ExpBin op e1 e2 p -> do 
         const1 <- getReference e1
@@ -86,11 +91,11 @@ getReference exp = case exp of
         tell $ DS.singleton assgn
         return $ nt
 
-assing = AsngL (StringL "x" (Position (4,2))) (IntL 5 (Position(4,5))) (Position (4,3))
+assing = AsngL (StringL "x" (Position (4,2))) (AccsA (IdL "a" (Entry (ArrayT 2 IntT) (Position (2,3)) 4 5) (Position (8,9))) [(IntL 2 (Position (7,8))), (ExpBin (Minus IntT) (IntL 5 (Position(4,5))) (IntL 5 (Position(4,5))) (Position(4,4)))] (Position (4,6))) (Position (4,3))
 assing2 = AsngL (StringL "x" (Position (4,2))) (ExpBin (Minus IntT) (ExpBin (Minus IntT) (IntL 5 (Position(4,5))) (IntL 5 (Position(4,5))) (Position(4,4))) (IntL 5 (Position(4,5))) (Position(4,4))) (Position (4,3))
 
 printTac = do 
-    let (state, bita) = execRWS (getAssign assing2) "" (TACState emptyZipper emptyZipper (AST []) 0 0)
+    let (state, bita) = execRWS (getAssign assing) "" (TACState emptyZipper emptyZipper (AST []) 0 0)
     putStrLn $ show bita
 
 emptyZipper :: Zipper
@@ -111,12 +116,17 @@ makeUOpp op = case op of
     Not -> NotT
     Minus t -> if t == IntT then NegI else NegF
 
-
--- mateo generaliza en Access los idL, accesos a areglos, accesos a strucuts y a apuntadores
--- calcula la dir del valor que queremos
--- return Address s r
--- con s el string de la variable y r la referencia que es 
--- un Reference Constant Int que guarda el offset (ya calculado
--- con otra funcion).
 getAddr :: Expression -> TACMonad Reference
-getAddr = undefined
+getAddr e = case e of 
+    IdL s (Entry t _ sz o) _ -> return $ Address s (Constant (ValInt o))
+    AccsA (IdL st (Entry _ _ s o) _) es _ -> do aux (Constant (ValString st)) es
+    AccsS (IdL st (Entry _ _ s o) _) es _ -> do aux (Constant (ValString st)) es -- es como los arreglos pero en a[d] d es el offset del campo al que se accede
+
+aux :: Reference -> [Expression] -> TACMonad Reference
+aux r [] = return $ r
+aux r (e:es) = do 
+    const1 <- getReference $ e
+    temp1 <- newTemp
+    let assgn = AssignB RArray temp1 r const1
+    tell $ DS.singleton assgn
+    aux temp1 es    
