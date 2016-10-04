@@ -6,6 +6,7 @@ module TAC
 	, Ins (..)
 	, BinOp (..)
 	, UnOp (..)
+	, Relation (..)
 	) where
 
 import qualified Data.Sequence as DS
@@ -102,7 +103,7 @@ data Reference =
 
 instance Show Reference where
 	show a = case a of
-		Address 	s r 	-> s ++ " " ++ show r
+		Address 	s r 	-> show r -- s ++ " " ++ show r
 		Constant 	v  		-> show v
 		Temp 		i 		-> "T" ++ show i
 
@@ -196,7 +197,7 @@ instance Binary BinOp where
 	put ModT 	= putWord8 26
 	put PowT 	= putWord8 27
 	put AndT 	= putWord8 28
-	put OrT 		= putWord8 29
+	put OrT 	= putWord8 29
 	put LArray 	= putWord8 44
 	put RArray	= putWord8 45
 	
@@ -253,8 +254,8 @@ instance Binary UnOp where
 
 data Relation = 
 	Eq
-	| Gt 
-	| Lt
+	| GtT 
+	| LtT
 	| Ne 
 	| Ge
 	| Le 
@@ -263,16 +264,16 @@ data Relation =
 instance Show Relation where
 	show a = case a of
 		Eq -> "=="
-		Gt -> ">"
-		Lt -> "<"
+		GtT -> ">"
+		LtT -> "<"
 		Ne -> "!="
 		Ge -> ">="
 		Le -> "<="
 
 instance Binary Relation where
 	put Eq = putWord8 33
-	put Gt = putWord8 34
-	put Lt = putWord8 35
+	put GtT = putWord8 34
+	put LtT = putWord8 35
 	put Ne = putWord8 36
 	put Ge = putWord8 37
 	put Le = putWord8 38
@@ -281,8 +282,8 @@ instance Binary Relation where
 		w <- getWord8
 		case w of 
 			33 -> return Eq
-			34 -> return Gt
-			35 -> return Lt
+			34 -> return GtT
+			35 -> return LtT
 			36 -> return Ne
 			37 -> return Ge
 			38 -> return Le		
@@ -308,7 +309,7 @@ showR (Just r) 	= show r
 
 
 tac = DS.fromList [(Assign (Temp 1) (Constant (ValInt 3))), 
-		(IfGoto (Gt) (Constant (ValInt 2)) (Constant (ValInt 5)) (Just (Label 1))),
+		(IfGoto (GtT) (Constant (ValInt 2)) (Constant (ValInt 5)) (Just (Label 1))),
 		(Comment "Hola Mundo!"),
 		(Call (Constant (ValString "qux")) "bar" 3),
 		(CallP "baz" 2)]

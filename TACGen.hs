@@ -10,7 +10,9 @@ import Type
 import SymbolTable
 import Position
 import Control.Monad.RWS
+import Data.Maybe
 import qualified Data.Sequence as DS
+import qualified Data.Map.Strict as DMap
 
 type TACMonad = RWS TACReader TAC TACState 
 
@@ -50,15 +52,19 @@ newTemp = do
     modify $ \x -> x { temp = newt }
     return $ Temp newt
 
+
 getAssign :: Instructions -> TACMonad Ins
 getAssign ins = case ins of
-    AsngL (StringL s ps) e2 p -> do
-        const <- getReference e2
-        let assgn = Assign (Constant $ ValString s) const
-        tell $ DS.singleton assgn
-        return $ assgn
-
-
+    AsngL (StringL s ps) e2 p -> if (isBool e2) 
+        then do
+            trueL   <- newLabel
+            falseL  <- newLabel
+            jumpingCode e2 trueL falseL
+        else do
+            const <- getReference e2
+            let assgn = Assign (Constant $ ValString s) const
+            tell $ DS.singleton assgn
+            return $ assgn
 
 getReference :: Expression -> TACMonad Reference
 getReference exp = case exp of
@@ -67,6 +73,10 @@ getReference exp = case exp of
     FloatL f p  -> return $ Constant $ ValFloat f
     CharL  c p  -> return $ Constant $ ValChar  c 
     StringL s p -> return $ Constant $ ValString s
+
+    ex@(IdL s e p) -> do
+        add <- getAddr ex
+        return $ add
 
     ex@(AccsA s e p) -> do 
         add <- getAddr ex
@@ -91,12 +101,6 @@ getReference exp = case exp of
         tell $ DS.singleton assgn
         return $ nt
 
-assing = AsngL (StringL "x" (Position (4,2))) (AccsA (IdL "a" (Entry (ArrayT 2 IntT) (Position (2,3)) 4 5) (Position (8,9))) [(IntL 2 (Position (7,8))), (ExpBin (Minus IntT) (IntL 5 (Position(4,5))) (IntL 5 (Position(4,5))) (Position(4,4)))] (Position (4,6))) (Position (4,3))
-assing2 = AsngL (StringL "x" (Position (4,2))) (ExpBin (Minus IntT) (ExpBin (Minus IntT) (IntL 5 (Position(4,5))) (IntL 5 (Position(4,5))) (Position(4,4))) (IntL 5 (Position(4,5))) (Position(4,4))) (Position (4,3))
-
-printTac = do 
-    let (state, bita) = execRWS (getAssign assing) "" (TACState emptyZipper emptyZipper (AST []) 0 0)
-    putStrLn $ show bita
 
 emptyZipper :: Zipper
 emptyZipper = focus $ emptyST emptyScope
@@ -119,14 +123,145 @@ makeUOpp op = case op of
 getAddr :: Expression -> TACMonad Reference
 getAddr e = case e of 
     IdL s (Entry t _ sz o) _ -> return $ Address s (Constant (ValInt o))
-    AccsA (IdL st (Entry _ _ s o) _) es _ -> do aux (Constant (ValString st)) es
-    AccsS (IdL st (Entry _ _ s o) _) es _ -> do aux (Constant (ValString st)) es -- es como los arreglos pero en a[d] d es el offset del campo al que se accede
+    AccsA (IdL st (Entry t _ s o) _) es _ -> do auxArray st t es
+    AccsS (IdL st (Entry _ _ s o) _) es _ -> do aux (Constant (ValString st)) es 
+
 
 aux :: Reference -> [Expression] -> TACMonad Reference
 aux r [] = return $ r
-aux r (e:es) = do 
+aux r (e:es) = do
     const1 <- getReference $ e
     temp1 <- newTemp
     let assgn = AssignB RArray temp1 r const1
     tell $ DS.singleton assgn
     aux temp1 es    
+
+auxArray :: String -> Type-> [Expression] -> TACMonad Reference
+auxArray s (ArrayT d t) [e] = do
+    symt    <- get 
+    const1  <- getReference $ e
+    temp1   <- newTemp
+    let assgn = AssignB MulI temp1 (Constant (ValInt (typeSize' t (tsyt symt)))) const1
+    tell $ DS.singleton assgn
+    return $ temp1
+
+auxArray s (ArrayT d t)(e:es) = do
+    const1  <- getReference $ e
+    temp1   <- newTemp
+    let assgn = AssignB MulI temp1 (Constant (ValInt d)) const1
+    tell $ DS.singleton assgn
+    auxArray' s t es temp1
+
+auxArray':: String -> Type-> [Expression] -> Reference -> TACMonad Reference
+auxArray' s (ArrayT d t) [e] r = do
+    symt    <- get 
+    const1  <- getReference $ e
+    temp1   <- newTemp
+    temp2   <- newTemp
+    let assgn = AssignB MulI temp1 (Constant (ValInt (typeSize' t (tsyt symt)))) const1
+    let assgn2 = AssignB AddI temp2 temp1 r
+    tell $ DS.singleton assgn
+    tell $ DS.singleton assgn2
+    return $ temp2
+
+auxArray' s (ArrayT d t)(e:es) r = do
+    const1  <- getReference $ e
+    temp1   <- newTemp
+    temp2   <- newTemp
+    let assgn = AssignB MulI temp1 (Constant (ValInt d)) const1
+    let assgn2 = AssignB AddI temp2 temp1 r
+    tell $ DS.singleton assgn
+    tell $ DS.singleton assgn2
+    auxArray' s t es temp2
+
+typeSize' (FuncT t ts ast) z    = typeSize' t z
+typeSize' (ProcT t ts ast) z    = typeSize' t z
+typeSize' (TypeT s) z           = sm
+    where (Entry t p sm o)      = fst $ fromJust $ lookupS s z
+typeSize' (StructT m) z         = structSize m z
+typeSize' (UnionT m) z          = unionSize m z 
+typeSize' t z                   = typeSize t 
+
+structSize m z                          = DMap.foldl (structS z) 0 m
+structS z n (Entry (TypeT s) p sz off)  = n + sm
+    where (Entry t p sm o)              = fst $ fromJust $ lookupS s z
+structS z n (Entry t p sz off)          = n + typeSize' t z
+
+unionSize m z                           = DMap.foldl (unionS z) 0 m
+unionS z n (Entry (TypeT s) p sz off)   = if n > sm then n else sm
+    where (Entry t p sm o)              = fst $ fromJust $ lookupS s z
+unionS z n (Entry t p sz off)           = if n > typeSize' t z then n else typeSize' t z  
+
+isBool :: Expression -> Bool
+isBool (BoolL b p)                     = True
+isBool (ExpUna Not _ p)              = True
+isBool (IdL s (Entry t p sz o) po)   = (t == BoolT)
+isBool (AccsA e es p)               = isBool e
+isBool (AccsS e es p)               = isBool (head $ reverse es)
+isBool (ExpBin op _ _ p )             = case op of
+                Gt _        -> True
+                Lt _        -> True 
+                GEt _       -> True
+                LEt _       -> True
+                Equal _     -> True
+                Inequal _   -> True
+                And         -> True
+                Or          -> True
+                _           -> False
+isBool _                            = False
+
+
+jumpingCode :: Expression -> Label -> Label -> TACMonad Ins
+jumpingCode e tl fl = case e of 
+    BoolL t p-> do 
+        let goto = Goto (Just (if t then tl else fl))
+        tell $ DS.singleton goto 
+        return goto
+
+    ExpBin op e1 e2 p-> case op of
+        And  -> do
+            rLabel <- newLabel
+            jumpingCode e1 rLabel fl
+            jumpingCode e2 tl fl 
+        Or   -> do
+            rLabel <- newLabel
+            jumpingCode e1 tl rLabel
+            jumpingCode e2 tl fl
+
+        _    -> do
+            expl <- getReference e1
+            expr <- getReference e2
+            let ifgoto  = IfGoto (toRel op) expl expr (Just tl)
+            tell $ DS.singleton ifgoto
+            let goto    = Goto (Just fl)
+            tell $ DS.singleton goto
+            return goto
+
+    ExpUna op e1 p-> do 
+        jumpingCode e1 fl tl
+
+    --ex@(IdL s e p) tl fl -> do
+    --    let goto = Goto 
+
+toRel:: Operator -> Relation
+toRel o = case o of 
+    Gt _    -> GtT
+    Lt _    -> LtT
+    GEt _   -> Ge
+    LEt _   -> Le
+    Equal _ -> Eq
+    Inequal _ -> Ne
+
+
+assing = AsngL (StringL "x" (Position (4,2))) (AccsA (IdL "a" (Entry (ArrayT 2 (ArrayT 1 IntT)) (Position (2,3)) 4 5) (Position (8,9))) [(IntL 2 (Position (7,8))), (ExpBin (Minus IntT) (IntL 5 (Position(4,5))) (IntL 5 (Position(4,5))) (Position(4,4)))] (Position (4,6))) (Position (4,3))
+assing2 = AsngL (StringL "x" (Position (4,2))) (ExpBin (Minus IntT) (ExpBin (Minus IntT) (IntL 5 (Position(4,5))) (IntL 5 (Position(4,5))) (Position(4,4))) (IntL 5 (Position(4,5))) (Position(4,4))) (Position (4,3))
+assing3 = AsngL (StringL "x" (Position (4,2))) (AccsS (IdL "a" (Entry (StructT (DMap.insert ("otraCosa") (Entry (TypeT "otraCosa") (Position (2,3)) 4 10) (DMap.singleton "cosa" (Entry (TypeT "cosa") (Position (2,3)) 4 6)))) (Position (2,3)) 4 5) (Position (8,9))) [(IdL "cosa" (Entry (TypeT "cosa") (Position (2,3)) 4 6) (Position (8,9))),(IdL "otraCosa" (Entry (TypeT "otraCosa") (Position (2,3)) 4 10) (Position (8,9))) ] (Position (4,6))) (Position (4,3))
+
+
+
+assign4 = AsngL (StringL "x" (Position (4,2))) (ExpBin (Gt IntT) (IntL 5 (Position(4,5))) (IntL 6 (Position(4,5))) (Position(4,4))) (Position (4,3))
+
+printTac = do 
+    let (state, bita) = execRWS (getAssign assign4) "" (TACState emptyZipper emptyZipper (AST []) 0 0)
+    putStrLn $ show bita
+

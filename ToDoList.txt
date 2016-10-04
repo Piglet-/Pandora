@@ -1,4 +1,3 @@
-- agregar instruccion Return LISTO
-- agregar ifnotGoto LISTO
-- agregar arreglos LISTO
-- agregar apuntadores LISTO*
+- falta arreglos como lvalue.
+- expresiones booelanas variables
+- integración.
