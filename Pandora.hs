@@ -3,6 +3,8 @@ import Parser
 import System.Environment (getArgs)
 import SymbolTable
 import Type
+import TAC -- no es necesario pero necesito el type TAC
+import TACGen
 import Data.Either (lefts)
 import qualified Data.Sequence as DS
 --import Instructions
@@ -27,6 +29,8 @@ main = do
                                 putStr $ drawTree (treeAST (filterI (ast state)))
                                 putStr "\nErrors: \n"
                                 putStr (filterBit bita)
+                                let (stateT,bitT) = execRWS (mapM_ getAssign (listTAC (ast state))) "" emptyTACState
+                                putStr (unlines $ map show (FB.toList bitT))
                             --print $ drop 2 (show (parse lexs) ++ "Accepted") 
                 else case head (tail args) of
                     "-l" -> if any isTokenError lexs 
@@ -59,6 +63,9 @@ initZipper = insertS "intToFloat" (Entry (FuncT FloatT [IntT] (AST [])) (Positio
 
 filterBit :: DS.Seq(Binnacle) -> String
 filterBit bs = unlines (lefts (FB.toList bs))
+
+--filterBitTAC :: DS.Seq(TAC) -> String
+--filterBitTAC ts = unlines $ FB.toList ts
 --    case scanner str of
         --Right lexs -> mapM_ fPrint lexs
 --        Right lexs -> print (parse lexs)   

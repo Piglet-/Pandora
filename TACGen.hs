@@ -1,6 +1,9 @@
 module TACGen 
     ( initTAC
     , initTACState
+    , getAssign
+    , listTAC
+    , emptyTACState
     , TACMonad (..)
     )
 where
@@ -11,6 +14,7 @@ import SymbolTable
 import Position
 import Control.Monad.RWS
 import Data.Maybe
+import qualified Data.Foldable as FB
 import qualified Data.Sequence as DS
 import qualified Data.Map.Strict as DMap
 
@@ -51,18 +55,33 @@ newTemp = do
     newt <- liftM succ $ gets temp
     modify $ \x -> x { temp = newt }
     return $ Temp newt
-
-
+ 
 getAssign :: Instructions -> TACMonad Ins
 getAssign ins = case ins of
-    AsngL (StringL s ps) e2 p -> if (isBool e2) 
+    AsngL ex@(IdL s e ps) e2 p -> if (isBool e2) 
         then do
             trueL   <- newLabel
             falseL  <- newLabel
             jumpingCode e2 trueL falseL
         else do
             const <- getReference e2
-            let assgn = Assign (Constant $ ValString s) const
+            add <- getAddr ex
+            let assgn = AssignU LPoint add const
+            tell $ DS.singleton assgn
+            return $ assgn
+    AsngL ex@(AccsA s e ps) e2 p -> if (isBool e2) 
+        then do
+            trueL   <- newLabel
+            falseL  <- newLabel
+            jumpingCode e2 trueL falseL
+        else do 
+            const <- getReference e2
+            add <- getAddr ex
+            let assgn = AssignU LPoint add const
+            tell $ DS.singleton assgn
+            return $ assgn
+    p   ->  do 
+            let assgn = Assign (Constant $ ValString (show p)) (Constant $ ValString "yo tampoco")
             tell $ DS.singleton assgn
             return $ assgn
 
@@ -80,11 +99,20 @@ getReference exp = case exp of
 
     ex@(AccsA s e p) -> do 
         add <- getAddr ex
-        return $ add 
+        temp <- newTemp
+        let assgn = AssignU RPoint temp add
+        tell $ DS.singleton assgn
+        return $ temp
 
     ex@(AccsS s e p) -> do 
         add <- getAddr ex
-        return $ add 
+        temp <- newTemp
+        let assgn = AssignU RPoint temp add
+        tell $ DS.singleton assgn
+        return $ temp 
+
+    --ex@(AccsP e i p ) -> do 
+
 
     ExpBin op e1 e2 p -> do 
         const1 <- getReference e1
@@ -122,10 +150,29 @@ makeUOpp op = case op of
 
 getAddr :: Expression -> TACMonad Reference
 getAddr e = case e of 
-    IdL s (Entry t _ sz o) _ -> return $ Address s (Constant (ValInt o))
-    AccsA (IdL st (Entry t _ s o) _) es _ -> do auxArray st t es
-    AccsS (IdL st (Entry _ _ s o) _) es _ -> do aux (Constant (ValString st)) es 
-
+    IdL s (Entry t _ sz o) _ -> 
+        do  temp <- newTemp 
+            let assgn = AssignB RArray temp (Constant (ValString "fp")) (Constant (ValInt o))
+            tell $ DS.singleton assgn
+            return $ temp
+    AccsA (IdL st (Entry t _ s o) _) es _ -> 
+        do  arrayAcc <- auxArray st t es
+            temp1 <- newTemp
+            temp2 <- newTemp
+            let assgn1 = AssignB RArray temp1 (Constant (ValString "fp")) (Constant (ValInt o)) -- No se si es un Addi o RArray
+            let assgn2 = AssignB AddI temp2 temp1 arrayAcc
+            tell $ DS.singleton assgn1
+            tell $ DS.singleton assgn2
+            return $ temp2
+    AccsS (IdL st (Entry _ _ s o) _) es _ -> 
+        do  structAcc <- aux (Constant (ValString st)) es 
+            temp1 <- newTemp
+            temp2 <- newTemp
+            let assgn1 = AssignB RArray temp1 (Constant (ValString "fp")) (Constant (ValInt o))
+            let assgn2 = AssignB AddI temp2 temp1 structAcc
+            tell $ DS.singleton assgn1
+            tell $ DS.singleton assgn2
+            return $ temp2
 
 aux :: Reference -> [Expression] -> TACMonad Reference
 aux r [] = return $ r
@@ -262,6 +309,10 @@ assing3 = AsngL (StringL "x" (Position (4,2))) (AccsS (IdL "a" (Entry (StructT (
 assign4 = AsngL (StringL "x" (Position (4,2))) (ExpBin (Gt IntT) (IntL 5 (Position(4,5))) (IntL 6 (Position(4,5))) (Position(4,4))) (Position (4,3))
 
 printTac = do 
-    let (state, bita) = execRWS (getAssign assign4) "" (TACState emptyZipper emptyZipper (AST []) 0 0)
+    let (state, bita) = execRWS (FB.mapM_ getAssign (DS.singleton assign4)) "" (TACState emptyZipper emptyZipper (AST []) 0 0)
     putStrLn $ show bita
 
+emptyTACState = TACState emptyZipper emptyZipper (AST []) 0 0
+
+listTAC :: AST -> [Instructions]
+listTAC (AST ins) = ins

@@ -35,6 +35,7 @@ instance Show Ins where
 	show a = case a of
 		Comment s 			-> "# " ++ s
 		AssignB o re l r 	-> (show re) ++ " := " ++ (show l) ++ (show o) ++ (show r)
+		AssignU (LPoint) r op -> "*" ++ show r ++ " := " ++ (show op)
 		AssignU o r  op 	-> (show r) ++ " := " ++ (show o) ++ (show op)
 		Assign 	l r 		-> (show l) ++ " := " ++ (show r)
 		Goto 	l 			-> "Goto " ++  showJ l
