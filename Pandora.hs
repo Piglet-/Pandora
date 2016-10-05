@@ -27,10 +27,13 @@ main = do
                                 putStr "Strings Symbol Table:"
                                 print $ defocus $ srt state
                                 putStr $ drawTree (treeAST (filterI (ast state)))
-                                putStr "\nErrors: \n"
-                                putStr (filterBit bita)
-                                let (stateT,bitT) = execRWS (mapM_ getAssign (listTAC (ast state))) "" emptyTACState
-                                putStr (unlines $ map show (FB.toList bitT))
+                                if not(null (filterBit bita)) then 
+                                     do putStr "\nErrors: \n"
+                                        putStr (filterBit bita)
+                                else do 
+                                    putStr "\n\n"
+                                    let (stateT,bitT) = execRWS (mapM_ getAssign (listTAC $ filterI (ast state))) "" emptyTACState
+                                    putStr (unlines $ map show (FB.toList bitT))
                             --print $ drop 2 (show (parse lexs) ++ "Accepted") 
                 else case head (tail args) of
                     "-l" -> if any isTokenError lexs 

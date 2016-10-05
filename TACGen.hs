@@ -64,6 +64,7 @@ getAssign ins = case ins of
             falseL  <- newLabel
             jumpingCode e2 trueL falseL
         else do
+            tell $ DS.singleton (Comment ("Line " ++ show (line p)))
             const <- getReference e2
             add <- getAddr ex
             let assgn = AssignU LPoint add const
@@ -75,6 +76,7 @@ getAssign ins = case ins of
             falseL  <- newLabel
             jumpingCode e2 trueL falseL
         else do 
+            tell $ DS.singleton (Comment ("Line " ++ show (line p)))
             const <- getReference e2
             add <- getAddr ex
             let assgn = AssignU LPoint add const
@@ -86,15 +88,22 @@ getAssign ins = case ins of
             falseL  <- newLabel
             jumpingCode e2 trueL falseL
         else do 
+            tell $ DS.singleton (Comment ("Line " ++ show (line p)))
             const <- getReference e2
             add <- getAddr ex
             let assgn = AssignU LPoint add const
             tell $ DS.singleton assgn
             return $ assgn
-    p   ->  do 
-            let assgn = Assign (Constant $ ValString (show p)) (Constant $ ValString "yo tampoco")
-            tell $ DS.singleton assgn
-            return $ assgn
+
+    AsngL ex@(AccsP e i po) e2 p -> if (isBool e2)
+        then do
+            trueL   <- newLabel
+            falseL  <- newLabel
+            jumpingCode e2 trueL falseL
+        else do
+            tell $ DS.singleton (Comment ("Line " ++ show (line p)))
+            return $ (Comment ("Line " ++ show (line p)))
+
 
 getReference :: Expression -> TACMonad Reference
 getReference exp = case exp of
@@ -106,7 +115,10 @@ getReference exp = case exp of
 
     ex@(IdL s e p) -> do
         add <- getAddr ex
-        return $ add
+        temp <- newTemp
+        let assgn = AssignU RPoint temp add
+        tell $ DS.singleton assgn
+        return $ temp
 
     ex@(AccsA s e p) -> do 
         add <- getAddr ex
@@ -115,19 +127,16 @@ getReference exp = case exp of
         tell $ DS.singleton assgn
         return $ temp
 
-    ex@(AccsS s e p) -> 
-        do 
-            temp <- getAddr ex
-            temp2 <- newTemp
-            let assgn = AssignU RPoint temp2 temp
-            tell $ DS.singleton assgn
-            return $ temp2
-        --temp <- newTemp
-        --let assgn = AssignU RPoint temp add
-        --tell $ DS.singleton assgn
-        --return $ temp 
+    ex@(AccsS s e p) -> do 
+        add <- getAddr ex
+        temp <- newTemp
+        let assgn = AssignU RPoint temp add
+        tell $ DS.singleton assgn
+        return $ temp
 
-    --ex@(AccsP e i p ) -> do 
+    ex@(AccsP e i p) -> do 
+        temp <- newTemp
+        return $ temp
 
 
     ExpBin op e1 e2 p -> do 
@@ -168,31 +177,29 @@ getAddr :: Expression -> TACMonad Reference
 getAddr e = case e of 
     IdL s (Entry t _ sz o) _ -> 
         do  temp <- newTemp 
-            let assgn = AssignB AddI temp (Constant (ValString "fp")) (Constant (ValInt o))
+            let assgn = AssignB AddI temp FP (Constant (ValInt o))
             tell $ DS.singleton assgn
             return $ temp
     AccsA (IdL st (Entry t _ s o) _) es _ -> 
         do  arrayAcc <- auxArray st t es
             temp1 <- newTemp
             temp2 <- newTemp
-            let assgn1 = AssignB AddI temp1 (Constant (ValString "fp")) (Constant (ValInt o)) -- No se si es un Addi o RArray
+            let assgn1 = AssignB AddI temp1 FP (Constant (ValInt o)) -- No se si es un Addi o RArray
             let assgn2 = AssignB AddI temp2 temp1 arrayAcc
             tell $ DS.singleton assgn1
             tell $ DS.singleton assgn2
             return $ temp2
-    AccsS ex@(IdL st (Entry _ _ s o) _) es _ -> do aux ex es
-            --temp1 <- newTemp
-           -- temp2 <- newTemp
-          --  let assgn1 = AssignB AddI temp1 (Constant (ValString "fp")) (Constant (ValInt o))
-            --let assgn2 = AssignB AddI temp2 temp1 structAcc
-           -- tell $ DS.singleton assgn1
-           -- tell $ DS.singleton assgn2
-            
+    AccsS ex@(IdL st (Entry _ _ s o) _) es _ -> 
+        do aux ex es
+
+    AccsP ex@(IdL st (Entry t _ s o)_ ) i p ->
+        do  temp2 <- newTemp
+            return $ temp2
 
 aux :: Expression -> [Expression] -> TACMonad Reference
 aux (IdL st (Entry _ _ s o) _) es = do
     temp1 <- newTemp
-    let assgn = AssignB AddI temp1 (Constant (ValString "fp")) (Constant(ValInt o))
+    let assgn = AssignB AddI temp1 FP (Constant(ValInt o))
     let offs = map offsetCal es
     tell $ DS.singleton assgn
     auxStruct temp1 offs
@@ -205,12 +212,9 @@ auxStruct r [o] = do
     return $ temp
 auxStruct r (o:os) = do
     temp <- newTemp 
-    temp2 <- newTemp
     let assgn = AssignB AddI temp r (Constant (ValInt o))
-    let assgn2 = AssignU RPoint temp2 temp
     tell $ DS.singleton assgn
-    tell $ DS.singleton assgn2
-    auxStruct temp2 os
+    auxStruct temp os
 
 auxArray :: String -> Type-> [Expression] -> TACMonad Reference
 auxArray s (ArrayT d t) [e] = do
@@ -289,7 +293,8 @@ isBool _                            = False
 
 jumpingCode :: Expression -> Label -> Label -> TACMonad Ins
 jumpingCode e tl fl = case e of 
-    BoolL t p-> do 
+    BoolL t p-> do
+        tell $ DS.singleton (Comment ("Line " ++ show (line p))) 
         let goto = Goto (Just (if t then tl else fl))
         tell $ DS.singleton goto 
         return goto
@@ -305,6 +310,7 @@ jumpingCode e tl fl = case e of
             jumpingCode e2 tl fl
 
         _    -> do
+            tell $ DS.singleton (Comment ("Line " ++ show (line p)))
             expl <- getReference e1
             expr <- getReference e2
             let ifgoto  = IfGoto (toRel op) expl expr (Just tl)

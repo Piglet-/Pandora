@@ -1,6 +1,4 @@
-- falta arreglos como lvalue. (Listo)
 - expresiones booelanas variables
-- integración. (Listo)
 - Acomodar Accesos y apuntadores.
 - Probar las expresiones booleanas.
 - Revisar createTree

@@ -100,6 +100,7 @@ data Reference =
 	Address 	String Reference
 	| Constant 	Value
 	| Temp 		Int
+	| FP 		
 	deriving(Eq)
 
 instance Show Reference where
@@ -107,11 +108,13 @@ instance Show Reference where
 		Address 	s r 	-> show r -- s ++ " " ++ show r
 		Constant 	v  		-> show v
 		Temp 		i 		-> "T" ++ show i
+		FP 					-> " fp "
 
 instance Binary Reference where
 	put (Address s r ) 	= putWord8 10 >> put s >> put r
 	put (Constant v) 	= putWord8 11 >> put v
 	put (Temp i) 		= putWord8 12 >> put i
+	put (FP)			= putWord8 48 
 
 	get = do 
 		w <- getWord8
@@ -119,7 +122,7 @@ instance Binary Reference where
 			10  -> makeT2 Address
 			11 	-> Bin.get >>= return . Constant
 			12	-> Bin.get >>= return . Temp
-
+			48 	-> return $ FP
 data Value =
 	ValInt 		Int
 	| ValFloat 	Float
