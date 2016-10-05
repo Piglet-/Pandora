@@ -990,8 +990,8 @@ createTree z s1 (typ@(Lexeme (TokenIdent s2) p):ts) =
     (IdL s2 a p:createTree z str ts)
     where (Entry ty pos size off) = fst $ fromJust $ lookupS s1 z
           (Entry (TypeT str) pos2 size2 o) = fromJust $ DMap.lookup s2 (snd $ isStruct ty z)
-          a@(Entry tyd posd sized offd) = fst $ fromJust $ lookupS str z
-
+          (Entry tyd posd sized offd) = fst $ fromJust $ lookupS str z
+          a = (Entry tyd posd sized o)
 binTypeOp :: Type -> Type -> Type
 binTypeOp IntT IntT = IntT
 binTypeOp FloatT FloatT = FloatT
