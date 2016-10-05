@@ -1,3 +1,5 @@
-- falta arreglos como lvalue.
+- falta arreglos como lvalue. (Listo)
 - expresiones booelanas variables
-- integración.
+- integración. (Listo)
+- Acomodar Accesos y apuntadores.
+- Probar las expresiones booleanas.
