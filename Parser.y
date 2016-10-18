@@ -356,8 +356,8 @@ Exp : Values                { % return $1 }
                                     tell (snd (numExp $1 (fst $2) "-"))
                                     return ((fst (numExp $1 (fst $2) "-")), ExpUna (Minus (unaTypeOp (fst $2))) (snd $2) (pos $1)) }
     | not Exp   %prec NEG   { % do 
-                                    tell (snd (numExp $1 (fst $2) "not"))
-                                    return ((fst (numExp $1 (fst $2) "not")), ExpUna Not (snd $2) (pos $1)) }
+                                    tell (snd (boolExp $1 (fst $2) "not"))
+                                    return ((fst (boolExp $1 (fst $2) "not")), ExpUna Not (snd $2) (pos $1)) }
     | "->" Exp  %prec NEG   { % do 
                                     tell (snd (pointExp $1 (fst $2) "->"))
                                     return ((fst (pointExp $1 (fst $2) "->")), ExpUna Arrow (snd $2) (pos $1)) }

@@ -60,9 +60,25 @@ getAssign :: Instructions -> TACMonad Ins
 getAssign ins = case ins of
     AsngL ex@(IdL s e ps) e2 p -> if (isBool e2) 
         then do
+            add <- getAddr ex
             trueL   <- newLabel
             falseL  <- newLabel
+            nextL   <- newLabel
             jumpingCode e2 trueL falseL
+            let assgn  = PutLabel trueL 
+            let assgn2 = Assign add (Constant (ValBool True))
+            let assgn3 = Goto (Just nextL)
+            let assgn4 = PutLabel falseL 
+            let assgn5 = Assign add (Constant (ValBool False))
+            let assgn6 = PutLabel nextL 
+            tell $ DS.singleton assgn
+            tell $ DS.singleton assgn2
+            tell $ DS.singleton assgn3
+            tell $ DS.singleton assgn4
+            tell $ DS.singleton assgn5
+            tell $ DS.singleton assgn6
+            return $ assgn6
+
         else do
             tell $ DS.singleton (Comment ("Line " ++ show (line p)))
             const <- getReference e2
@@ -70,11 +86,28 @@ getAssign ins = case ins of
             let assgn = AssignU LPoint add const
             tell $ DS.singleton assgn
             return $ assgn
+
     AsngL ex@(AccsA s e ps) e2 p -> if (isBool e2) 
         then do
+            add <- getAddr ex
             trueL   <- newLabel
             falseL  <- newLabel
+            nextL   <- newLabel
             jumpingCode e2 trueL falseL
+            let assgn  = PutLabel trueL 
+            let assgn2 = Assign add (Constant (ValBool True))
+            let assgn3 = Goto (Just nextL)
+            let assgn4 = PutLabel falseL 
+            let assgn5 = Assign add (Constant (ValBool False))
+            let assgn6 = PutLabel nextL 
+            tell $ DS.singleton assgn
+            tell $ DS.singleton assgn2
+            tell $ DS.singleton assgn3
+            tell $ DS.singleton assgn4
+            tell $ DS.singleton assgn5
+            tell $ DS.singleton assgn6
+            return $ assgn6
+
         else do 
             tell $ DS.singleton (Comment ("Line " ++ show (line p)))
             const <- getReference e2
@@ -84,9 +117,25 @@ getAssign ins = case ins of
             return $ assgn
     AsngL ex@(AccsS s e ps) e2 p -> if (isBool e2) 
         then do
+            add <- getAddr ex
             trueL   <- newLabel
             falseL  <- newLabel
+            nextL   <- newLabel
             jumpingCode e2 trueL falseL
+            let assgn  = PutLabel trueL 
+            let assgn2 = Assign add (Constant (ValBool True))
+            let assgn3 = Goto (Just nextL)
+            let assgn4 = PutLabel falseL 
+            let assgn5 = Assign add (Constant (ValBool False))
+            let assgn6 = PutLabel nextL 
+            tell $ DS.singleton assgn
+            tell $ DS.singleton assgn2
+            tell $ DS.singleton assgn3
+            tell $ DS.singleton assgn4
+            tell $ DS.singleton assgn5
+            tell $ DS.singleton assgn6
+            return $ assgn6
+
         else do 
             tell $ DS.singleton (Comment ("Line " ++ show (line p)))
             const <- getReference e2
@@ -226,11 +275,15 @@ auxArray s (ArrayT d t) [e] = do
     return $ temp1
 
 auxArray s (ArrayT d t)(e:es) = do
+    symt    <- get 
     const1  <- getReference $ e
     temp1   <- newTemp
-    let assgn = AssignB MulI temp1 (Constant (ValInt d)) const1
-    tell $ DS.singleton assgn
-    auxArray' s t es temp1
+    temp2   <- newTemp
+    let assgn1 = AssignB MulI temp1 (Constant (ValInt (typeSize' t (tsyt symt)))) (Constant (ValInt d))
+    let assgn2 = AssignB MulI temp2 const1 temp1
+    tell $ DS.singleton assgn1
+    tell $ DS.singleton assgn2
+    auxArray' s t es temp2
 
 auxArray':: String -> Type-> [Expression] -> Reference -> TACMonad Reference
 auxArray' s (ArrayT d t) [e] r = do
@@ -245,14 +298,18 @@ auxArray' s (ArrayT d t) [e] r = do
     return $ temp2
 
 auxArray' s (ArrayT d t)(e:es) r = do
+    symt    <- get 
     const1  <- getReference $ e
     temp1   <- newTemp
     temp2   <- newTemp
-    let assgn = AssignB MulI temp1 (Constant (ValInt d)) const1
-    let assgn2 = AssignB AddI temp2 temp1 r
-    tell $ DS.singleton assgn
+    temp3   <- newTemp
+    let assgn1 = AssignB MulI temp1 (Constant (ValInt (typeSize' t (tsyt symt)))) (Constant (ValInt d))
+    let assgn2 = AssignB MulI temp2 const1 temp1
+    let assgn3 = AssignB AddI temp3 temp2 r
+    tell $ DS.singleton assgn1
     tell $ DS.singleton assgn2
-    auxArray' s t es temp2
+    tell $ DS.singleton assgn3
+    auxArray' s t es temp3
 
 typeSize' (FuncT t ts ast) z    = typeSize' t z
 typeSize' (ProcT t ts ast) z    = typeSize' t z
@@ -260,6 +317,7 @@ typeSize' (TypeT s) z           = sm
     where (Entry t p sm o)      = fst $ fromJust $ lookupS s z
 typeSize' (StructT m) z         = structSize m z
 typeSize' (UnionT m) z          = unionSize m z 
+typeSize' (ArrayT d t) z        = typeSize' t z
 typeSize' t z                   = typeSize t 
 
 structSize m z                          = DMap.foldl (structS z) 0 m
@@ -303,10 +361,12 @@ jumpingCode e tl fl = case e of
         And  -> do
             rLabel <- newLabel
             jumpingCode e1 rLabel fl
+            tell $ DS.singleton (PutLabel rLabel)
             jumpingCode e2 tl fl 
         Or   -> do
             rLabel <- newLabel
             jumpingCode e1 tl rLabel
+            tell $ DS.singleton (PutLabel rLabel)
             jumpingCode e2 tl fl
 
         _    -> do

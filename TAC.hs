@@ -18,6 +18,7 @@ type TAC = DS.Seq Ins
 
 data Ins =  
 	Comment 	String
+	| PutLabel  Label
 	| AssignB 	BinOp Reference Reference Reference
 	| AssignU 	UnOp Reference Reference
 	| Assign 	Reference Reference
@@ -34,6 +35,7 @@ data Ins =
 instance Show Ins where
 	show a = case a of
 		Comment s 			-> "# " ++ s
+		PutLabel l 			-> (show l) ++ " : "
 		AssignB o re l r 	-> (show re) ++ " := " ++ (show l) ++ (show o) ++ (show r)
 		AssignU (LPoint) r op -> "*" ++ show r ++ " := " ++ (show op)
 		AssignU o r  op 	-> (show r) ++ " := " ++ (show o) ++ (show op)
@@ -49,6 +51,7 @@ instance Show Ins where
 
 instance Binary Ins where
 	put (Comment s) 			= putWord8 0 >> put s
+	put (PutLabel l) 			= putWord8 50 >> put l
 	put (AssignB re o l r) 		= putWord8 1 >> put re >> put o >> put l >> put r
 	put (AssignU r o op) 		= putWord8 2 >> put r >> put o >> put op
 	put (Assign l r) 			= putWord8 3 >> put l >> put r
@@ -65,6 +68,7 @@ instance Binary Ins where
 		    w <- getWord8
 		    case w of
 		       	0  ->  Bin.get >>= return . Comment
+		       	50 ->  Bin.get >>= return . PutLabel
 		       	1  ->  makeT4 AssignB
 		       	2  ->  makeT3 AssignU
 		       	3  ->  makeT2  Assign
