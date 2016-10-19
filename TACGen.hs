@@ -239,6 +239,12 @@ getAssign ins = case ins of
         tell $ DS.singleton assgn
         return $ assgn 
 
+    DecFun ex -> do
+        temp0 <- getReference ex 
+        let assgn = Return (Just temp0)
+        tell $ DS.singleton assgn
+        return $ assgn 
+
 getReference :: Expression -> TACMonad Reference
 getReference exp = case exp of
     BoolL  b p  -> return $ Constant $ ValBool  b

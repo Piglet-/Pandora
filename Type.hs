@@ -213,6 +213,7 @@ data Instructions
 	| ReturnL 	Expression		Position
 	| AsngL 	Expression 		Expression		Position
 	| FreeL 	Expression		Position
+    | DecFun    Expression
 	| None
 	| DecL 
 	deriving(Show, Eq)
@@ -245,6 +246,8 @@ treeIns (AsngL exp1 exp2 p)
 	= Node ("Assignation " ++ show p) [treeExp exp1, treeExp exp2]
 treeIns (FreeL exp p) 
 	= Node ("Free " ++ show p) [treeExp exp]
+treeIns (DecFun exp)  
+    = Node ("Function ") [treeExp exp]
 treeIns None = Node "" []
 treeIns DecL = Node "" []
 

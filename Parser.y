@@ -139,8 +139,8 @@ import qualified Data.Sequence as DS
 
 Program : Declarations Main "EOF"  { % do
                                     st <- get
-                                    put $ State (syt st) (srt st) (AST (snd $2))
-                                    return (instruc ((fst $2):[$1]), AST (snd $2)) }             
+                                    put $ State (syt st) (srt st) (AST (snd $1 ++ (snd $2)))
+                                    return (instruc ((fst $2):[fst $1]), AST (snd $1 ++ (snd $2))) }             
        | Main "EOF"                { % do
                                     st <- get
                                     put $ State (syt st) (srt st) (AST (snd $1))
@@ -151,19 +151,19 @@ Main : begin OS Insts CS end  { % return (fst $3, (isNoneA (reverse (snd $3)))) 
 Declaration:  FuncDec OS Insts CS end CS    {% do
                                                 st <- get
                                                 put $ State (insertInsF (snd $ snd $1) (isNoneA (reverse(snd $3))) (syt st)) (srt st) (ast st)
-                                                return (fst $3) } 
+                                                return (fst $3, decFun (snd $ snd $1) (syt st) ) } 
             | struct id has StructObjs ";" end         { % do 
                                                         st <- get
                                                         tell (snd (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2))
                                                         put $ State (fst (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2)) (srt st) (ast st)  
-                                                        return VoidT}
+                                                        return (VoidT, DecL)}
             | union id like StructObjs ";" end          { % do 
                                                         st <- get
                                                         tell (snd (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2))
                                                         put $ State (fst(doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2)) (srt st) (ast st)
-                                                        return VoidT  }
-            | Dec                                       { % return (fst $1) }
-            | Assign                                    { % return (fst $1) } 
+                                                        return (VoidT, DecL)  }
+            | Dec                                       { % return (fst $1, DecL) }
+            | Assign                                    { % return (fst $1, DecL) } 
 
 StructObjs : StructOb                   { $1 }
             | StructObjs ";" StructOb   { $1 ++ $3 }
@@ -199,8 +199,8 @@ CS: {- Lambda -} { % do
                      put $ State (closeScope (syt st)) (srt st) (ast st)
                  }
 
-Declarations : Declaration { % return (instrucS $1) }
-    | Declarations Declaration  { % return (instruc ($2:[$1])) }
+Declarations : Declaration { % return (instrucS (fst $1), [snd $1]) }
+    | Declarations Declaration  { % return (instruc (fst $2:[fst $1]), (snd $2:snd $1)) }
 
 Dec : Type ":" ListId                      { % do 
                                             st <- get 
@@ -1009,5 +1009,8 @@ unaTypeOp IteratorT = IntT
 unaTypeOp FloatT = FloatT
 unaTypeOp _ = TypeError
 
+decFun :: (Lexeme Token) -> Zipper -> Instructions
+decFun t@(Lexeme tok p) z = DecFun (IdL (getTkID t) e p )
+    where Just e = lookupS' (getTkID t) z
 
 }   
