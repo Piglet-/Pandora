@@ -235,7 +235,7 @@ Params: Type ":" id     { % do
                                             st <- get
                                             tell (snd (doInsert (makeArray $4 (makeBtype $3)) ((syt st),DS.empty) $6))
                                             put $ State (fst (doInsert (makeArray $4 (makeBtype $3)) ((syt st),DS.empty) $6)) (srt st) (ast st)
-                                            return [(makeBtype $3)]} 
+                                            return [(makeArray $4 (makeBtype $3))]} 
         | var Type ":" id   { % do
                                 st <- get
                                 tell (snd (doInsert (makeBtype $2) ((syt st),DS.empty) $4))
@@ -255,7 +255,7 @@ Params: Type ":" id     { % do
                                                             st <- get
                                                             tell (snd (doInsert (makeArray $7 (makeBtype $6)) ((syt st),DS.empty) $9))
                                                             put $ State (fst (doInsert (makeArray $7 (makeBtype $6)) ((syt st),DS.empty) $9)) (srt st) (ast st)
-                                                            return ((makeBtype $6):$1)} 
+                                                            return ((makeArray $7 (makeBtype $6)):$1)} 
         | Params "," Type ":" id    { % do
                                         st <- get
                                         tell (snd (doInsert (makeBtype $3) ((syt st),DS.empty) $5))
@@ -265,7 +265,7 @@ Params: Type ":" id     { % do
                                                         st <- get
                                                         tell (snd (doInsert (makeArray $6 (makeBtype $5)) ((syt st),DS.empty) $8))
                                                         put $ State (fst (doInsert (makeArray $6 (makeBtype $5)) ((syt st),DS.empty) $8)) (srt st) (ast st)
-                                                        return ((makeBtype $5):$1) }
+                                                        return ((makeArray $6 (makeBtype $5)):$1) }
 
 Type : intT     { $1 } 
     | floatT    { $1 }
@@ -492,8 +492,8 @@ Range : It from Exp to Exp with Exp  { % do
                                         return (fst (rangeVef $2 (fst $3) (fst $5) (fst $7)), [((IdL (getTkID $1) (fst (fromJust (lookupS (getTkID $1) (syt st)))) (pos $1))),(snd $3), (snd $5), (snd $7)]) }
 It : id { % do 
                 st <- get
-                put $ State (fst $ doInsert IteratorT ((syt st),DS.empty) $1) (srt st) (ast st)
-                tell (snd (doInsert IteratorT ((syt st),DS.empty) $1)) 
+                put $ State (fst $ doInsert IntT ((syt st),DS.empty) $1) (srt st) (ast st)
+                tell (snd (doInsert IntT ((syt st),DS.empty) $1)) 
                 return $1}
 
 While : while "(" Exp ")" do Block  

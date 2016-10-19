@@ -1,20 +1,17 @@
-int : func factorial(int: n) 
-        int : f, g; 
-        f = 1;
-        for(i from 1 to n with i+1) do 
-            f = f * i;
-            i = f + 1;
+int: func sumArray(array of int[10] : n, array of int[10] : m) 
+        int : a,b;
+        b = 0;
+        for(i from 1 to 10 with i+1) do 
+            a = n[i] + m[i] ;
+            b = b +a;
         end
-        int : f;
-        void : a;
-        return f;
+        return b;
     end
 
     begin
-        int : n;
-        read m;
-        write "hola mundo";
-        write "hola mundo";
-        write "ola k ase";
-        write factorial(n);
+        array of int[10] : n;
+        array of int[10] : m;
+        int : x;
+        x = sumArray(n,m);
+        write x;
     end
