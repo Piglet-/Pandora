@@ -1,4 +1,2 @@
-- expresiones booelanas variables
-- Acomodar Accesos y apuntadores.
-- Probar las expresiones booleanas.
-- Revisar createTree
+- Arreglar el paso del for
+- MALLOC

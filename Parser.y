@@ -475,25 +475,26 @@ If : if "(" Exp ")" then Block
         tell (snd (ifInst (fst $3) $1 (fst $6)))
         return (fst (ifInst (fst $3) $1 (fst $6)), isIf (fst (ifInst (fst $3) $1 (fst $6))) (snd $3) (snd $6) (pos $1)) } 
 
-    | if "(" Exp ")" then Block else Insts end  
+    | if "(" Exp ")" then Block else OS Insts CS end  
     {% do 
-        tell (snd (ifElseInst (fst $3) $1 (fst $6) (fst $8)))
-        return (fst (ifElseInst (fst $3) $1 (fst $6) (fst $8)), isIfte (fst (ifElseInst (fst $3) $1 (fst $6) (fst $8))) (snd $3) (snd $6) (snd $8) (pos $1)) }
+        tell (snd (ifElseInst (fst $3) $1 (fst $6) (fst $9)))
+        return (fst (ifElseInst (fst $3) $1 (fst $6) (fst $9)), isIfte (fst (ifElseInst (fst $3) $1 (fst $6) (fst $9))) (snd $3) (snd $6) (snd $9) (pos $1)) }
 
 For : for OS "(" Range ")" do Block CS  
 { % do 
     st <- get 
     tell (snd (forInst (fst $4) (fst $7) $1))
-    return (fst (forInst (fst $4) (fst $7) $1), isFor (fst (forInst (fst $4) (fst $7) $1)) (head $ snd $4) (head $ tail $ snd $4) (last $ snd $4) (snd $7) (pos $1)) } 
+    return (fst (forInst (fst $4) (fst $7) $1), isFor (fst (forInst (fst $4) (fst $7) $1)) (head $ snd $4) (head $ tail $ snd $4) (head $ tail $ tail $ snd $4) (last $ snd $4) (snd $7) (pos $1)) } 
 
 Range : It from Exp to Exp with Exp  { % do 
                                         st <- get 
                                         tell (snd (rangeVef $2 (fst $3) (fst $5) (fst $7)))
-                                        return (fst (rangeVef $2 (fst $3) (fst $5) (fst $7)), [(snd $3), (snd $5), (snd $7)]) }
+                                        return (fst (rangeVef $2 (fst $3) (fst $5) (fst $7)), [((IdL (getTkID $1) (fst (fromJust (lookupS (getTkID $1) (syt st)))) (pos $1))),(snd $3), (snd $5), (snd $7)]) }
 It : id { % do 
                 st <- get
                 put $ State (fst $ doInsert IteratorT ((syt st),DS.empty) $1) (srt st) (ast st)
-                tell (snd (doInsert IteratorT ((syt st),DS.empty) $1)) }
+                tell (snd (doInsert IteratorT ((syt st),DS.empty) $1)) 
+                return $1}
 
 While : while "(" Exp ")" do Block  
 { % do
@@ -947,10 +948,10 @@ isIfte t e l1 l2 p = case t of
     TypeError   -> None
     _           -> IfteL e (filterIns l1) (filterIns l2) p
 
-isFor :: Type -> Expression -> Expression -> Expression -> [Instructions] -> Position -> Instructions
-isFor t e e1 e2 l p = case t of
+isFor :: Type -> Expression -> Expression -> Expression -> Expression -> [Instructions] -> Position -> Instructions
+isFor t e0 e e1 e2 l p = case t of
     TypeError   -> None
-    _           -> ForL e e1 e2 (filterIns l) p 
+    _           -> ForL e0 e e1 e2 (filterIns l) p 
 
 isWhile :: Type -> Expression -> [Instructions] -> Position -> Instructions
 isWhile t e l p = case t of

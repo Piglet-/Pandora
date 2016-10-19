@@ -20,6 +20,7 @@ module Type
 	, filterI
 	, filterE
 	, filterIns
+	, typeExp
 	) where
 
 import Tokens
@@ -204,7 +205,7 @@ instance Show Operator where
 data Instructions
 	= IfL 		Expression 		[Instructions]  Position
 	| IfteL		Expression 		[Instructions]  [Instructions]  Position
-	| ForL 		Expression 		Expression 		Expression		[Instructions]	Position
+	| ForL 		Expression 		Expression 		Expression 		Expression		[Instructions]	Position
 	| WhileL 	Expression 		[Instructions]	Position
 	| RepeatL 	[Instructions] 	Expression		Position
 	| ReadL 	Expression		Position
@@ -228,8 +229,8 @@ treeIns (IfL exp is p)
 	= Node ("IF " ++ show p) ((treeExp exp): map treeIns (reverse is))
 treeIns (IfteL exp ist ise p) 
 	= Node ("IF-Then-Else " ++ show p) ((treeExp exp):map treeIns (reverse ist) ++ map treeIns (reverse ise))
-treeIns (ForL exp1 exp2 exp3 is p) 
-	= Node ("For " ++ show p) ((treeExp exp1):(treeExp exp2):(treeExp exp3):map treeIns (reverse is))
+treeIns (ForL exp1 exp2 exp3 exp4 is p) 
+	= Node ("For " ++ show p) ((treeExp exp1):(treeExp exp2):(treeExp exp3):(treeExp exp4):map treeIns (reverse is))
 treeIns (WhileL exp is p) 
 	= Node ("While " ++ show p) ((treeExp exp):map treeIns (reverse is))
 treeIns (RepeatL is exp p) 
@@ -281,60 +282,19 @@ filterIns l = filter (/= DecL) l
 filterE :: [Expression] -> [Expression]
 filterE le = filter (/= NoneE) le
 
-{-data Access = VariableAcc String
-			| ArrayAcc (Access) (Expression)
-			| StructAcc (Access) String 
-
-instance Show Access where
-	show a = case a of
-		VariableAcc s 	-> s 
-		ArrayAcc a e 	-> show a ++ "[" ++ show e ++ "]"
-		StructAcc a s 	-> show a ++ "." ++ s 
-
-
-data AccHist = HistA Expression
-			| HistS String
-
-type Thread = [AccHist]
-
-type AccZipper = (Access, Thread)
-
-focusAcc:: Access -> AccZipper
-focusAcc acc = (acc, [])
-
-defocusAcc :: AccZipper -> Maybe (AccZipper)
-defocusAcc = fst 
-
-inAcc :: AccZipper -> Maybe (AccZipper)
-inAcc accz = case (fst accz) of 
-	VariableAcc _ 	-> Nothing
-	ArrayAcc _ _ 	-> inArrayAcc accz
-	StructAcc _ _ 	-> inStructAcc accz 
-
-inArrayAcc :: AccZipper -> Maybe (AccZipper)
-inArrayAcc (acc, h) = case acc of 
-	ArrayAcc a e 	-> Just(acc, (HistA e):h)
-	_				-> Nothing
-
-inStructAcc :: AccZipper -> Maybe (AccZipper)
-inStructAcc (acc, h) = case acc of
-	StructAcc a s 	-> Just (acc, (HistS s):h)
-	_				-> Nothing
-
-backAcc :: AccZipper -> Maybe (AccZipper)
-backAcc (acc, h) = case h of
-	[]		-> Nothing
-	(hi:hs) -> case hi of
-		HistA e -> Just (ArrayAcc acc e , hs)
-		HistS s -> Just (StructAcc acc s , hs)
-
-topAcc :: AccZipper -> AccZipper
-topAcc accz = case (snd accz) of
-	[]	-> accz
-	_:_	-> topAcc $ fromJust $ backAcc accz
-
-deepAcc :: AccZipper -> AccZipper
-deepAcc accz = case (fst accz) of
-	VariableAcc _ 	-> accz
-	_				-> deepAcc $ fromJust $ inAcc accz
--}
+typeExp :: Expression -> Type
+typeExp	   (BoolL b p ) = BoolT
+typeExp    (IntL i p  )	= IntT
+typeExp    (FloatL f t ) = FloatT
+typeExp    (CharL _ _ ) = CharT 
+typeExp    (StringL _ _ ) = StringT
+typeExp    (VoidL _ ) = VoidT
+typeExp    (IdL _ (Entry t _ _ _) _ ) = t
+typeExp    (ExpBin _ _ e _ ) = typeExp e
+typeExp    (ExpUna _ e _ ) = typeExp e
+typeExp    (Index e _ _  ) = typeExp e
+typeExp    (FCall e _ _  ) = typeExp e
+typeExp    (CFCall e _ _  ) = typeExp e
+typeExp    (AccsA e _  _ ) = typeExp e
+typeExp    (AccsS e _  _ ) = typeExp e
+typeExp    (AccsP e _  _ ) = typeExp e

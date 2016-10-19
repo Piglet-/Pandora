@@ -23,13 +23,18 @@ data Ins =
 	| AssignU 	UnOp Reference Reference
 	| Assign 	Reference Reference
 	| Goto 		(Maybe Label)
+	| IfTrue	Reference (Maybe Label)
+	| IfFalse	Reference (Maybe Label)
 	| IfGoto 	Relation Reference Reference (Maybe Label)
 	| IfNotGoto	Relation Reference Reference (Maybe Label)
 	| Param 	Reference
-	| Call 		Reference String Int 
-	| CallP		String Int
+	| Call 		Reference String  
+	| CallP		String 
+	| CleanUp	Int 
 	| Return 	(Maybe Reference)
 	| PrintT	Reference
+	| Prologue 	Int
+	| Epilogue 	Int
 	deriving (Eq)
 
 instance Show Ins where
@@ -37,17 +42,22 @@ instance Show Ins where
 		Comment s 			-> "# " ++ s
 		PutLabel l 			-> (show l) ++ " : "
 		AssignB o re l r 	-> (show re) ++ " := " ++ (show l) ++ (show o) ++ (show r)
-		AssignU (LPoint) r op -> "*" ++ show r ++ " := " ++ (show op)
+		AssignU (LPoint) r op -> "*" ++ show r ++ " := " ++ (show op) -- op es operando 
 		AssignU o r  op 	-> (show r) ++ " := " ++ (show o) ++ (show op)
 		Assign 	l r 		-> (show l) ++ " := " ++ (show r)
 		Goto 	l 			-> "Goto " ++  showJ l
+		IfTrue 	r l 		-> "If " ++ show r ++ " Goto " ++ showJ l 
+		IfFalse r l 		-> "If not " ++ show r ++ " Goto " ++ showJ l 
 		IfGoto	o r1 r2	l	-> "If " ++ show r1 ++ " " ++ show o ++ " " ++ show r2 ++ " Goto " ++ showJ l
 		IfNotGoto o r1 r2 l	-> "If not " ++  show r1 ++ " " ++ show o ++ " " ++ show r2 ++ " Goto " ++ showJ l
 		Param r 			-> "Param " ++ show r
-		Call r s i			-> show r ++ " := " ++ "call " ++ s ++ "," ++ show i 
-		CallP s i 			-> "call " ++ s ++ "," ++ show i 
+		Call r s 			-> show r ++ " := " ++ "call " ++ s  
+		CallP s 			-> "Call " ++ s 
+		CleanUp i 			-> "CleanUp " ++ show i 
 		Return r 			-> "Return " ++ showR r
 		PrintT r 			-> "Print " ++ show r 
+		Prologue i 			-> "PROLOGUE " ++ show i 
+		Epilogue i 			-> "EPILOGUE " ++ show i
 
 instance Binary Ins where
 	put (Comment s) 			= putWord8 0 >> put s
@@ -56,13 +66,18 @@ instance Binary Ins where
 	put (AssignU r o op) 		= putWord8 2 >> put r >> put o >> put op
 	put (Assign l r) 			= putWord8 3 >> put l >> put r
 	put (Goto 	l)	 			= putWord8 4 >> put l
+	put (IfTrue r l) 			= putWord8 51 >> put r >> put l 
+	put (IfFalse r l)			= putWord8 52 >> put r >> put l
 	put (IfGoto	o r1 r2	l) 		= putWord8 5 >> put o >> put r1 >> put r2 >> put l
 	put (IfNotGoto o r1 r2 l) 	= putWord8 43 >> put o >> put r1 >> put r2 >> put l
 	put (Param r)				= putWord8 39 >> put r
-	put (Call r s i) 			= putWord8 8 >> put r >> put s >> put i
-	put (CallP s i)				= putWord8 41 >> put s >> put i
+	put (Call r s ) 			= putWord8 8 >> put r >> put s 
+	put (CallP s)				= putWord8 41 >> put s 
+	put (CleanUp i)				= putWord8 53 >> put i
 	put (Return r)				= putWord8 42 >> put r 
 	put (PrintT r) 				= putWord8 9 >> put r
+	put (Prologue i)			= putWord8 54 >> put i 
+	put (Epilogue i) 			= putWord8 55 >> put i
 
 	get = do 
 		    w <- getWord8
@@ -73,13 +88,18 @@ instance Binary Ins where
 		       	2  ->  makeT3 AssignU
 		       	3  ->  makeT2  Assign
 		       	4  ->  Bin.get >>= return .  Goto
+		       	51 ->  makeT2 IfTrue
+		       	52 ->  makeT2 IfFalse
 		    	5  ->  makeT4 IfGoto
 		    	43 ->  makeT4 IfNotGoto
-		    	8  ->  makeT3 Call
-		    	41 ->  makeT2 CallP
+		    	8  ->  makeT2 Call
+		    	41 ->  Bin.get >>= return . CallP
+		    	53 ->  Bin.get >>= return . CleanUp
 		    	39 ->  Bin.get >>= return . Param
 		    	42 ->  Bin.get >>= return . Return
 		    	9  ->  Bin.get >>= return . PrintT 
+		    	54 ->  Bin.get >>= return . Prologue
+		    	55 ->  Bin.get >>= return . Epilogue
 
 makeT2::(Binary a1, Binary a2) => (a1 -> a2 -> r) -> Get r
 makeT2 t = liftM2 t Bin.get Bin.get
@@ -315,12 +335,6 @@ showR :: (Maybe Reference) -> String
 showR (Nothing) = ""
 showR (Just r) 	= show r
 
-
-tac = DS.fromList [(Assign (Temp 1) (Constant (ValInt 3))), 
-		(IfGoto (GtT) (Constant (ValInt 2)) (Constant (ValInt 5)) (Just (Label 1))),
-		(Comment "Hola Mundo!"),
-		(Call (Constant (ValString "qux")) "bar" 3),
-		(CallP "baz" 2)]
 
 writeTac :: FilePath -> TAC -> IO()
 writeTac = encodeFile

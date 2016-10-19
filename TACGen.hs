@@ -4,6 +4,7 @@ module TACGen
     , getAssign
     , listTAC
     , emptyTACState
+   -- , makeFunL
     , TACMonad (..)
     )
 where
@@ -55,7 +56,8 @@ newTemp = do
     newt <- liftM succ $ gets temp
     modify $ \x -> x { temp = newt }
     return $ Temp newt
- 
+
+-- NO DEBE LLAMARSE ASI
 getAssign :: Instructions -> TACMonad Ins
 getAssign ins = case ins of
     AsngL ex@(IdL s e ps) e2 p -> if (isBool e2) 
@@ -66,10 +68,10 @@ getAssign ins = case ins of
             nextL   <- newLabel
             jumpingCode e2 trueL falseL
             let assgn  = PutLabel trueL 
-            let assgn2 = Assign add (Constant (ValBool True))
+            let assgn2 = AssignU (LPoint) add (Constant (ValBool True))
             let assgn3 = Goto (Just nextL)
             let assgn4 = PutLabel falseL 
-            let assgn5 = Assign add (Constant (ValBool False))
+            let assgn5 = AssignU (LPoint) add (Constant (ValBool False))
             let assgn6 = PutLabel nextL 
             tell $ DS.singleton assgn
             tell $ DS.singleton assgn2
@@ -153,6 +155,89 @@ getAssign ins = case ins of
             tell $ DS.singleton (Comment ("Line " ++ show (line p)))
             return $ (Comment ("Line " ++ show (line p)))
 
+    IfL ex ins p -> do
+        trueL   <- newLabel
+        falseL   <- newLabel
+        tell $ DS.singleton (Comment ("Line " ++ show (line p)))
+        jumpingCode ex trueL falseL
+        tell $ DS.singleton (PutLabel trueL)
+        mapM_ getAssign ins
+        let put = PutLabel falseL
+        tell $ DS.singleton put
+        return $ put
+
+    IfteL ex insT insF p -> do
+        trueL <- newLabel
+        falseL <- newLabel
+        tell $ DS.singleton (Comment ("Line " ++ show (line p)))
+        jumpingCode ex trueL falseL
+        tell $ DS.singleton (PutLabel trueL)
+        mapM_ getAssign insT 
+        let put = PutLabel falseL
+        tell $ DS.singleton (PutLabel falseL)
+        mapM_ getAssign insF
+        return $ put
+
+    WhileL ex ins p -> do
+        auxL <- newLabel
+        trueL <- newLabel
+        falseL <- newLabel
+        tell $ DS.singleton (PutLabel auxL)
+        jumpingCode ex trueL falseL
+        tell $ DS.singleton (PutLabel trueL)
+        mapM_ getAssign ins
+        tell $ DS.singleton (Goto (Just auxL))
+        let put = PutLabel falseL
+        tell $ DS.singleton (PutLabel falseL)
+        return $ put
+
+    RepeatL ins ex p -> do
+        trueL <- newLabel
+        falseL <- newLabel
+        tell $ DS.singleton (PutLabel trueL)
+        mapM_ getAssign ins 
+        jumpingCode ex trueL falseL
+        let put = PutLabel falseL
+        tell $ DS.singleton (PutLabel falseL)
+        return $ put
+
+    ForL ex1 ex2 ex3 ex4 ins p -> do
+        auxL <- newLabel
+        trueL <- newLabel
+        falseL <- newLabel
+        temp0 <- getAddr ex1
+        temp1 <- getReference ex2
+        let assgn = AssignU (LPoint) temp0 temp1
+        tell $ DS.singleton assgn
+        tell $ DS.singleton (PutLabel auxL)
+        let auxE = ExpBin (Lt IntT) ex1 ex3 p
+        jumpingCode auxE trueL falseL
+        tell $ DS.singleton (PutLabel trueL)
+        mapM_ getAssign ins
+        getAssign (AsngL ex1 ex4 p)
+        tell $ DS.singleton (Goto (Just auxL))
+        let put = PutLabel falseL
+        tell $ DS.singleton (PutLabel falseL)
+        return $ put
+
+    ReadL ex p -> do
+        temp0 <- getReference ex
+        let expAux = FCall (StringL "Read" p) [] p
+        temp1 <- getReference expAux
+        let assgn = Assign temp0 temp1 
+        tell $ DS.singleton assgn
+        return $ (Comment ("Line " ++ show (line p)))
+
+    WriteL ex p -> do
+        let expAux = FCall (StringL "Write" p) [ex] p
+        temp0 <- getReference expAux 
+        return $ (Comment ("Line " ++ show (line p)))
+
+    ReturnL ex p -> do
+        temp0 <- getReference ex 
+        let assgn = Return (Just temp0)
+        tell $ DS.singleton assgn
+        return $ assgn 
 
 getReference :: Expression -> TACMonad Reference
 getReference exp = case exp of
@@ -203,6 +288,37 @@ getReference exp = case exp of
         tell $ DS.singleton assgn
         return $ nt
 
+    FCall ex exs p ->
+        case ex of
+            (IdL s e pos) -> do
+                st <- get
+                mapM_ makeParams exs
+                temp <- newTemp
+                let assgn = Call temp s 
+                tell $ DS.singleton assgn
+                let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
+                tell $ DS.singleton assgn2
+                return $ temp
+
+            StringL "Write" p -> do
+                st <- get
+                mapM_ makeParams exs
+                temp <- newTemp
+                let assgn = CallP "Write" 
+                tell $ DS.singleton assgn
+                let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
+                tell $ DS.singleton assgn2
+                return $ temp
+
+            StringL s p -> do
+                st <- get
+                mapM_ makeParams exs
+                temp <- newTemp
+                let assgn = Call temp s 
+                tell $ DS.singleton assgn
+                let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
+                tell $ DS.singleton assgn2
+                return $ temp
 
 emptyZipper :: Zipper
 emptyZipper = focus $ emptyST emptyScope
@@ -381,9 +497,14 @@ jumpingCode e tl fl = case e of
 
     ExpUna op e1 p-> do 
         jumpingCode e1 fl tl
+        return $ (Comment ("Line " ++ show (line p)))
 
-    --ex@(IdL s e p) tl fl -> do
-    --    let goto = Goto 
+    ex@(IdL s e p) -> do
+        temp <- getReference ex
+        let ifgoto = IfTrue temp (Just tl)
+        tell $ DS.singleton ifgoto
+        tell $ DS.singleton (Goto (Just fl))
+        return ifgoto
 
 toRel:: Operator -> Relation
 toRel o = case o of 
@@ -397,18 +518,55 @@ toRel o = case o of
 offsetCal :: Expression -> Int 
 offsetCal (IdL _ (Entry _ _ _ o) _) = o 
 
+sizeCal :: Zipper -> [Expression] -> [Int]
+sizeCal z []    = [0]
+sizeCal z (ex:exs) = (typeSize' (typeExp ex) z):(sizeCal z exs)
 
-assing = AsngL (StringL "x" (Position (4,2))) (AccsA (IdL "a" (Entry (ArrayT 2 (ArrayT 1 IntT)) (Position (2,3)) 4 5) (Position (8,9))) [(IntL 2 (Position (7,8))), (ExpBin (Minus IntT) (IntL 5 (Position(4,5))) (IntL 5 (Position(4,5))) (Position(4,4)))] (Position (4,6))) (Position (4,3))
-assing2 = AsngL (StringL "x" (Position (4,2))) (ExpBin (Minus IntT) (ExpBin (Minus IntT) (IntL 5 (Position(4,5))) (IntL 5 (Position(4,5))) (Position(4,4))) (IntL 5 (Position(4,5))) (Position(4,4))) (Position (4,3))
-assing3 = AsngL (StringL "x" (Position (4,2))) (AccsS (IdL "a" (Entry (StructT (DMap.insert ("otraCosa") (Entry (TypeT "otraCosa") (Position (2,3)) 4 10) (DMap.singleton "cosa" (Entry (TypeT "cosa") (Position (2,3)) 4 6)))) (Position (2,3)) 4 5) (Position (8,9))) [(IdL "cosa" (Entry (TypeT "cosa") (Position (2,3)) 4 6) (Position (8,9))),(IdL "otraCosa" (Entry (TypeT "otraCosa") (Position (2,3)) 4 10) (Position (8,9))) ] (Position (4,6))) (Position (4,3))
+makeParams :: Expression -> TACMonad Reference
+makeParams e = do
+    temp <- getReference e
+    let p = Param temp
+    tell $ DS.singleton p
+    return $ temp
 
+{-
+makeFunL :: TACMonad Ins
+makeFunL = do
+    st <- get
+    syt@(SymbolTable (Scope _ _ _) m _) <- fst $ tsyt st
+    let list = DMap.toList m
+    mapM_ makeFunc list 
+    let assgn = PutLabel (Label "Main")
+    tell $ DS.singleton assgn
+    let assgn1 = Prologue 0
+    tell $ DS.singleton assgn1
+    return assgn1
 
+makeFunc :: (String, Entry) -> TACMonad Ins
+makeFunc (s,e@(Entry (FuncT t ts ast) _ _ _ )) = do
+    st <- get
+    let assgn = PutLabel (Label s)
+    tell $ DS.singleton assgn
+    let tam = (sum $ map (typeSize' (tsyt st)) ts)
+    let assgn1 = Prologue tam
+    tell $ DS.singleton assgn1
+    let (stateT,bitT) = execRWS (mapM_ getAssign (listTAC $ filterI ast)) "" emptyTACState
+    let assgn2 = Epilogue tam 
+    tell $ DS.singleton assgn2
+    return assgn2
 
-assign4 = AsngL (StringL "x" (Position (4,2))) (ExpBin (Gt IntT) (IntL 5 (Position(4,5))) (IntL 6 (Position(4,5))) (Position(4,4))) (Position (4,3))
-
-printTac = do 
-    let (state, bita) = execRWS (FB.mapM_ getAssign (DS.singleton assign4)) "" (TACState emptyZipper emptyZipper (AST []) 0 0)
-    putStrLn $ show bita
+makeFunc (s,e@(Entry (ProcT t ts ast) _ _ _ )) = do
+    st <- get
+    let assgn = PutLabel (Label s)
+    tell $ DS.singleton assgn
+    let tam = (sum $ map (typeSize' (tsyt st)) ts)
+    let assgn1 = Prologue tam
+    tell $ DS.singleton assgn1
+    let (stateT,bitT) = execRWS (mapM_ getAssign (listTAC $ filterI ast)) "" emptyTACState
+    let assgn2 = Epilogue tam 
+    tell $ DS.singleton assgn2
+    return assgn2
+-}
 
 emptyTACState = TACState emptyZipper emptyZipper (AST []) 0 0
 
