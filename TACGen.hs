@@ -49,7 +49,7 @@ newLabel :: TACMonad Label
 newLabel = do 
     newl <- liftM succ $ gets label
     modify $ \x -> x { label = newl }
-    return $ Label newl
+    return $ Label ('L':(show newl))
 
 newTemp :: TACMonad Reference
 newTemp = do 
@@ -239,11 +239,19 @@ getAssign ins = case ins of
         tell $ DS.singleton assgn
         return $ assgn 
 
-    DecFun ex -> do
-        temp0 <- getReference ex 
-        let assgn = Return (Just temp0)
+    DecFun ex@(IdL s e p) -> do
+        st <- get
+        let (ast, lt) = astEntry e
+        let assgn = PutLabel (Label s)
         tell $ DS.singleton assgn
-        return $ assgn 
+        let tam = sum (sizeCal' (tsyt st) lt)
+        let assgn1 = Prologue tam
+        tell $ DS.singleton assgn1
+        --mapM_ getAssign [(ReadL (StringL "a" (Position (4,5))) (Position (8,9)))]
+        mapM_ getAssign (listTAC $ filterI ast)
+        let assgn2 = Epilogue tam 
+        tell $ DS.singleton assgn2
+        return assgn2
 
 getReference :: Expression -> TACMonad Reference
 getReference exp = case exp of
@@ -528,12 +536,20 @@ sizeCal :: Zipper -> [Expression] -> [Int]
 sizeCal z []    = [0]
 sizeCal z (ex:exs) = (typeSize' (typeExp ex) z):(sizeCal z exs)
 
+sizeCal' :: Zipper -> [Type] -> [Int]
+sizeCal' z []    = [0]
+sizeCal' z (ex:exs) = (typeSize' ex z):(sizeCal' z exs)
+
 makeParams :: Expression -> TACMonad Reference
 makeParams e = do
     temp <- getReference e
     let p = Param temp
     tell $ DS.singleton p
     return $ temp
+
+astEntry :: Entry -> (AST, [Type])
+astEntry e@(Entry t@(FuncT _ l ast) _ _ _ ) = (ast, l)
+astEntry e@(Entry t@(ProcT _ l ast) _ _ _ ) = (ast, l)
 
 {-
 makeFunL :: TACMonad Ins

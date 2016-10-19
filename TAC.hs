@@ -111,10 +111,10 @@ makeT4::(Binary a1, Binary a2, Binary a3, Binary a4) => (a1 -> a2 -> a3 -> a4 ->
 makeT4 t = liftM4 t Bin.get Bin.get Bin.get Bin.get
 
 
-newtype Label = Label Int deriving (Eq)
+newtype Label = Label String deriving (Eq)
 
 instance Show Label where
-	show (Label i) = "L" ++ show i
+	show (Label i) = i 
 
 instance Binary Label where
 	put (Label l) = put l
@@ -317,7 +317,7 @@ instance Binary Relation where
 			38 -> return Le		
 
 newLabel :: Int -> Label
-newLabel i = (Label i)
+newLabel i = Label ('L':show i)
 
 newTemp :: Int -> Reference
 newTemp i = (Temp i)

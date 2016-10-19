@@ -151,7 +151,7 @@ Main : begin OS Insts CS end  { % return (fst $3, (isNoneA (reverse (snd $3)))) 
 Declaration:  FuncDec OS Insts CS end CS    {% do
                                                 st <- get
                                                 put $ State (insertInsF (snd $ snd $1) (isNoneA (reverse(snd $3))) (syt st)) (srt st) (ast st)
-                                                return (fst $3, decFun (snd $ snd $1) (syt st) ) } 
+                                                return (fst $3, decFun (snd $ snd $1) (isNoneA (reverse(snd $3))) (syt st) ) } 
             | struct id has StructObjs ";" end         { % do 
                                                         st <- get
                                                         tell (snd (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2))
@@ -918,6 +918,11 @@ insertInsF (Lexeme (TokenIdent s) p) l z = case (lookupS s z) of
         Just (Entry (FuncT t lt _) pos i1 i2, sc) -> insertS s (Entry (FuncT t lt (AST l)) pos i1 i2) z
         Just (Entry (ProcT t lt _) pos i1 i2, sc) -> insertS s (Entry (ProcT t lt (AST l)) pos i1 i2) z
 
+decFun :: Lexeme Token -> [Instructions] -> Zipper -> Instructions
+decFun t@(Lexeme (TokenIdent s) p) l z = case (lookupS s z) of
+    Just (Entry (FuncT t lt _) pos i1 i2, sc) -> DecFun (IdL s (Entry (FuncT t lt (AST l)) pos i1 i2) pos)
+    Just (Entry (ProcT t lt _) pos i1 i2, sc) -> DecFun (IdL s (Entry (ProcT t lt (AST l)) pos i1 i2) pos)
+
 isReturn :: Type -> Expression -> Position -> Instructions
 isReturn t e p  = case t of
     TypeError -> None
@@ -1009,8 +1014,5 @@ unaTypeOp IteratorT = IntT
 unaTypeOp FloatT = FloatT
 unaTypeOp _ = TypeError
 
-decFun :: (Lexeme Token) -> Zipper -> Instructions
-decFun t@(Lexeme tok p) z = DecFun (IdL (getTkID t) e p )
-    where Just e = lookupS' (getTkID t) z
 
 }   

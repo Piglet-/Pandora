@@ -1,2 +1,3 @@
 - Arreglar el paso del for
 - MALLOC
+- cambiar decFun en parser.y

@@ -26,7 +26,7 @@ main = do
                                 print $ defocus $ syt state
                                 putStr "Strings Symbol Table:"
                                 print $ defocus $ srt state
-                                putStr $ drawTree (treeAST (filterI (ast state)))
+                                putStr $ drawTree (treeAST (filterDec (ast state)))
                                 if not(null (filterBit bita)) then 
                                      do putStr "\nErrors: \n"
                                         putStr (filterBit bita)
