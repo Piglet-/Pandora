@@ -461,7 +461,7 @@ InstB: If               { % return $1 }
     | Repeat            { % return $1 }
     | For               { % return $1 }
 
-Return : return Exp ";"     { % return(fst $2, isReturn (fst $2) (snd $2) (pos $1))}
+Return : return Exp ";"     { % return(VoidT, isReturn (fst $2) (snd $2) (pos $1))}
                     --return (fst $2, ReturnL (snd $2) (pos $1)) 
                -- } 
 

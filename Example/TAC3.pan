@@ -5,7 +5,7 @@ struct persona has
     bool : mujer;
 end
 
-struct animal has
+union animal like
 	int: name;
 	int: ced;
 	persona: type;

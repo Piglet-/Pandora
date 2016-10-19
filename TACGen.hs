@@ -253,6 +253,11 @@ getAssign ins = case ins of
         tell $ DS.singleton assgn2
         return assgn2
 
+    p -> do
+        let assg = (Comment ("Line " ++ show p))
+        tell $ DS.singleton assg
+        return assg
+
 getReference :: Expression -> TACMonad Reference
 getReference exp = case exp of
     BoolL  b p  -> return $ Constant $ ValBool  b

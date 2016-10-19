@@ -1,3 +1,4 @@
 - Arreglar el paso del for
 - MALLOC
 - cambiar decFun en parser.y
+- return en las instruccuiones de control
