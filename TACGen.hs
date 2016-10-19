@@ -161,7 +161,7 @@ getAssign ins = case ins of
         tell $ DS.singleton (Comment ("Line " ++ show (line p)))
         jumpingCode ex trueL falseL
         tell $ DS.singleton (PutLabel trueL)
-        mapM_ getAssign ins
+        mapM_ getAssign (reverse ins)
         let put = PutLabel falseL
         tell $ DS.singleton put
         return $ put
@@ -172,7 +172,7 @@ getAssign ins = case ins of
         tell $ DS.singleton (Comment ("Line " ++ show (line p)))
         jumpingCode ex trueL falseL
         tell $ DS.singleton (PutLabel trueL)
-        mapM_ getAssign insT 
+        mapM_ getAssign (reverse insT)
         let put = PutLabel falseL
         tell $ DS.singleton (PutLabel falseL)
         mapM_ getAssign insF
@@ -185,7 +185,7 @@ getAssign ins = case ins of
         tell $ DS.singleton (PutLabel auxL)
         jumpingCode ex trueL falseL
         tell $ DS.singleton (PutLabel trueL)
-        mapM_ getAssign ins
+        mapM_ getAssign (reverse ins)
         tell $ DS.singleton (Goto (Just auxL))
         let put = PutLabel falseL
         tell $ DS.singleton (PutLabel falseL)
@@ -195,7 +195,7 @@ getAssign ins = case ins of
         trueL <- newLabel
         falseL <- newLabel
         tell $ DS.singleton (PutLabel trueL)
-        mapM_ getAssign ins 
+        mapM_ getAssign (reverse ins)
         jumpingCode ex trueL falseL
         let put = PutLabel falseL
         tell $ DS.singleton (PutLabel falseL)
@@ -213,7 +213,7 @@ getAssign ins = case ins of
         let auxE = ExpBin (Lt IntT) ex1 ex3 p
         jumpingCode auxE trueL falseL
         tell $ DS.singleton (PutLabel trueL)
-        mapM_ getAssign ins
+        mapM_ getAssign (reverse ins)
         getAssign (AsngL ex1 ex4 p)
         tell $ DS.singleton (Goto (Just auxL))
         let put = PutLabel falseL
@@ -247,7 +247,6 @@ getAssign ins = case ins of
         let tam = sum (sizeCal' (tsyt st) lt)
         let assgn1 = Prologue tam
         tell $ DS.singleton assgn1
-        --mapM_ getAssign [(ReadL (StringL "a" (Position (4,5))) (Position (8,9)))]
         mapM_ getAssign (listTAC $ filterI ast)
         let assgn2 = Epilogue tam 
         tell $ DS.singleton assgn2
@@ -313,7 +312,7 @@ getReference exp = case exp of
                 st <- get
                 mapM_ makeParams exs
                 temp <- newTemp
-                let assgn = Call temp s 
+                let assgn = Call temp s 0 -- aqui numero que es
                 tell $ DS.singleton assgn
                 let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
                 tell $ DS.singleton assgn2
@@ -323,7 +322,7 @@ getReference exp = case exp of
                 st <- get
                 mapM_ makeParams exs
                 temp <- newTemp
-                let assgn = CallP "Write" 
+                let assgn = CallP "Write" 0 -- aqui numero ue es
                 tell $ DS.singleton assgn
                 let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
                 tell $ DS.singleton assgn2
@@ -333,7 +332,7 @@ getReference exp = case exp of
                 st <- get
                 mapM_ makeParams exs
                 temp <- newTemp
-                let assgn = Call temp s 
+                let assgn = Call temp s 0 -- aqui numero que es
                 tell $ DS.singleton assgn
                 let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
                 tell $ DS.singleton assgn2

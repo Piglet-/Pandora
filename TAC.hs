@@ -28,8 +28,8 @@ data Ins =
 	| IfGoto 	Relation Reference Reference (Maybe Label)
 	| IfNotGoto	Relation Reference Reference (Maybe Label)
 	| Param 	Reference
-	| Call 		Reference String  
-	| CallP		String 
+	| Call 		Reference String Int 
+	| CallP		String Int
 	| CleanUp	Int 
 	| Return 	(Maybe Reference)
 	| PrintT	Reference
@@ -51,8 +51,8 @@ instance Show Ins where
 		IfGoto	o r1 r2	l	-> "If " ++ show r1 ++ " " ++ show o ++ " " ++ show r2 ++ " Goto " ++ showJ l
 		IfNotGoto o r1 r2 l	-> "If not " ++  show r1 ++ " " ++ show o ++ " " ++ show r2 ++ " Goto " ++ showJ l
 		Param r 			-> "Param " ++ show r
-		Call r s 			-> show r ++ " := " ++ "call " ++ s  
-		CallP s 			-> "Call " ++ s 
+		Call r s i			-> show r ++ " := " ++ "call " ++ s ++ ", " ++ show i 
+		CallP s i			-> "Call " ++ s ++ ", " ++ show i
 		CleanUp i 			-> "CleanUp " ++ show i 
 		Return r 			-> "Return " ++ showR r
 		PrintT r 			-> "Print " ++ show r 
@@ -71,8 +71,8 @@ instance Binary Ins where
 	put (IfGoto	o r1 r2	l) 		= putWord8 5 >> put o >> put r1 >> put r2 >> put l
 	put (IfNotGoto o r1 r2 l) 	= putWord8 43 >> put o >> put r1 >> put r2 >> put l
 	put (Param r)				= putWord8 39 >> put r
-	put (Call r s ) 			= putWord8 8 >> put r >> put s 
-	put (CallP s)				= putWord8 41 >> put s 
+	put (Call r s i) 			= putWord8 8 >> put r >> put s >> put i
+	put (CallP s i)				= putWord8 41 >> put s >> put i
 	put (CleanUp i)				= putWord8 53 >> put i
 	put (Return r)				= putWord8 42 >> put r 
 	put (PrintT r) 				= putWord8 9 >> put r
@@ -92,8 +92,8 @@ instance Binary Ins where
 		       	52 ->  makeT2 IfFalse
 		    	5  ->  makeT4 IfGoto
 		    	43 ->  makeT4 IfNotGoto
-		    	8  ->  makeT2 Call
-		    	41 ->  Bin.get >>= return . CallP
+		    	8  ->  makeT3 Call
+		    	41 ->  makeT2 CallP
 		    	53 ->  Bin.get >>= return . CleanUp
 		    	39 ->  Bin.get >>= return . Param
 		    	42 ->  Bin.get >>= return . Return

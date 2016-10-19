@@ -1,4 +1,9 @@
 - Arreglar el paso del for
-- MALLOC
+- MALLOC / free
 - cambiar decFun en parser.y
-- return en las instruccuiones de control
+- void procedimientos
+- arreglos (cuenta mardita)
+- programas de prueba
+- pasaje por referencia
+- etiquetas para string (l-values)
+- write/read polimorficos

@@ -2,27 +2,25 @@ int : func cualquiera(int : a, bool : b)
 	    int : c;
 	    c = a + 1;
 	    a = 1;
+        bool : n;
+        while ((c>2) and (5>c) or (a<=5) or (not b)) do
+            if (4<c) then
+                a = 2;
+            end
+            if (n) then
+                a = 1;
+            end
+            else
+                a = 4;
+            end
+            a = a+1;
+        end
     return c;
 end
+
 begin
-
-	int: a;
     bool : n;
-    n = (7>2) and (5>6) or (7<=5) or (not true);
-    if (4<3) then
-    	a = 2;
-    end
-    if (n) then
-    	a = 1;
-    end
-    else
-    	a = 4;
-    end
-
-    while (n) do
-    	a = a+1;
-    end
-
+	int: a;
     int: f;
     f = 3;
 

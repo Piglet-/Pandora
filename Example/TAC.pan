@@ -1,7 +1,12 @@
+int : func fu(var int: a, var int: b)
+	int : t;
+	t = a;
+	a =b;
+	b = t;
+end
+
 begin
-    int : m,n;
-    m = 6 + 5;
-    m = 3;
-    n = 2;
-    m = m div n*3;
+   int : x;
+   int : y;
+   x = fu(x,y); 
 end
