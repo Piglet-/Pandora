@@ -228,43 +228,43 @@ Param: {- lambda -}     { % return [] }
 
 Params: Type ":" id     { % do
                             st <- get
-                            tell (snd (doInsert (makeBtype $1) ((syt st),DS.empty) $3))
-                            put $ State (fst (doInsert (makeBtype $1) ((syt st),DS.empty) $3)) (srt st) (ast st)
+                            tell (snd (doInsert' (makeBtype $1) ((syt st),DS.empty) $3))
+                            put $ State (fst (doInsert' (makeBtype $1) ((syt st),DS.empty) $3)) (srt st) (ast st)
                             return [(makeBtype $1)]} 
         | array of Type Dimen ":" id    {% do
                                             st <- get
-                                            tell (snd (doInsert (makeArray $4 (makeBtype $3)) ((syt st),DS.empty) $6))
-                                            put $ State (fst (doInsert (makeArray $4 (makeBtype $3)) ((syt st),DS.empty) $6)) (srt st) (ast st)
+                                            tell (snd (doInsert' (makeArray $4 (makeBtype $3)) ((syt st),DS.empty) $6))
+                                            put $ State (fst (doInsert' (makeArray $4 (makeBtype $3)) ((syt st),DS.empty) $6)) (srt st) (ast st)
                                             return [(makeArray $4 (makeBtype $3))]} 
         | var Type ":" id   { % do
                                 st <- get
-                                tell (snd (doInsert (makeBtype $2) ((syt st),DS.empty) $4))
-                                put $ State (fst (doInsert (makeBtype $2) ((syt st),DS.empty) $4)) (srt st) (ast st)
+                                tell (snd (doInsert' (makeBtype $2) ((syt st),DS.empty) $4))
+                                put $ State (fst (doInsert' (makeBtype $2) ((syt st),DS.empty) $4)) (srt st) (ast st)
                                 return [(makeBtype $2)]} 
         | var array of Type Dimen ":" id    { % do
                                                 st <- get
-                                                tell (snd (doInsert (makeArray $5 (makeBtype $4)) ((syt st),DS.empty) $7))
-                                                put $ State (fst (doInsert (makeArray $5 (makeBtype $4)) ((syt st),DS.empty) $7)) (srt st) (ast st)
+                                                tell (snd (doInsert' (makeArray $5 (makeBtype $4)) ((syt st),DS.empty) $7))
+                                                put $ State (fst (doInsert' (makeArray $5 (makeBtype $4)) ((syt st),DS.empty) $7)) (srt st) (ast st)
                                                 return [(makeBtype $4)]} 
         | Params "," var Type ":" id    {% do
                                             st <- get
-                                            tell (snd (doInsert (makeBtype $4) ((syt st),DS.empty) $6))
-                                            put $ State (fst (doInsert (makeBtype $4) ((syt st),DS.empty) $6)) (srt st) (ast st)
+                                            tell (snd (doInsert' (makeBtype $4) ((syt st),DS.empty) $6))
+                                            put $ State (fst (doInsert' (makeBtype $4) ((syt st),DS.empty) $6)) (srt st) (ast st)
                                             return ((makeBtype $4):$1)} 
         | Params "," var array of Type Dimen ":" id     {% do
                                                             st <- get
-                                                            tell (snd (doInsert (makeArray $7 (makeBtype $6)) ((syt st),DS.empty) $9))
-                                                            put $ State (fst (doInsert (makeArray $7 (makeBtype $6)) ((syt st),DS.empty) $9)) (srt st) (ast st)
+                                                            tell (snd (doInsert' (makeArray $7 (makeBtype $6)) ((syt st),DS.empty) $9))
+                                                            put $ State (fst (doInsert' (makeArray $7 (makeBtype $6)) ((syt st),DS.empty) $9)) (srt st) (ast st)
                                                             return ((makeArray $7 (makeBtype $6)):$1)} 
         | Params "," Type ":" id    { % do
                                         st <- get
-                                        tell (snd (doInsert (makeBtype $3) ((syt st),DS.empty) $5))
-                                        put $ State (fst (doInsert (makeBtype $3) ((syt st),DS.empty) $5)) (srt st) (ast st)
+                                        tell (snd (doInsert' (makeBtype $3) ((syt st),DS.empty) $5))
+                                        put $ State (fst (doInsert' (makeBtype $3) ((syt st),DS.empty) $5)) (srt st) (ast st)
                                         return ((makeBtype $3):$1)} 
         | Params "," array of Type Dimen ":" id     { % do
                                                         st <- get
-                                                        tell (snd (doInsert (makeArray $6 (makeBtype $5)) ((syt st),DS.empty) $8))
-                                                        put $ State (fst (doInsert (makeArray $6 (makeBtype $5)) ((syt st),DS.empty) $8)) (srt st) (ast st)
+                                                        tell (snd (doInsert' (makeArray $6 (makeBtype $5)) ((syt st),DS.empty) $8))
+                                                        put $ State (fst (doInsert' (makeArray $6 (makeBtype $5)) ((syt st),DS.empty) $8)) (srt st) (ast st)
                                                         return ((makeArray $6 (makeBtype $5)):$1) }
 
 Type : intT     { $1 } 
@@ -545,6 +545,36 @@ doInsert t (z,_) l@(Lexeme (TokenIdent s) p) =
         Nothing -> (insertS s (Entry t p (typeSize' t z) (padding t (offScope z))) z, DS.singleton(Right $ ""))
         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                       " already declared " ++ show pos)))
+
+------------------No se si es mejor hacer una funcion nuevo o agregar un booleano para la verificacion----
+doInsert':: Type -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq(Binnacle))
+doInsert' VoidT (z,_) l@(Lexeme (TokenIdent s) p) = 
+     (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
+                                    " can't be declared as void")))
+
+doInsert' (TypeT t) (z,_) l@(Lexeme (TokenIdent s) p) =
+    case lookupS t z of
+        Nothing -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " " ++ show p ++
+                                      " not declared ")))
+        Just ((Entry st pos sz o),_) -> 
+            case st of
+                StructT _ ->  
+                    case lookupS' s z of
+                        Nothing -> (insertS s (Entry (TypeT t) p sz (-(padding (TypeT t) (offScope z)) - sz)) z, DS.singleton(Right $ ""))
+                        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
+                                      " already declared " ++ show pos)))
+                UnionT _ -> case lookupS' s z of
+                        Nothing -> (insertS s (Entry (TypeT t) p sz (-(padding (TypeT t) (offScope z)) - sz)) z, DS.singleton(Right $ ""))
+                        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
+                                      " already declared " ++ show pos)))
+                _ -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " " ++ show p ++
+                                      " not declared ")))
+doInsert' t (z,_) l@(Lexeme (TokenIdent s) p) = 
+    case lookupS' s z of
+        Nothing -> (insertS s (Entry t p (typeSize' t z) (-(padding t (offScope z) - (typeSize' t z)))) z, DS.singleton(Right $ ""))
+        Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
+                                      " already declared " ++ show pos)))
+
 
 --Funcion para agregar la funcion y procedimiento sin el offset ya que no lleva
 doInsertF:: Type -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq(Binnacle))
