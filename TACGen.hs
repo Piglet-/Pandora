@@ -228,10 +228,26 @@ getAssign ins = case ins of
         tell $ DS.singleton assgn
         return $ (Comment ("Line " ++ show (line p)))
 
-    WriteL ex p -> do
-        let expAux = FCall (StringL "Write" p) [ex] p
-        temp0 <- getReference expAux 
-        return $ (Comment ("Line " ++ show (line p)))
+    -- Creo que hay que crear el tipo del write con los diferentes en la tac mas que 
+    -- llamar a la funcion pero no estoy seguro
+    WriteL ex p -> 
+        case (typeExp ex) of 
+            IntT -> do
+                let expAux = FCall (StringL "WriteI" p) [ex] p
+                temp0 <- getReference expAux 
+                return $ (Comment ("Line " ++ show (line p)))
+            BoolT -> do 
+                let expAux = FCall (StringL "WriteB" p) [ex] p
+                temp0 <- getReference expAux 
+                return $ (Comment ("Line " ++ show (line p)))
+            CharT -> do
+                let expAux = FCall (StringL "WriteC" p) [ex] p
+                temp0 <- getReference expAux 
+                return $ (Comment ("Line " ++ show (line p)))
+            _ -> do
+                let expAux = FCall (StringL ("Write") p) [ex] p
+                temp0 <- getReference expAux 
+                return $ (Comment ("Line " ++ show (line p)))
 
     ReturnL ex p -> do
         temp0 <- getReference ex 
