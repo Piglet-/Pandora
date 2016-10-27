@@ -422,10 +422,6 @@ Arrays : Array        { % return [$1] }
 
 Array : "[" Exp "]"   { % return (isTypeInt (fst $2), snd $2) }
 
-FuncCall : id "(" Fields ")" { % do 
-                                    st <- get 
-                                    tell (snd (findFunc $1 (fst $ unzip $3) (syt st)))
-                                    return (fst (findFunc $1 (fst $ unzip $3) (syt st)), FCall (IdL (getTkID $1) (fst (fromJust (lookupS (getTkID $1) (syt st)))) (pos $1)) (snd $ unzip $3) (pos $1)) }
 
 Fields : {- lambda -}       { % return [] }
         | Exp               { % return ([$1]) }
@@ -458,10 +454,10 @@ Inst : InstA            { % return $1  }
                             tell (snd (freeInst (fst $2) $1))
                             return (fst (freeInst (fst $2) $1), isFree (fst (freeInst (fst $2) $1)) (snd $2) (pos $1)) } 
     | InstB             { % return $1 }
-    | id "(" Fields ")" { % do 
-                            st <- get 
-                            tell (snd (findFunc $1 (fst $ unzip $3) (syt st)))
-                            return (fst (findFunc $1 (fst $ unzip $3) (syt st)), FCallI (IdL (getTkID $1) (fst (fromJust (lookupS (getTkID $1) (syt st)))) (pos $1)) (snd $ unzip $3) (pos $1)) }
+    | id "(" Fields ")" ";"     { % do 
+                                    st <- get 
+                                    tell (snd (findFunc $1 (fst $ unzip $3) (syt st)))
+                                    return (fst (findFunc $1 (fst $ unzip $3) (syt st)), FCallI (IdL (getTkID $1) (fst (fromJust (lookupS (getTkID $1) (syt st)))) (pos $1)) (snd $ unzip $3) (pos $1)) }
 
 InstB: If               { % return $1 }
     | While             { % return $1 }
