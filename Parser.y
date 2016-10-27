@@ -369,7 +369,10 @@ Exp : Values                { % return $1 }
                                 put $ State (syt st) (doInsertStr StringT (srt st) $1) (ast st)
                                 return (StringT, StringL (getTkID $1) (pos $1))
                                 }
-    |FuncCall               { % return $1 } 
+    | id "(" Fields ")"     { % do 
+                                st <- get 
+                                tell (snd (findFunc $1 (fst $ unzip $3) (syt st)))
+                                return (fst (findFunc $1 (fst $ unzip $3) (syt st)), FCall (IdL (getTkID $1) (fst (fromJust (lookupS (getTkID $1) (syt st)))) (pos $1)) (snd $ unzip $3) (pos $1)) }
 
 Assign : id "=" Exp  ";"        
 { % do 
@@ -449,12 +452,16 @@ InstA : read Exp ";"    { % return (fst $2, isRead (fst $2) (snd $2) (pos $1)) }
 Inst : InstA            { % return $1  }
     | Assign            { % return $1 } 
     | Dec ";"           { % return $1 }
-    | Write             { % return $1 }
+    | Write             { % return $1 } 
     | Return            { % return $1 }
     | free Exp ";"      { % do  
                             tell (snd (freeInst (fst $2) $1))
                             return (fst (freeInst (fst $2) $1), isFree (fst (freeInst (fst $2) $1)) (snd $2) (pos $1)) } 
     | InstB             { % return $1 }
+    | id "(" Fields ")" { % do 
+                            st <- get 
+                            tell (snd (findFunc $1 (fst $ unzip $3) (syt st)))
+                            return (fst (findFunc $1 (fst $ unzip $3) (syt st)), FCallI (IdL (getTkID $1) (fst (fromJust (lookupS (getTkID $1) (syt st)))) (pos $1)) (snd $ unzip $3) (pos $1)) }
 
 InstB: If               { % return $1 }
     | While             { % return $1 }
