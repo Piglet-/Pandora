@@ -32,7 +32,11 @@ data Ins =
 	| CallP		String Int
 	| CleanUp	Int 
 	| Return 	(Maybe Reference)
-	| PrintT	Reference
+	| WriteI	Int
+	| WriteF	Int	
+	| WriteB	Int
+	| WriteC	Int
+	| WriteS	Int
 	| Prologue 	Int
 	| Epilogue 	Int
 	deriving (Eq)
@@ -55,7 +59,11 @@ instance Show Ins where
 		CallP s i			-> "Call " ++ s ++ ", " ++ show i
 		CleanUp i 			-> "CleanUp " ++ show i 
 		Return r 			-> "Return " ++ showR r
-		PrintT r 			-> "Print " ++ show r 
+		WriteI i 			-> "WriteI " ++ show i 
+		WriteF i 			-> "WriteF " ++ show i 		
+		WriteB i 			-> "WriteB " ++ show i 
+		WriteC i 			-> "WriteC " ++ show i 
+		WriteS i 			-> "WriteS " ++ show i 
 		Prologue i 			-> "PROLOGUE " ++ show i 
 		Epilogue i 			-> "EPILOGUE " ++ show i
 
@@ -75,7 +83,11 @@ instance Binary Ins where
 	put (CallP s i)				= putWord8 41 >> put s >> put i
 	put (CleanUp i)				= putWord8 53 >> put i
 	put (Return r)				= putWord8 42 >> put r 
-	put (PrintT r) 				= putWord8 9 >> put r
+	put (WriteI i) 				= putWord8 9 >> put i
+	put (WriteF i) 				= putWord8 56 >> put i	
+	put (WriteB i) 				= putWord8 57 >> put i
+	put (WriteC i) 				= putWord8 58 >> put i
+	put (WriteS i) 				= putWord8 59 >> put i
 	put (Prologue i)			= putWord8 54 >> put i 
 	put (Epilogue i) 			= putWord8 55 >> put i
 
@@ -97,7 +109,11 @@ instance Binary Ins where
 		    	53 ->  Bin.get >>= return . CleanUp
 		    	39 ->  Bin.get >>= return . Param
 		    	42 ->  Bin.get >>= return . Return
-		    	9  ->  Bin.get >>= return . PrintT 
+		    	9  ->  Bin.get >>= return . WriteI
+		    	56  ->  Bin.get >>= return . WriteF
+		    	57  ->  Bin.get >>= return . WriteB 
+		    	58  ->  Bin.get >>= return . WriteC 
+		    	59  ->  Bin.get >>= return . WriteS 
 		    	54 ->  Bin.get >>= return . Prologue
 		    	55 ->  Bin.get >>= return . Epilogue
 
