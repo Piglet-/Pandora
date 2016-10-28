@@ -37,6 +37,11 @@ data Ins =
 	| WriteB	Int
 	| WriteC	Int
 	| WriteS	Int
+	| ReadI		Reference
+	| ReadF		Reference
+	| ReadB		Reference
+	| ReadC 	Reference
+	| ReadS		Reference
 	| Prologue 	Int
 	| Epilogue 	Int
 	deriving (Eq)
@@ -64,6 +69,11 @@ instance Show Ins where
 		WriteB i 			-> "WriteB " ++ show i 
 		WriteC i 			-> "WriteC " ++ show i 
 		WriteS i 			-> "WriteS " ++ show i 
+		ReadI r 			-> "ReadI " ++ showR r 
+		ReadF r 			-> "ReadF " ++ showR r 
+		ReadB r 			-> "ReadB " ++ showR r 
+		ReadC r 			-> "ReadC " ++ showR r 
+		ReadS r 			-> "ReadS " ++ showR r 
 		Prologue i 			-> "PROLOGUE " ++ show i 
 		Epilogue i 			-> "EPILOGUE " ++ show i
 
@@ -88,6 +98,11 @@ instance Binary Ins where
 	put (WriteB i) 				= putWord8 57 >> put i
 	put (WriteC i) 				= putWord8 58 >> put i
 	put (WriteS i) 				= putWord8 59 >> put i
+	put (ReadI r)				= putWord8 60 >> put r 
+	put (ReadF r)				= putWord8 61 >> put r 
+	put (ReadB r)				= putWord8 62 >> put r 
+	put (ReadC r)				= putWord8 63 >> put r 
+	put (ReadS r)				= putWord8 64 >> put r
 	put (Prologue i)			= putWord8 54 >> put i 
 	put (Epilogue i) 			= putWord8 55 >> put i
 
@@ -114,6 +129,11 @@ instance Binary Ins where
 		    	57  ->  Bin.get >>= return . WriteB 
 		    	58  ->  Bin.get >>= return . WriteC 
 		    	59  ->  Bin.get >>= return . WriteS 
+		    	60 -> Bin.get >>= return . ReadI
+		    	61 -> Bin.get >>= return . ReadF
+		    	62 -> Bin.get >>= return . ReadB
+		    	63 -> Bin.get >>= return . ReadC
+		    	64 -> Bin.get >>= return . ReadS
 		    	54 ->  Bin.get >>= return . Prologue
 		    	55 ->  Bin.get >>= return . Epilogue
 

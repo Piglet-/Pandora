@@ -256,6 +256,28 @@ getAssign ins = case ins of
         tell $ DS.singleton assgn2
         return assgn2
 
+    FCallI ex exs p ->
+        case ex of
+            (IdL s e pos) -> do
+                st <- get
+                mapM_ makeParams exs
+                temp <- newTemp
+                let assgn = CallP s 0 -- aqui numero que es
+                tell $ DS.singleton assgn
+                let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
+                tell $ DS.singleton assgn2
+                return $ assgn2
+
+            StringL s p -> do
+                st <- get
+                mapM_ makeParams exs
+                temp <- newTemp
+                let assgn = CallP s 0 -- aqui numero que es
+                tell $ DS.singleton assgn
+                let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
+                tell $ DS.singleton assgn2
+                return $ assgn2
+
     p -> do
         let assg = (Comment ("Line " ++ show p))
         tell $ DS.singleton assg
@@ -612,6 +634,42 @@ makeWrite t =
         (FuncT t _ _) -> do 
             makeWrite t
 
+--falta el reference
+{-}
+makeRead :: Type -> TACMonad Ins
+makeRead t = 
+    case t of 
+        IntT -> do
+            let assgn = ReadI 0 -- aqui numero ue es
+            tell $ DS.singleton assgn
+            let assgn2 = CleanUp 4
+            tell $ DS.singleton assgn2
+            return $ assgn
+        FloatT -> do
+            let assgn = ReadF 0 -- aqui numero ue es
+            tell $ DS.singleton assgn
+            let assgn2 = CleanUp 8
+            tell $ DS.singleton assgn2
+            return $ assgn
+        BoolT -> do 
+            let assgn = ReadB 0 -- aqui numero ue es
+            tell $ DS.singleton assgn
+            let assgn2 = CleanUp 2
+            tell $ DS.singleton assgn2
+            return $ assgn
+        CharT -> do
+            let assgn = ReadC 0 -- aqui numero ue es
+            tell $ DS.singleton assgn
+            let assgn2 = CleanUp 2
+            tell $ DS.singleton assgn2
+            return $ assgn
+        StringT -> do
+            let assgn = ReadS 0 -- aqui numero ue es
+            tell $ DS.singleton assgn
+            let assgn2 = CleanUp 4
+            tell $ DS.singleton assgn2
+            return $ assgn
+-}
 emptyTACState = TACState emptyZipper emptyZipper (AST []) 0 0
 
 listTAC :: AST -> [Instructions]
