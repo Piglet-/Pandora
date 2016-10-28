@@ -380,7 +380,7 @@ getAddr e = case e of
             tell $ DS.singleton assgn
             return $ temp
     AccsA (IdL st (Entry t _ s o) _) es _ -> 
-        do  arrayAcc <- auxArray st t es
+        do  arrayAcc <- auxArray st t (reverse es)
             temp1 <- newTemp
             temp2 <- newTemp
             let assgn1 = AssignB AddI temp1 FP (Constant (ValInt o)) -- No se si es un Addi o RArray
@@ -424,42 +424,63 @@ auxArray s (ArrayT d t) [e] = do
     tell $ DS.singleton assgn
     return $ temp1
 
-auxArray s (ArrayT d t)(e:es) = do
+auxArray s a@(ArrayT d t) l@(e:es) = do
     symt    <- get 
     const1  <- getReference $ e
-    temp1   <- newTemp
-    temp2   <- newTemp
-    let assgn1 = AssignB MulI temp1 (Constant (ValInt (typeSize' t (tsyt symt)))) (Constant (ValInt d))
-    let assgn2 = AssignB MulI temp2 const1 temp1
+    let n = getNdimention a
+    temp2 <- makeDimArray n 
+    temp1 <- newTemp
+    let assgn1 = AssignB MulI temp1 const1 temp2
     tell $ DS.singleton assgn1
-    tell $ DS.singleton assgn2
-    auxArray' s t es temp2
+    auxArray' t es (init n) temp1
 
-auxArray':: String -> Type-> [Expression] -> Reference -> TACMonad Reference
-auxArray' s (ArrayT d t) [e] r = do
+auxArray':: Type-> [Expression] -> [Expression] -> Reference -> TACMonad Reference
+auxArray' (ArrayT d t) [e] n r = do
     symt    <- get 
     const1  <- getReference $ e
     temp1   <- newTemp
     temp2   <- newTemp
-    let assgn = AssignB MulI temp1 (Constant (ValInt (typeSize' t (tsyt symt)))) const1
-    let assgn2 = AssignB AddI temp2 temp1 r
-    tell $ DS.singleton assgn
+    let assgn2 = AssignB AddI temp1 const1 r
+    let assgn = AssignB MulI temp2 (Constant (ValInt (typeSize' t (tsyt symt)))) temp1
     tell $ DS.singleton assgn2
+    tell $ DS.singleton assgn
     return $ temp2
 
-auxArray' s (ArrayT d t)(e:es) r = do
+auxArray' a@(ArrayT d t)(e:es) n r = do
     symt    <- get 
     const1  <- getReference $ e
+    temp2   <- makeDimArray n
     temp1   <- newTemp
-    temp2   <- newTemp
     temp3   <- newTemp
-    let assgn1 = AssignB MulI temp1 (Constant (ValInt (typeSize' t (tsyt symt)))) (Constant (ValInt d))
-    let assgn2 = AssignB MulI temp2 const1 temp1
-    let assgn3 = AssignB AddI temp3 temp2 r
+    let assgn1 = AssignB MulI temp1 const1 temp2
+    let assgn2 = AssignB AddI temp3 temp1 r
     tell $ DS.singleton assgn1
     tell $ DS.singleton assgn2
-    tell $ DS.singleton assgn3
-    auxArray' s t es temp3
+    auxArray' t es (init n) temp3
+
+makeDimArray :: [Expression] -> TACMonad Reference
+makeDimArray [n1, n2]  = do
+    cons <- getReference n1
+    return $ cons
+
+makeDimArray (n1:n2:ns) = do
+    const1  <- getReference n1
+    const2  <- getReference n2
+    temp2   <- newTemp
+    let assgn = AssignB MulI temp2 const1 const2
+    tell $ DS.singleton assgn
+    makeDimArray' ns temp2
+
+makeDimArray' :: [Expression] -> Reference -> TACMonad Reference
+makeDimArray' [n1] r   = do
+    return $ r
+
+makeDimArray' (n1:ns) r = do
+    temp1   <- getReference n1
+    temp2   <- newTemp
+    let assgn = AssignB MulI temp2 temp1 r
+    tell $ DS.singleton assgn
+    makeDimArray' ns temp2
 
 typeSize' (FuncT t ts ast) z    = typeSize' t z
 typeSize' (ProcT t ts ast) z    = typeSize' t z
@@ -570,6 +591,10 @@ makeParams e = do
 astEntry :: Entry -> (AST, [Type])
 astEntry e@(Entry t@(FuncT _ l ast) _ _ _ ) = (ast, l)
 astEntry e@(Entry t@(ProcT _ l ast) _ _ _ ) = (ast, l)
+
+getNdimention :: Type -> [Expression]
+getNdimention (ArrayT d t@(ArrayT d' t'))   = (IntL d (Position (0,0))):(getNdimention t)
+getNdimention (ArrayT d ty)                 = [(IntL d (Position (0,0)))] 
 
 {-
 makeFunL :: TACMonad Ins

@@ -30,7 +30,7 @@ data Token
     | TokenFunc      | TokenProc      | TokenFree 
     | TokenRepeat    | TokenUntil     | TokenRead      
     | TokenWrite     | TokenOf        | TokenITS
-    | TokenFTS       | TokenITF
+    | TokenFTS       | TokenITF       | TokenMalloc
 
     -- tipos --
     | TokenIntT      | TokenBoolT     | TokenFloatT 
@@ -104,6 +104,7 @@ instance Show Token where
         TokenFunc           -> "\nToken: FUNC"
         TokenProc           -> "\nToken: PROC"
         TokenFree           -> "\nToken: FREE"
+        TokenMalloc         -> "\nToken: MALLOC"
         TokenRepeat         -> "\nToken: REPEAT" 
         TokenUntil          -> "\nToken: UNTIL"
         TokenRead           -> "\nToken: READ"

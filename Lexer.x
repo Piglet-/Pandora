@@ -80,6 +80,7 @@ tokens :-
     <0> "func"          { tok' TokenFunc }
     <0> "proc"          { tok' TokenProc }
     <0> "free"          { tok' TokenFree }
+    <0> "malloc"        { tok' TokenMalloc }
     <0> "repeat"        { tok' TokenRepeat }
     <0> "until"         { tok' TokenUntil }
     <0> "read"          { tok' TokenRead }
