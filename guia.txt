@@ -1,0 +1,145 @@
+
+1) Pila de llamadas
+
+                    top of stack
+                +-----------------+ <---- sp
+                | Local2          |
+                +-----------------+
+                | Local1          |
+                +-----------------+
+                | Local0          | 
+                +-----------------+ <---- fp
+                | Return Address  |
+                +-----------------+
+                | Return Value    |
+                +-----------------+
+                | Arg1            |
+                +-----------------+
+                | Arg0            |
+                +-----------------+
+                | ...             |
+                +-----------------+ 
+
+
+3) Registros:
+
+$gp                         Global Pointer
+
+$sp                         Stack Pointer
+
+$fp                         Frame Pointer
+
+$ra                         Return Address
+
+$a0-$a3                     Cuentas para Jumps
+    
+$v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
+
+
+4) Plantillas
+
+    4.1) t2 := t0 +i t1
+
+                add Rx, Ri, Rj
+
+    4.2) t2 := t0 +f t1
+
+                add.s Rx, Ri, Rj
+
+    4.3) t2 := t0 -i t1
+
+                sub Rx, Ri, Rj
+
+    4.4) t2:= t0 -f t1
+
+    4.5) t2 := t0 and t1 
+
+    4.6) t2 := t0 or t1
+
+    4.7) t2 := t0 > t1
+
+    4.8) t2 := t0 < t1
+
+    4.11) t2 := t0 == t1
+
+    4.12) t2 := t0 != t1
+
+    4.13) t1 := not t0
+
+    4.14) t1 := -i t0
+
+    4.15) t1 := -f t0
+
+    4.16) t2 := t0 <= t1
+
+    4.17) t2 := t0 >= t1
+
+    4.18) t2 := t0 *i t1
+
+    4.19) t2 := t0 *f t1
+
+    4.20) t2 := t0 /i t1
+
+    4.21) t2 := t0 /f t1
+
+    4.22) t2 := t0 ^ t1 
+
+    4.23) t2 := t0 mod t1
+
+    4.24) if a < b then goto L1 
+
+    4.25) goto L1
+
+    4.26) if not a < b then goto L1
+
+    4.27) if a > b then goto L1 
+
+    4.28) if not a > b then goto L1 
+
+    4.29) if a then goto L1 
+
+    4.30) if not a then goto L1 
+
+------------ funciones de mios que hay que re-escribir------
+
+    4.31) call writeI, 1
+
+    4.32) call writeF, 1
+
+    4.33) call writeC, 1
+
+    4.34) call writeB, 1
+
+    4.35) call writeS, 1
+
+    4.36) t0 := call readI 
+
+    4.37) t0 := call readF
+
+    4.38) t0 := call readB
+
+    4.39) t0 := call readC
+
+    4.40) t0 := call readS
+
+------------------------------------ llamada a funciones ---------------
+
+    4.41) t0 := call f, i
+
+    4.42) call f, i
+
+    4.43) EPILOGUE
+
+    4.44) PROLOGUE
+
+    4.45) Return t0
+
+    4.46) t0 := t1
+
+    4.47) *t0 := t1
+
+    4.48) t0 := *t1
+
+    4.49) PARAM t0
+
+    4.50) CLEANUP i

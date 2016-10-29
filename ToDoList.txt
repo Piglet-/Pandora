@@ -1,9 +1,12 @@
 - Arreglar el paso del for
-- MALLOC / free
+- MALLOC / free TAC
+- MALLOC parser
 - cambiar decFun en parser.y
-- void procedimientos
-- arreglos (cuenta mardita)
 - programas de prueba
 - pasaje por referencia
 - etiquetas para string (l-values)
 - write/read polimorficos
+- arreglar clean up
+- plantillas
+- funciones read y write en mips
+- atrapar overflow
