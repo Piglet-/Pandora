@@ -52,19 +52,35 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
     4.4) t2:= t0 -f t1
 
+                sub.s Rx, Ri, Rj
+
     4.5) t2 := t0 and t1 
+
+                and Rx, Ri, Rj
 
     4.6) t2 := t0 or t1
 
+                or Rx, Ri, Rj
+
     4.7) t2 := t0 > t1
+
+                slt Rx, Rj, Ri   // pone 1 en Rx si se cumple la condicion
 
     4.8) t2 := t0 < t1
 
+                slt Rx, Ri, Rj    
+
     4.11) t2 := t0 == t1
+
+                seq Rx, Ri, Rj
 
     4.12) t2 := t0 != t1
 
+                sne Rx, Ri, Rj
+
     4.13) t1 := not t0
+
+                not Rj, Ri
 
     4.14) t1 := -i t0
 
@@ -72,15 +88,27 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
     4.16) t2 := t0 <= t1
 
+                sle Rx, Ri, Rj
+
     4.17) t2 := t0 >= t1
+
+                sge Rx, Ri, Rj
 
     4.18) t2 := t0 *i t1
 
+            mul Rx, Ri, Rj
+
     4.19) t2 := t0 *f t1
+
+            mul.s Rx, Ri, Rj
 
     4.20) t2 := t0 /i t1
 
+            div Rx, Ri, Rj
+
     4.21) t2 := t0 /f t1
+
+            div.s Rx, Ri, Rj
 
     4.22) t2 := t0 ^ t1 
 
@@ -88,11 +116,26 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
     4.24) if a < b then goto L1 
 
+            blt Ri, Rj, L1
+
+    4.24) if a <= b then goto L1 
+
+            ble Ri, Rj, L1
+
     4.25) goto L1
+
+            j L1
 
     4.26) if not a < b then goto L1
 
+
     4.27) if a > b then goto L1 
+
+            bgt Ri, Rj, L1
+
+ 4.27) if a >= b then goto L1 
+
+            bge Ri, Rj, L1
 
     4.28) if not a > b then goto L1 
 
@@ -100,27 +143,61 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
     4.30) if not a then goto L1 
 
------------- funciones de mios que hay que re-escribir------
+------------ funciones de mips que hay que re-escribir------
 
-    4.31) call writeI, 1
+    4.31) call writeI, 1 // lo de la pila no lo hace ya el param y cleanup limpia??
+
+        li $v0, 1
+        sw $a0, 0($sp)
+        syscall
 
     4.32) call writeF, 1
 
+        li $v0, 2
+        sw $f12, 0($sp)
+        syscall
+
     4.33) call writeC, 1
+
+        li $v0, 11
+        sw $a0, 0($sp)
+        syscall
 
     4.34) call writeB, 1
 
+        // no consigo nada de read y writes para boleanos, supongo que hay que // usar otra representacion
+
     4.35) call writeS, 1
+
+        li $v0, 4
+        sw $a0, 0($sp)
+        syscall
 
     4.36) t0 := call readI 
 
+        li $v0, 5
+        syscall
+        lw $Ri, $v0
+
     4.37) t0 := call readF
+
+        li $v0, 6
+        syscall
+        lw $Ri, $v0
 
     4.38) t0 := call readB
 
+        // no consigo nada de read ni write para booleanos
+
     4.39) t0 := call readC
 
+        li $v0, 12
+        syscall
+        lw $Ri, $v0
+
     4.40) t0 := call readS
+
+        // aqui hay que poner tamañaos del string a leer y pues no se
 
 ------------------------------------ llamada a funciones ---------------
 
@@ -136,10 +213,19 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
     4.46) t0 := t1
 
+        lw Rx, Ri
+
     4.47) *t0 := t1
 
     4.48) t0 := *t1
 
-    4.49) PARAM t0
+    4.49) PARAM t0  // empilar t0 que esta en Ri
+
+        addi $sp, $sp, -4
+        sw Ri, 0($sp)
 
     4.50) CLEANUP i
+
+        mul Rx, i , 4
+        addi $sp, $sp, Rx
+
