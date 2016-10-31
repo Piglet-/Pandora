@@ -117,14 +117,17 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
     4.24) if a < b then goto L1 
 
             blt Ri, Rj, L1
+            sll $0, $0, 0
 
     4.24) if a <= b then goto L1 
 
             ble Ri, Rj, L1
+            sll $0, $0, 0
 
     4.25) goto L1
 
             j L1
+            sll $0, $0, 0
 
     4.26) if not a < b then goto L1
 
@@ -132,10 +135,12 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
     4.27) if a > b then goto L1 
 
             bgt Ri, Rj, L1
+            sll $0, $0, 0
 
  4.27) if a >= b then goto L1 
 
             bge Ri, Rj, L1
+            sll $0, $0, 0
 
     4.28) if not a > b then goto L1 
 
