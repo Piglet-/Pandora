@@ -187,7 +187,7 @@ TypeFunc :  Type ":" func id    {% do
                               st <- get
                               tell( snd (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4))
                               put $ State (fst (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4)) (srt st) (ast st)
-                              return (($3,makeBtype $1),$4)} 
+                              return (($3,makeBtype $1), $4)} 
 
 OS: {- Lambda -} { % do 
                      st <- get 
@@ -230,42 +230,42 @@ Params: Type ":" id     { % do
                             st <- get
                             tell (snd (doInsert' (makeBtype $1) ((syt st),DS.empty) $3))
                             put $ State (fst (doInsert' (makeBtype $1) ((syt st),DS.empty) $3)) (srt st) (ast st)
-                            return [(makeBtype $1)]} 
+                            return [(makeBtype $1, False)]} 
         | array of Type Dimen ":" id    {% do
                                             st <- get
                                             tell (snd (doInsert' (makeArray $4 (makeBtype $3)) ((syt st),DS.empty) $6))
                                             put $ State (fst (doInsert' (makeArray $4 (makeBtype $3)) ((syt st),DS.empty) $6)) (srt st) (ast st)
-                                            return [(makeArray $4 (makeBtype $3))]} 
+                                            return [(makeArray $4 (makeBtype $3), False)]} 
         | var Type ":" id   { % do
                                 st <- get
                                 tell (snd (doInsert' (makeBtype $2) ((syt st),DS.empty) $4))
                                 put $ State (fst (doInsert' (makeBtype $2) ((syt st),DS.empty) $4)) (srt st) (ast st)
-                                return [(makeBtype $2)]} 
+                                return [((makeBtype $2), True)]} 
         | var array of Type Dimen ":" id    { % do
                                                 st <- get
                                                 tell (snd (doInsert' (makeArray $5 (makeBtype $4)) ((syt st),DS.empty) $7))
                                                 put $ State (fst (doInsert' (makeArray $5 (makeBtype $4)) ((syt st),DS.empty) $7)) (srt st) (ast st)
-                                                return [(makeBtype $4)]} 
+                                                return [((makeBtype $4), True)]} 
         | Params "," var Type ":" id    {% do
                                             st <- get
                                             tell (snd (doInsert' (makeBtype $4) ((syt st),DS.empty) $6))
                                             put $ State (fst (doInsert' (makeBtype $4) ((syt st),DS.empty) $6)) (srt st) (ast st)
-                                            return ((makeBtype $4):$1)} 
+                                            return (((makeBtype $4), True):$1)} 
         | Params "," var array of Type Dimen ":" id     {% do
                                                             st <- get
                                                             tell (snd (doInsert' (makeArray $7 (makeBtype $6)) ((syt st),DS.empty) $9))
                                                             put $ State (fst (doInsert' (makeArray $7 (makeBtype $6)) ((syt st),DS.empty) $9)) (srt st) (ast st)
-                                                            return ((makeArray $7 (makeBtype $6)):$1)} 
+                                                            return (((makeArray $7 (makeBtype $6)),True):$1)} 
         | Params "," Type ":" id    { % do
                                         st <- get
                                         tell (snd (doInsert' (makeBtype $3) ((syt st),DS.empty) $5))
                                         put $ State (fst (doInsert' (makeBtype $3) ((syt st),DS.empty) $5)) (srt st) (ast st)
-                                        return ((makeBtype $3):$1)} 
+                                        return (((makeBtype $3),False):$1)} 
         | Params "," array of Type Dimen ":" id     { % do
                                                         st <- get
                                                         tell (snd (doInsert' (makeArray $6 (makeBtype $5)) ((syt st),DS.empty) $8))
                                                         put $ State (fst (doInsert' (makeArray $6 (makeBtype $5)) ((syt st),DS.empty) $8)) (srt st) (ast st)
-                                                        return ((makeArray $6 (makeBtype $5)):$1) }
+                                                        return (((makeArray $6 (makeBtype $5)),False):$1) }
 
 Type : intT     { $1 } 
     | floatT    { $1 }
@@ -795,7 +795,7 @@ freeInst t1 (Lexeme t p)    = (TypeError, DS.singleton(Left $ "Type Error free "
                                 ++ show p ++ " given " ++ show t1 ++ " expecting Pointer"))
 
 matchType :: Type -> [Type] -> Type
-matchType (FuncT t ts ast) lts = if ts == lts 
+matchType (FuncT t ts ast) lts = if (map fst ts) == lts
                                 then t
                                 else TypeError
 

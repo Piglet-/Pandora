@@ -577,9 +577,9 @@ sizeCal :: Zipper -> [Expression] -> [Int]
 sizeCal z []    = [0]
 sizeCal z (ex:exs) = (typeSize' (typeExp ex) z):(sizeCal z exs)
 
-sizeCal' :: Zipper -> [Type] -> [Int]
+sizeCal' :: Zipper -> [(Type,Bool)] -> [Int]
 sizeCal' z []    = [0]
-sizeCal' z (ex:exs) = (typeSize' ex z):(sizeCal' z exs)
+sizeCal' z (ex:exs) = (typeSize' (fst ex) z):(sizeCal' z exs)
 
 makeParams :: Expression -> TACMonad Reference
 makeParams e = do
@@ -588,7 +588,20 @@ makeParams e = do
     tell $ DS.singleton p
     return $ temp
 
-astEntry :: Entry -> (AST, [Type])
+makeParams' :: Expression -> Bool -> TACMonad Reference
+makeParams' e b = case b of
+    True -> do
+            temp <- getReference e
+            let p = Param temp
+            tell $ DS.singleton p
+            return $ temp
+    _    -> do
+            temp <- getReference e
+            let p = Param temp
+            tell $ DS.singleton p
+            return $ temp
+
+astEntry :: Entry -> (AST, [(Type,Bool)])
 astEntry e@(Entry t@(FuncT _ l ast) _ _ _ ) = (ast, l)
 astEntry e@(Entry t@(ProcT _ l ast) _ _ _ ) = (ast, l)
 

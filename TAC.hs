@@ -69,11 +69,11 @@ instance Show Ins where
 		WriteB i 			-> "WriteB " ++ show i 
 		WriteC i 			-> "WriteC " ++ show i 
 		WriteS i 			-> "WriteS " ++ show i 
-		ReadI r 			-> "ReadI " ++ showR r 
-		ReadF r 			-> "ReadF " ++ showR r 
-		ReadB r 			-> "ReadB " ++ showR r 
-		ReadC r 			-> "ReadC " ++ showR r 
-		ReadS r 			-> "ReadS " ++ showR r 
+		ReadI r 			-> "ReadI " ++ show r 
+		ReadF r 			-> "ReadF " ++ show r 
+		ReadB r 			-> "ReadB " ++ show r 
+		ReadC r 			-> "ReadC " ++ show r 
+		ReadS r 			-> "ReadS " ++ show r 
 		Prologue i 			-> "PROLOGUE " ++ show i 
 		Epilogue i 			-> "EPILOGUE " ++ show i
 

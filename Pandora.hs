@@ -57,13 +57,13 @@ emptyZipper :: Zipper
 emptyZipper = focus $ emptyST emptyScope
 
 insertITS :: Zipper
-insertITS = insertS "intToString" (Entry (FuncT StringT [IntT] (AST [])) (Position (0,0)) 0 0) emptyZipper
+insertITS = insertS "intToString" (Entry (FuncT StringT [(IntT, False)] (AST [])) (Position (0,0)) 0 0) emptyZipper
 
 insertFTS :: Zipper
-insertFTS = insertS "floatToString" (Entry (FuncT StringT [FloatT] (AST [])) (Position (0,0)) 0 0) insertITS
+insertFTS = insertS "floatToString" (Entry (FuncT StringT [(FloatT, False)] (AST [])) (Position (0,0)) 0 0) insertITS
 
 initZipper :: Zipper
-initZipper = insertS "intToFloat" (Entry (FuncT FloatT [IntT] (AST [])) (Position (0,0)) 0 0) insertFTS
+initZipper = insertS "intToFloat" (Entry (FuncT FloatT [(IntT, False)] (AST [])) (Position (0,0)) 0 0) insertFTS
 
 filterBit :: DS.Seq(Binnacle) -> String
 filterBit bs = unlines (lefts (FB.toList bs))

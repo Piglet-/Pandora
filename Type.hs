@@ -39,8 +39,8 @@ data Type = IntT
 		| UnionT 	(DMap.Map String Entry)
 		| StringT
 		| IteratorT
-		| FuncT 	Type [Type]	AST
-		| ProcT 	Type [Type]	AST
+		| FuncT 	Type [(Type,Bool)]	AST
+		| ProcT 	Type [(Type, Bool)]	AST
 		| ArrayT 	Int  Type 
 		| TypeT 	String 
 		| TypeError
@@ -59,8 +59,8 @@ instance Show Type where
 		 	UnionT 	l		-> "Union " ++ show l
 		 	StringT 		-> "String "
 		 	IteratorT 		-> "Iterator "
-		 	FuncT t	l ast	-> "Function "  ++ show t ++ show (reverse l) ++ "\n" ++ drawTree (treeAST (filterDec ast))
-		 	ProcT t l ast 	-> "Procedure " ++ show t ++ show (reverse l) ++ "\n" ++ drawTree (treeAST (filterDec ast))
+		 	FuncT t	l ast	-> "Function "  ++ show t ++ show (reverse (map fst l)) ++ "\n" ++ drawTree (treeAST (filterDec ast))
+		 	ProcT t l ast 	-> "Procedure " ++ show t ++ show (reverse (map fst l)) ++ "\n" ++ drawTree (treeAST (filterDec ast))
 		 	ArrayT d t 		-> "Array of "  ++ show t 
 		 	TypeT s 		-> "TypeT " ++ s ++ " "
 		 	TypeError 		-> "TypeError"
@@ -84,7 +84,7 @@ aux (((Lexeme (TokenIdent s) _),t):ls) =  (s,t):(aux ls)
 toMap :: [(Lexeme Token, Type)] -> DMap.Map String Type
 toMap l = DMap.fromList (aux l)
 
-makeObj :: Lexeme t -> Type -> [Type]-> Type
+makeObj :: Lexeme t -> Type -> [(Type, Bool)]-> Type
 makeObj l bt lt = case (token l) of
 	TokenProc		-> ProcT bt lt (AST [])
 	TokenFunc		-> FuncT bt lt (AST [])
@@ -251,7 +251,7 @@ treeIns (FreeL exp p)
 treeIns (DecFun exp)  
     = Node ("Function ") [treeExp exp]
 treeIns (FCallI e es p)
-	= Node ("Function " ++ show p) ((treeExp e):map treeExp (reverse es))
+	= Node ("Function " ++ show p) ((treeExp  e):(map treeExp (reverse es)))
 treeIns None = Node "" []
 treeIns DecL = Node "" []
 
@@ -268,11 +268,11 @@ treeExp (ExpBin op exp1 exp2 p)
 treeExp (ExpUna op exp p) 
 	= Node ("ExpUn: " ++ show op ++ " " ++ show p) [treeExp exp]
 treeExp (FCall e es p)    -- Era lo que estaba al revez y no se si sea lo mejor poner una variable.
-	= Node ("Function " ++ show p) ((treeExp e):map treeExp (reverse es)) 
+	= Node ("Function " ++ show p) ((treeExp  e):map treeExp (reverse es))
 treeExp (CFCall exp1 exp2 p) 
 	= Node ("Function " ++ show p) [treeExp exp1,treeExp exp2] -- No estoy seguro si esta bien
 treeExp (AccsA e es p) 
-	= Node ("Array " ++ show p) ((treeExp e):map treeExp (reverse es)) -- Era lo que estaba al revez
+	= Node ("Array " ++ show p) ((treeExp e):(map treeExp (reverse es))) -- Era lo que estaba al revez
 treeExp (AccsS e es p) 
 	= Node ("Accesor " ++ show p) ((treeExp e):map treeExp es)
 treeExp (AccsP e 1 p) 
