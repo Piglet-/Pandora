@@ -40,59 +40,68 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
     4.1) t2 := t0 +i t1
 
-                add Rx, Ri, Rj
+            add Rx, Ri, Rj
 
     4.2) t2 := t0 +f t1
 
-                add.s Rx, Ri, Rj
+            add.s Rx, Ri, Rj
 
     4.3) t2 := t0 -i t1
 
-                sub Rx, Ri, Rj
+            sub Rx, Ri, Rj
 
     4.4) t2:= t0 -f t1
 
-                sub.s Rx, Ri, Rj
+            sub.s Rx, Ri, Rj
 
     4.5) t2 := t0 and t1 
 
-                and Rx, Ri, Rj
+            and Rx, Ri, Rj
 
     4.6) t2 := t0 or t1
 
-                or Rx, Ri, Rj
+            or Rx, Ri, Rj
 
     4.7) t2 := t0 > t1
 
-                slt Rx, Rj, Ri   // pone 1 en Rx si se cumple la condicion
+            slt Rx, Rj, Ri   // pone 1 en Rx si se cumple la condicion
 
     4.8) t2 := t0 < t1
 
-                slt Rx, Ri, Rj    
+            slt Rx, Ri, Rj    
 
     4.11) t2 := t0 == t1
 
-                seq Rx, Ri, Rj
+            seq Rx, Ri, Rj
 
     4.12) t2 := t0 != t1
 
-                sne Rx, Ri, Rj
+            sne Rx, Ri, Rj
 
     4.13) t1 := not t0
 
-                not Rj, Ri
+            not Rj, Ri
 
     4.14) t1 := -i t0
 
+            sub Rx, Ri, $zero
+            ------
+            neg Rx, Ri
+
+
     4.15) t1 := -f t0
+
+            sub.s Rx, Ri, $zero // no estoy seguro
+            ------
+            neg.s Rx, Ri
 
     4.16) t2 := t0 <= t1
 
-                sle Rx, Ri, Rj
+            sle Rx, Ri, Rj
 
     4.17) t2 := t0 >= t1
 
-                sge Rx, Ri, Rj
+            sge Rx, Ri, Rj
 
     4.18) t2 := t0 *i t1
 
@@ -110,9 +119,26 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
             div.s Rx, Ri, Rj
 
-    4.22) t2 := t0 ^ t1 
+    4.22) t2 := t0 ^ t1
+
+            beq Rx, $zero, L2
+
+            addi Rx, Ri, $zero
+
+        L1: ble Rj, $zero, L3
+            mul Rx, Rx, Ri
+            sub Rj, Rj, 1
+            j l1
+
+        l2: addi Rx, 1, $zero
+
+        L3:
 
     4.23) t2 := t0 mod t1
+
+            div Rx, Ri, Rj
+            mfhi Rx
+
 
     4.24) if a < b then goto L1 
 
@@ -131,6 +157,8 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
     4.26) if not a < b then goto L1
 
+            bgt Ri, Rj, L1
+            sll $0, $0, 0
 
     4.27) if a > b then goto L1 
 
@@ -142,11 +170,18 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
             bge Ri, Rj, L1
             sll $0, $0, 0
 
-    4.28) if not a > b then goto L1 
+    4.28) if not a > b then got 
+
+            blt Ri, Rj, L1
+            sll $0, $0, 0
 
     4.29) if a then goto L1 
 
-    4.30) if not a then goto L1 
+            bne Ri, $zero, L1
+
+    4.30) if not a then goto L1
+
+            beq Ri, $zero, L1 
 
 ------------ funciones de mips que hay que re-escribir------
 
@@ -170,7 +205,9 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
     4.34) call writeB, 1
 
-        // no consigo nada de read y writes para boleanos, supongo que hay que // usar otra representacion
+        li $v0, 4
+        sw $a0, 0($sp)
+        syscall
 
     4.35) call writeS, 1
 
@@ -200,15 +237,18 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
         syscall
         lw $Ri, $v0
 
-    4.40) t0 := call readS
-
-        // aqui hay que poner tamañaos del string a leer y pues no se
 
 ------------------------------------ llamada a funciones ---------------
 
     4.41) t0 := call f, i
 
+        jal f
+        lw Ri, 0(sp)
+        addi $sp , $sp, 4 
+
     4.42) call f, i
+
+        jal f
 
     4.43) EPILOGUE
 
@@ -216,15 +256,23 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
     4.45) Return t0
 
+        addi $sp, $sp, -4
+        sw Ri,0(sp)
+        j EPILOGUE
+
     4.46) t0 := t1
 
-        lw Rx, Ri
+        lw Rj, Ri
 
     4.47) *t0 := t1
 
+        sw 0(Ri), Rj
+
     4.48) t0 := *t1
 
-    4.49) PARAM t0  // empilar t0 que esta en Ri
+        sw Ri, 0(Rj)
+
+    4.49) PARAM t0  // empila t0 que esta en Ri
 
         addi $sp, $sp, -4
         sw Ri, 0($sp)
