@@ -1,18 +1,17 @@
 
 1) Pila de llamadas
 
-                    top of stack
                 +-----------------+ <---- sp
                 | Local2          |
                 +-----------------+
                 | Local1          |
                 +-----------------+
                 | Local0          | 
-                +-----------------+ <---- fp
+                +-----------------+ 
                 | Return Address  |
                 +-----------------+
                 | Return Value    |
-                +-----------------+
+                +-----------------+ <---- fp
                 | Arg1            |
                 +-----------------+
                 | Arg0            |
@@ -23,6 +22,8 @@
 
 3) Registros:
 
+$zero                       Cero
+
 $gp                         Global Pointer
 
 $sp                         Stack Pointer
@@ -31,10 +32,11 @@ $fp                         Frame Pointer
 
 $ra                         Return Address
 
+$v0                         Return de llamadas al sistema
+
 $a0-$a3                     Cuentas para Jumps
     
-$v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
-
+$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
 4) Plantillas
 
@@ -128,7 +130,7 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
         L1: ble Rj, $zero, L3
             mul Rx, Rx, Ri
             sub Rj, Rj, 1
-            j l1
+            b L1
 
         l2: addi Rx, 1, $zero
 
@@ -138,7 +140,6 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
             div Rx, Ri, Rj
             mfhi Rx
-
 
     4.24) if a < b then goto L1 
 
@@ -152,7 +153,7 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
     4.25) goto L1
 
-            j L1
+            b L1
             sll $0, $0, 0
 
     4.26) if not a < b then goto L1
@@ -184,54 +185,53 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
             beq Ri, $zero, L1 
 
 ------------ funciones de mips que hay que re-escribir------
+    // prologo y epilogo
 
-    4.31) call writeI, 1 // lo de la pila no lo hace ya el param y cleanup limpia??
+    4.31) writeI:
 
         li $v0, 1
-        sw $a0, 0($sp)
+        lw $a0, 0($sp)
         syscall
 
-    4.32) call writeF, 1
+    4.32) writeF:
 
         li $v0, 2
-        sw $f12, 0($sp)
+        lw $f12, 0($sp)
         syscall
 
-    4.33) call writeC, 1
+    4.33) writeC:
 
         li $v0, 11
-        sw $a0, 0($sp)
+        lw $a0, 0($sp)
         syscall
 
-    4.34) call writeB, 1
+    4.34) writeB:
 
         li $v0, 4
-        sw $a0, 0($sp)
+        lw $a0, 0($sp)
         syscall
 
-    4.35) call writeS, 1
+    4.35) writeS:
 
         li $v0, 4
-        sw $a0, 0($sp)
+        lw $a0, 0($sp)
         syscall
 
-    4.36) t0 := call readI 
+    4.36) readI:
 
         li $v0, 5
         syscall
-        lw $Ri, $v0
+        lw $Ri, $v0 
 
-    4.37) t0 := call readF
+    4.37) readF:
 
         li $v0, 6
         syscall
         lw $Ri, $v0
 
-    4.38) t0 := call readB
+    4.38) readB:
 
-        // no consigo nada de read ni write para booleanos
-
-    4.39) t0 := call readC
+    4.39) readC:
 
         li $v0, 12
         syscall
@@ -240,25 +240,28 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
 ------------------------------------ llamada a funciones ---------------
 
-    4.41) t0 := call f, i
+    4.41) t0 := call f, i  // i puede ser los arg + valor de retorno (func)
+                            // i los argumentos (procedimientos)
 
+        addi $sp, $sp, -4 // espacio para t0
         jal f
-        lw Ri, 0(sp)
-        addi $sp , $sp, 4 
+        lw Ri, 0(sp)    // guardo el valor en t0
+        addi $sp, $sp, 4  // desempilo el valor de retorno
+        addi $sp, $sp, i // limpio la pila
 
     4.42) call f, i
 
+        addi $sp, $sp, -4 // espacio para el valor de retorno
         jal f
+        addi $sp, $sp, 4  // desempilo el valor de retorno
+        addi $sp, $sp, i // limpio la pila
 
-    4.43) EPILOGUE
-
-    4.44) PROLOGUE
 
     4.45) Return t0
 
         addi $sp, $sp, -4
-        sw Ri,0(sp)
-        j EPILOGUE
+        sw Ri, 0(sp)
+        b EPILOGUE // la etiqueta de su epilogo
 
     4.46) t0 := t1
 
@@ -266,19 +269,35 @@ $v0-$v1, $t0-$t9, $s0-$s7   Cuentas en general
 
     4.47) *t0 := t1
 
-        sw 0(Ri), Rj
+        sw Rj, 0(Ri)
 
     4.48) t0 := *t1
 
-        sw Ri, 0(Rj)
+        lw Ri, 0(Rj)
 
-    4.49) PARAM t0  // empila t0 que esta en Ri
+    4.49) PARAM t0 
 
         addi $sp, $sp, -4
         sw Ri, 0($sp)
 
     4.50) CLEANUP i
 
-        mul Rx, i , 4
-        addi $sp, $sp, Rx
+        addi $sp, $sp, i
 
+4.44) PROLOGUE i
+        
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+        addi $sp, $sp, -4
+        sw $fp, 0($sp)
+        lw $sp, $fp
+        sub $sp, $sp, i
+
+4.43) EPILOGUE i
+
+        // epilogo ejemplo de la clase
+        sw Ri, 8($fp)
+        move $sp, $fp
+        lw $fp, 0($sp)
+        addi $sp, $sp, 4
+        b 0($sp)
