@@ -2,7 +2,7 @@ module Mips
 ( Register(..)
 , Operand (..)
 , MInstruction (..)
-	)
+ )
 where
 
 data Register = Zero
@@ -13,7 +13,7 @@ data Register = Zero
 			| T6 | T7 | T8 | T9
 			| S0 | S1 | S2 | S3
 			| S4 | S5 | S6 | S7
-			deriving(Show)
+			deriving(Show,Ord,Eq)
 
 data Operand = 	Register Register
 			|	Const Int 
@@ -21,9 +21,7 @@ data Operand = 	Register Register
 			deriving (Show)
 
 data MInstruction = Comment String
-				| PutLabel Stri
-type MipsMonad = RWS String 
-				ng String
+				| PutLabel String String
 				| PutDirective String
 				| Asciiz String String
 				| Add Register Register Register
@@ -35,4 +33,5 @@ type MipsMonad = RWS String
 				| MulS Register Register Register
 				| Div Register Register Register
 				| DivS Register Register Register
+				| Mfhi Register
 				deriving(Show)

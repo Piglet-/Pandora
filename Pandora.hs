@@ -5,11 +5,13 @@ import SymbolTable
 import Type
 import TAC -- no es necesario pero necesito el type TAC
 import TACGen
+import Mips
+import MipsGen
 import Data.Either (lefts)
 import qualified Data.Sequence as DS
 --import Instructions
 import qualified Data.Foldable as FB
-import Control.Monad.RWS
+import Control.Monad.RWS 
 import Data.Tree
 
 main = do
@@ -35,6 +37,8 @@ main = do
                                 --    let (stateT, biT) = execRWS (makeFunL) "" emptyTACState
                                     let (stateT,bitT) = execRWS (mapM_ getAssign (listTAC $ filterI (ast state))) "" emptyTACState
                                     putStr (unlines $ map show (FB.toList bitT))
+                                    let (stateM,bitM) = execRWS (mapM_ buildMips (FB.toList bitT)) "" emptyMIPSState
+                                    putStr (unlines $ map show (FB.toList bitM))
                             --print $ drop 2 (show (parse lexs) ++ "Accepted") 
                 else case head (tail args) of
                     "-l" -> if any isTokenError lexs 
