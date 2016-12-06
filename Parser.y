@@ -164,6 +164,7 @@ Declaration:  FuncDec OS Insts CS end CS    {% do
                                                         return (VoidT, DecL)  }
             | Dec                                       { % return (fst $1, DecL) }
             | Assign                                    { % return (fst $1, DecL) } 
+            | FuncDec ";"                               { % return (snd $ fst $1,DecL ) }
 
 StructObjs : StructOb                   { $1 }
             | StructObjs ";" StructOb   { $1 ++ $3 }
