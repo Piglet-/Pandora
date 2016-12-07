@@ -61,9 +61,9 @@ initRegDescriptors = DMap.fromList
 buildMips :: Tac.Ins -> MipsMonad MInstruction
 buildMips ins = case ins of
     Tac.AssignB op res r1 r2 -> do 
-        rz <- getReg res
-        ry <- getReg r2
-        rx <- getReg r1
+        rz <- getReg False res
+        ry <- getReg True r2
+        rx <- getReg True r1
         let assgn = builBOp op rz rx ry
         tell $ DS.singleton assgn
         return assgn
@@ -77,8 +77,8 @@ buildMips ins = case ins of
         return (PutLabel "L" str)
 
     Tac.AssignU op res r1 -> do
-        ry <- getReg res
-        rx <- getReg r1
+        ry <- getReg False res
+        rx <- getReg True r1
         let assgn = builBOpU op ry rx
         tell $ DS.singleton assgn
         return assgn
@@ -103,6 +103,7 @@ builBOpU op res r1 = case op of
     Tac.NegI -> Negi res r1 
     Tac.NegF -> Negf res r1
     Tac.LPoint -> Store res r1
+--    Tac.RPoint -> Lw res r1
 
 emptyZipper :: Zipper
 emptyZipper = focus $ emptyST emptyScope
@@ -111,8 +112,8 @@ data Reason = Read
             | Write
             deriving (Eq)
 
-getReg ::  Tac.Reference -> MipsMonad (Register)
-getReg ref = case ref of
+getReg :: Bool -> Tac.Reference -> MipsMonad (Register)
+getReg read ref = case ref of
     Tac.FP -> return FP
     _   -> do
             reg <- do 
@@ -129,8 +130,17 @@ getReg ref = case ref of
                                 return regi
 
                         usingRef ref reg 
+--                        when (read) $ do
+--                            op <- buildRef ref
+--                            tell $ DS.singleton (Lw reg op)
                         return reg
             return reg
+
+--buildRef :: Tac.Reference -> MipsMonad (Register)
+--buildRef ref = case ref of 
+--    Tac.Address s r -> do buildRef r
+--    Tac.Constant (Tac.ValInt i) -> do return $ Const i
+--    _ -> error "asd"
 
 makeSpill:: Int -> MipsMonad (Register)
 makeSpill count = do

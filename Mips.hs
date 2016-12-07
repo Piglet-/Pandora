@@ -40,4 +40,5 @@ data MInstruction = Comment String
 				| Negi Register Register
 				| Negf Register Register
 				| Store Register Register 
+--				| Lw Register Operand
 				deriving(Show)
