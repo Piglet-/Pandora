@@ -72,12 +72,15 @@ getAssign ins = case ins of
             let assgn3 = Goto (Just nextL)
             let assgn4 = PutLabel falseL 
             let assgn5 = AssignU (LPoint) add (Constant (ValBool False))
-            let assgn6 = PutLabel nextL 
+            let assgn6 = PutLabel nextL
+            tell $ DS.singleton Block 
             tell $ DS.singleton assgn
             tell $ DS.singleton assgn2
             tell $ DS.singleton assgn3
+            tell $ DS.singleton Block
             tell $ DS.singleton assgn4
             tell $ DS.singleton assgn5
+            tell $ DS.singleton Block
             tell $ DS.singleton assgn6
             return $ assgn6
 
@@ -102,11 +105,14 @@ getAssign ins = case ins of
             let assgn4 = PutLabel falseL 
             let assgn5 = Assign add (Constant (ValBool False))
             let assgn6 = PutLabel nextL 
+            tell $ DS.singleton Block
             tell $ DS.singleton assgn
             tell $ DS.singleton assgn2
             tell $ DS.singleton assgn3
+            tell $ DS.singleton Block
             tell $ DS.singleton assgn4
             tell $ DS.singleton assgn5
+            tell $ DS.singleton Block
             tell $ DS.singleton assgn6
             return $ assgn6
 
@@ -130,11 +136,14 @@ getAssign ins = case ins of
             let assgn4 = PutLabel falseL 
             let assgn5 = Assign add (Constant (ValBool False))
             let assgn6 = PutLabel nextL 
+            tell $ DS.singleton Block
             tell $ DS.singleton assgn
             tell $ DS.singleton assgn2
             tell $ DS.singleton assgn3
+            tell $ DS.singleton Block
             tell $ DS.singleton assgn4
             tell $ DS.singleton assgn5
+            tell $ DS.singleton Block
             tell $ DS.singleton assgn6
             return $ assgn6
 
@@ -160,9 +169,11 @@ getAssign ins = case ins of
         falseL   <- newLabel
         tell $ DS.singleton (Comment ("Line " ++ show (line p)))
         jumpingCode ex trueL falseL
+        tell $ DS.singleton Block
         tell $ DS.singleton (PutLabel trueL)
         mapM_ getAssign (reverse ins)
         let put = PutLabel falseL
+        tell $ DS.singleton Block
         tell $ DS.singleton put
         return $ put
 
@@ -171,9 +182,11 @@ getAssign ins = case ins of
         falseL <- newLabel
         tell $ DS.singleton (Comment ("Line " ++ show (line p)))
         jumpingCode ex trueL falseL
+        tell $ DS.singleton Block
         tell $ DS.singleton (PutLabel trueL)
         mapM_ getAssign (reverse insT)
         let put = PutLabel falseL
+        tell $ DS.singleton Block
         tell $ DS.singleton (PutLabel falseL)
         mapM_ getAssign insF
         return $ put
@@ -182,22 +195,27 @@ getAssign ins = case ins of
         auxL <- newLabel
         trueL <- newLabel
         falseL <- newLabel
+        tell $ DS.singleton Block
         tell $ DS.singleton (PutLabel auxL)
         jumpingCode ex trueL falseL
+        tell $ DS.singleton Block
         tell $ DS.singleton (PutLabel trueL)
         mapM_ getAssign (reverse ins)
         tell $ DS.singleton (Goto (Just auxL))
         let put = PutLabel falseL
+        tell $ DS.singleton Block
         tell $ DS.singleton (PutLabel falseL)
         return $ put
 
     RepeatL ins ex p -> do
         trueL <- newLabel
         falseL <- newLabel
+        tell $ DS.singleton Block
         tell $ DS.singleton (PutLabel trueL)
         mapM_ getAssign (reverse ins)
         jumpingCode ex trueL falseL
         let put = PutLabel falseL
+        tell $ DS.singleton Block
         tell $ DS.singleton (PutLabel falseL)
         return $ put
 
@@ -209,14 +227,17 @@ getAssign ins = case ins of
         temp1 <- getReference ex2
         let assgn = AssignU (LPoint) temp0 temp1
         tell $ DS.singleton assgn
+        tell $ DS.singleton Block
         tell $ DS.singleton (PutLabel auxL)
         let auxE = ExpBin (Lt IntT) ex1 ex3 p
         jumpingCode auxE trueL falseL
+        tell $ DS.singleton Block
         tell $ DS.singleton (PutLabel trueL)
         mapM_ getAssign (reverse ins)
         getAssign (AsngL ex1 ex4 p)
         tell $ DS.singleton (Goto (Just auxL))
         let put = PutLabel falseL
+        tell $ DS.singleton Block
         tell $ DS.singleton (PutLabel falseL)
         return $ put
 
@@ -247,6 +268,7 @@ getAssign ins = case ins of
         st <- get
         let (ast, lt) = astEntry e
         let assgn = PutLabel (Label s)
+        tell $ DS.singleton Block
         tell $ DS.singleton assgn
         let tam = sum (sizeCal' (tsyt st) lt)
         let assgn1 = Prologue tam
@@ -532,11 +554,13 @@ jumpingCode e tl fl = case e of
         And  -> do
             rLabel <- newLabel
             jumpingCode e1 rLabel fl
+            tell $ DS.singleton Block
             tell $ DS.singleton (PutLabel rLabel)
             jumpingCode e2 tl fl 
         Or   -> do
             rLabel <- newLabel
             jumpingCode e1 tl rLabel
+            tell $ DS.singleton Block
             tell $ DS.singleton (PutLabel rLabel)
             jumpingCode e2 tl fl
 
@@ -546,6 +570,7 @@ jumpingCode e tl fl = case e of
             expr <- getReference e2
             let ifgoto  = IfGoto (toRel op) expl expr (Just tl)
             tell $ DS.singleton ifgoto
+            tell $ DS.singleton Block
             let goto    = Goto (Just fl)
             tell $ DS.singleton goto
             return goto
@@ -558,6 +583,7 @@ jumpingCode e tl fl = case e of
         temp <- getReference ex
         let ifgoto = IfTrue temp (Just tl)
         tell $ DS.singleton ifgoto
+        tell $ DS.singleton Block
         tell $ DS.singleton (Goto (Just fl))
         return ifgoto
 

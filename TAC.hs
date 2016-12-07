@@ -42,6 +42,7 @@ data Ins =
 	| ReadB		Reference
 	| ReadC 	Reference
 	| ReadS		Reference
+	| Block
 	| Prologue 	Int
 	| Epilogue 	Int
 	deriving (Eq)
@@ -73,7 +74,8 @@ instance Show Ins where
 		ReadF r 			-> "ReadF " ++ show r 
 		ReadB r 			-> "ReadB " ++ show r 
 		ReadC r 			-> "ReadC " ++ show r 
-		ReadS r 			-> "ReadS " ++ show r 
+		ReadS r 			-> "ReadS " ++ show r
+		Block				-> "Block" 
 		Prologue i 			-> "PROLOGUE " ++ show i 
 		Epilogue i 			-> "EPILOGUE " ++ show i
 
@@ -103,6 +105,7 @@ instance Binary Ins where
 	put (ReadB r)				= putWord8 62 >> put r 
 	put (ReadC r)				= putWord8 63 >> put r 
 	put (ReadS r)				= putWord8 64 >> put r
+	put (Block)					= putWord8 65
 	put (Prologue i)			= putWord8 54 >> put i 
 	put (Epilogue i) 			= putWord8 55 >> put i
 
@@ -136,6 +139,7 @@ instance Binary Ins where
 		    	64 -> Bin.get >>= return . ReadS
 		    	54 ->  Bin.get >>= return . Prologue
 		    	55 ->  Bin.get >>= return . Epilogue
+		    	65 -> return Block
 
 makeT2::(Binary a1, Binary a2) => (a1 -> a2 -> r) -> Get r
 makeT2 t = liftM2 t Bin.get Bin.get

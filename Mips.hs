@@ -34,4 +34,10 @@ data MInstruction = Comment String
 				| Div Register Register Register
 				| DivS Register Register Register
 				| Mfhi Register
+				| And Register Register Register
+				| Or Register Register Register
+				| Not Register Register
+				| Negi Register Register
+				| Negf Register Register
+				| Store Register Register 
 				deriving(Show)

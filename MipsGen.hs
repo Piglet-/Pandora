@@ -11,6 +11,7 @@ import qualified Data.Sequence as DS
 import qualified TAC as Tac
 import Mips
 import SymbolTable
+import qualified Data.Map.Strict as Map
 
 type MipsMonad = RWS MipsReader MIPS MState 
 
@@ -22,6 +23,7 @@ data MState = Mstate
     { tsyt  	:: Zipper
    	, tsrt  	:: Zipper 
    	, regDesc 	:: RegDesTable
+    , spillC    :: Int
     }
 
 data RegDescriptor = RegDescriptor 
@@ -30,7 +32,7 @@ data RegDescriptor = RegDescriptor
 	, using 		:: Bool
 	}
 
-emptyMIPSState = Mstate emptyZipper emptyZipper initRegDescriptors
+emptyMIPSState = Mstate emptyZipper emptyZipper initRegDescriptors 0
 
 type RegDesTable = DMap.Map Register RegDescriptor
 
@@ -59,26 +61,104 @@ initRegDescriptors = DMap.fromList
 buildMips :: Tac.Ins -> MipsMonad MInstruction
 buildMips ins = case ins of
     Tac.AssignB op res r1 r2 -> do 
-        let assgn = builBOp op res r1 r2
+        rz <- getReg res
+        ry <- getReg r2
+        rx <- getReg r1
+        let assgn = builBOp op rz rx ry
         tell $ DS.singleton assgn
         return assgn
 
-builBOp :: Tac.BinOp -> Tac.Reference -> Tac.Reference -> Tac.Reference -> MInstruction
+    Tac.Comment str -> do
+        tell $ DS.singleton (Comment str)
+        return (Comment str)
+
+    Tac.PutLabel (Tac.Label str) -> do
+        tell $ DS.singleton (PutLabel "L" str)
+        return (PutLabel "L" str)
+
+    Tac.AssignU op res r1 -> do
+        ry <- getReg res
+        rx <- getReg r1
+        let assgn = builBOpU op ry rx
+        tell $ DS.singleton assgn
+        return assgn
+
+builBOp :: Tac.BinOp -> Register -> Register -> Register -> MInstruction
 builBOp op res r1 r2 = case op of 
-    Tac.AddI -> Add T0 T1 T2  
-    Tac.AddF -> AddS T0 T1 T2
-    Tac.SubI -> Sub T0 T1 T2
-    Tac.SubF -> SubS T0 T1 T2
-    Tac.MulI -> Mul T0 T1 T2
-    Tac.MulF -> MulS T0 T1 T2
-    Tac.DivI -> Div T0 T1 T2
-    Tac.DivF -> DivS T0 T1 T2 
-    Tac.ModT -> Mfhi T0 
---    | PowT
---    | AndT 
---    | OrT
---    | LArray
---    | RArray    
+    Tac.AddI -> Add res r1 r2  
+    Tac.AddF -> AddS res r1 r2
+    Tac.SubI -> Sub res r1 r2
+    Tac.SubF -> SubS res r1 r2
+    Tac.MulI -> Mul res r1 r2
+    Tac.MulF -> MulS res r1 r2
+    Tac.DivI -> Div res r1 r2
+    Tac.DivF -> DivS res r1 r2
+    --Tac.ModT -> Mfhi res r1 r2
+    Tac.AndT -> And res r1 r2
+    Tac.OrT  -> Or res r1 r2
+
+builBOpU :: Tac.UnOp -> Register -> Register -> MInstruction
+builBOpU op res r1 = case op of
+    Tac.NotT -> Not res r1
+    Tac.NegI -> Negi res r1 
+    Tac.NegF -> Negf res r1
+    Tac.LPoint -> Store res r1
 
 emptyZipper :: Zipper
 emptyZipper = focus $ emptyST emptyScope
+
+data Reason = Read 
+            | Write
+            deriving (Eq)
+
+getReg ::  Tac.Reference -> MipsMonad (Register)
+getReg ref = case ref of
+    Tac.FP -> return FP
+    _   -> do
+            reg <- do 
+                mReg <- findRegContent ref
+                case mReg of
+                    Just reg    -> return reg
+                    Nothing     -> do
+                        mEReg <- findEmptyReg
+                        reg <- case mEReg of
+                            Just empty  -> return empty
+                            Nothing     -> do
+                                count <- gets spillC
+                                regi <- makeSpill count
+                                return regi
+
+                        usingRef ref reg 
+                        return reg
+            return reg
+
+makeSpill:: Int -> MipsMonad (Register)
+makeSpill count = do
+    descrM      <- gets regDesc
+    let newRegD = DMap.updateAt (\ _ _ -> Just(RegDescriptor { values = [], genPurpose = True, using = False})) count descrM
+    modify $ \x -> x { regDesc = newRegD, spillC = count + 1 }
+    let (reg, desc) = DMap.elemAt count newRegD
+    return reg
+
+findRegContent :: Tac.Reference-> MipsMonad (Maybe Register)
+findRegContent ref = gets regDesc >>= return . Map.foldlWithKey checkReg Nothing
+    where
+        checkReg Nothing reg regDescrip = if (elem ref (values regDescrip)) then Just reg else Nothing
+        checkReg reg@(Just _) _ _ = reg
+
+findEmptyReg :: MipsMonad (Maybe Register)
+findEmptyReg = gets regDesc >>= return . Map.foldlWithKey checkReg Nothing
+    where
+        checkReg mReg keyReg regDescrip = case (mReg, values regDescrip) of
+            (Just _, _)         -> mReg
+            (Nothing, [])       -> Just keyReg
+            (Nothing, values)   -> Nothing
+
+
+usingRef :: Tac.Reference -> Register -> MipsMonad()
+usingRef ref reg = do
+    regDescrip <- gets regDesc
+    if DMap.member reg regDescrip 
+        then modify $ \s -> s {regDesc = DMap.adjust (\rd -> rd { values = ref : values rd}) reg regDescrip }
+        else error "Register not exist"
+

@@ -34,7 +34,7 @@ main = do
                                         putStr (filterBit bita)
                                 else do 
                                     putStr "\n\n"
-                                --    let (stateT, biT) = execRWS (makeFunL) "" emptyTACState
+                                    --let (stateT, biT) = execRWS (makeFunL) "" emptyTACState
                                     let (stateT,bitT) = execRWS (mapM_ getAssign (listTAC $ filterI (ast state))) "" emptyTACState
                                     putStr (unlines $ map show (FB.toList bitT))
                                     let (stateM,bitM) = execRWS (mapM_ buildMips (FB.toList bitT)) "" emptyMIPSState
