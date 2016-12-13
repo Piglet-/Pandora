@@ -13,12 +13,49 @@ data Register = Zero
 			| T6 | T7 | T8 | T9
 			| S0 | S1 | S2 | S3
 			| S4 | S5 | S6 | S7
-			deriving(Show,Ord,Eq)
+			deriving(Ord,Eq)
+
+instance Show Register where
+	show r = case r of
+		Zero -> "$zero"
+		GP 	-> "$gp"
+		FP -> "$fp"
+		SP -> "$sp"
+		RA -> "$ra"
+		V0 -> "$v0" 
+		A0 -> "$a0"
+		A1 -> "$a1"
+		A2 -> "$a2"
+		A3 -> "$a3" 
+		V1 -> "$v1" 
+		T0 -> "$t0" 
+		T1 -> "$t1"
+		T2 -> "$t2" 
+		T3 -> "$t3" 
+		T4 -> "$t4" 
+		T5 -> "$t5"
+		T6 -> "$t6"
+		T7 -> "$t7"
+		T8 -> "$t8" 
+		T9 -> "$t9"
+		S0 -> "$s0" 
+		S1 -> "$s1" 
+		S2 -> "$s2" 
+		S3 -> "$s3"
+		S4 -> "$s4"
+		S5 -> "$s5"
+		S6 -> "$s6"
+		S7 -> "$s7"
 
 data Operand = 	Register Register
 			|	Const Int 
 			| 	Indexed Int Register
-			deriving (Show)
+
+instance Show Operand where
+	show op = case op of
+		Register r -> show r
+		Const i -> show i
+		Indexed i r -> show i ++ "(" ++ show r ++ ")"
 
 data MInstruction = Comment String
 				| PutLabel String String
@@ -48,4 +85,34 @@ data MInstruction = Comment String
 				| Blt Register Register String
 				| Bge Register Register String
 				| Ble Register Register String
-				deriving(Show)
+
+instance Show MInstruction where
+	show ins = case ins of
+		Comment s -> "# " ++ s
+		PutLabel s1 s2 -> 	s1 ++ ":" ++ "   #" ++ s2
+		PutDirective s -> 	s
+		Asciiz s1 s2 -> 	s1 ++ ": .asciiz " ++ s2
+		Add r1 r2 r3 -> 	"add   "  ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		Addi r1 r2 r3 -> 	"addi  "  ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		AddS r1 r2 r3 -> 	"add.s " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		Sub r1 r2 r3 ->  	"sub   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		SubS r1 r2 r3 -> 	"sub.s " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		Mul r1 r2 r3 -> 	"mul   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		MulS r1 r2 r3 -> 	"mul.s " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		Div r1 r2 r3 -> 	"div   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		DivS r1 r2 r3 -> 	"div.s " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		Mfhi r -> 			"mfhi  " ++ show r
+		And r1 r2 r3 -> 	"and   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		Or r1 r2 r3 -> 		"or    " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		Not r1 r2 ->		"neg   " ++ show r1 ++ ", " ++ show r2
+		Negi r1 r2 ->		"neg   " ++ show r1 ++ ", " ++ show r2
+		Negf r1 r2 ->		"neg.s " ++ show r1 ++ ", " ++ show r2
+		Sw r op ->			"sw    " ++ show r ++ ", " ++ show op
+		Lw r op ->			"lw    " ++ show r ++ ", " ++ show op
+		B s ->				"b     " ++ s
+		Beq r1 r2 s ->		"beq   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
+		Bne r1 r2 s ->		"bne   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
+		Bgt r1 r2 s ->		"bgt   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
+		Blt r1 r2 s ->		"blt   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
+		Bge r1 r2 s ->		"bge   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
+		Ble r1 r2 s ->		"ble   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
