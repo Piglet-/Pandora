@@ -58,7 +58,7 @@ instance Show Operand where
 		Indexed i r -> show i ++ "(" ++ show r ++ ")"
 
 data MInstruction = Comment String
-				| PutLabel String String
+				| PutLabel String
 				| PutDirective String
 				| Asciiz String String
 				| Add Register Register Register
@@ -90,7 +90,7 @@ data MInstruction = Comment String
 instance Show MInstruction where
 	show ins = case ins of
 		Comment s -> "# " ++ s
-		PutLabel s1 s2 -> 	s1 ++ ":" ++ "   #" ++ s2
+		PutLabel s1 -> 		s1 ++ ":" ++ "   #" ++ s1
 		PutDirective s -> 	s
 		Asciiz s1 s2 -> 	s1 ++ ": .asciiz " ++ s2
 		Add r1 r2 r3 -> 	"add   "  ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3

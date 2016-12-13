@@ -60,12 +60,6 @@ initRegDescriptors = DMap.fromList
 
 buildMips :: Tac.Ins -> MipsMonad MInstruction
 buildMips ins = case ins of
-    Tac.Preamble -> do
-        tell $ DS.singleton (Preamble ".text")
-        tell $ DS.singleton (Preamble ".align 2")
-        tell $ DS.singleton (Preamble ".globl main")
-        return $ Preamble ".text"
-
     Tac.AssignB op res r1 r2 -> do 
         rz <- getReg False res
         ry <- getReg True r2
@@ -170,7 +164,7 @@ buildRel rel r1 r2 l = case rel of
     Tac.Le  -> Ble r1 r2 (show l)
 
 buildNotRel :: Tac.Relation -> Register -> Register -> Tac.Label -> MInstruction
-buildNotRel rel r1 r2 l = case rel of
+buildRel rel r1 r2 l = case rel of
     Tac.Eq  -> Bne r1 r2 (show l)
     Tac.GtT -> Ble r1 r2 (show l)
     Tac.LtT -> Bge r1 r2 (show l)
