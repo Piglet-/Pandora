@@ -2,6 +2,7 @@ module MipsGen
 ( MipsMonad (..)
 , emptyMIPSState
 , buildMips
+, initMIPSState
 )
 where
 
@@ -34,6 +35,15 @@ data RegDescriptor = RegDescriptor
 
 emptyMIPSState = Mstate emptyZipper emptyZipper initRegDescriptors 0
 
+initMIPSState :: State -> MState
+initMIPSState sta = 
+    Mstate
+        { tsyt     = syt sta
+        , tsrt     = srt sta
+        , regDesc  = initRegDescriptors 
+        , spillC   = 0
+        } 
+
 type RegDesTable = DMap.Map Register RegDescriptor
 
 initRegDescriptors = DMap.fromList
@@ -60,7 +70,7 @@ initRegDescriptors = DMap.fromList
 
 buildMips :: Tac.Ins -> MipsMonad MInstruction
 buildMips ins = case ins of
-    Tac.Preamble -> do
+    Tac.TPreamble -> do
         tell $ DS.singleton (Preamble ".text")
         tell $ DS.singleton (Preamble ".align 2")
         tell $ DS.singleton (Preamble ".globl main")
@@ -134,6 +144,11 @@ buildMips ins = case ins of
                 tell $ DS.singleton assgn
                 return $ assgn 
             _ -> error " Label doesn't exist"
+
+    Tac.Block -> do
+        saveBlock
+        tell $ DS.singleton (Comment "Saving variables")
+        return $ Comment "Saving variables"
 
     s -> do return $ Comment (show s)
 
@@ -255,3 +270,7 @@ usingRef ref reg = do
         then modify $ \s -> s {regDesc = DMap.adjust (\rd -> rd { values = ref : values rd}) reg regDescrip }
         else error "Register not exist"
 
+saveBlock :: MipsMonad()
+saveBlock = do
+    regDescrip <- gets regDesc
+    modify $ \s -> s { regDesc = initRegDescriptors, spillC = 0 }

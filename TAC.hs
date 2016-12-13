@@ -45,7 +45,7 @@ data Ins =
 	| Block
 	| Prologue 	Int
 	| Epilogue 	Int
-	| Preamble
+	| TPreamble
 	deriving (Eq)
 
 instance Show Ins where
@@ -79,6 +79,7 @@ instance Show Ins where
 		Block				-> "Block" 
 		Prologue i 			-> "PROLOGUE " ++ show i 
 		Epilogue i 			-> "EPILOGUE " ++ show i
+		TPreamble 			-> ""
 
 instance Binary Ins where
 	put (Comment s) 			= putWord8 0 >> put s
