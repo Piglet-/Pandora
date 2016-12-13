@@ -61,6 +61,7 @@ tokens :-
     <0> "."             { tok' TokenPoint }
     -- type declarations
     <0> ":"             { tok' TokenColon }
+    <0> "fwd"           { tok' TokenFwd  }
     -- instructions
     <0> "if"            { tok' TokenIf }
     <0> "then"          { tok' TokenThen }
