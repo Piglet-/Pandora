@@ -45,7 +45,7 @@ data Ins =
 	| Block
 	| Prologue 	Int
 	| Epilogue 	Int
-	| Preamble
+	| TPreamble
 	deriving (Eq)
 
 instance Show Ins where
@@ -79,6 +79,7 @@ instance Show Ins where
 		Block				-> "Block" 
 		Prologue i 			-> "PROLOGUE " ++ show i 
 		Epilogue i 			-> "EPILOGUE " ++ show i
+		TPreamble 			-> ""
 
 instance Binary Ins where
 	put (Comment s) 			= putWord8 0 >> put s
@@ -155,7 +156,7 @@ makeT4 t = liftM4 t Bin.get Bin.get Bin.get Bin.get
 newtype Label = Label String deriving (Eq)
 
 instance Show Label where
-	show (Label i) = i 
+	show (Label i) = ('_' : i) 
 
 instance Binary Label where
 	put (Label l) = put l
@@ -358,7 +359,7 @@ instance Binary Relation where
 			38 -> return Le		
 
 newLabel :: Int -> Label
-newLabel i = Label ('L':show i)
+newLabel i = Label ( 'L':show i)
 
 newTemp :: Int -> Reference
 newTemp i = (Temp i)

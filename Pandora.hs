@@ -37,7 +37,7 @@ main = do
                                     --let (stateT, biT) = execRWS (makeFunL) "" emptyTACState
                                     let (stateT,bitT) = execRWS (mapM_ getAssign (listTAC $ filterI (ast state))) "" emptyTACState
                                     putStr (unlines $ map show (FB.toList bitT))
-                                    let (stateM,bitM) = execRWS (mapM_ buildMips (FB.toList bitT)) "" emptyMIPSState
+                                    let (stateM,bitM) = execRWS (mapM_ buildMips (TPreamble :(FB.toList bitT))) "" (initMIPSState state)
                                     putStr (unlines $ map show (FB.toList bitM))
                             --print $ drop 2 (show (parse lexs) ++ "Accepted") 
                 else case head (tail args) of
