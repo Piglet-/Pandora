@@ -103,7 +103,7 @@ builBOpU op res r1 = case op of
     Tac.NegI -> Negi res r1 
     Tac.NegF -> Negf res r1
     Tac.LPoint -> Store res r1
---    Tac.RPoint -> Lw res r1
+    Tac.RPoint -> Lw res r1
 
 emptyZipper :: Zipper
 emptyZipper = focus $ emptyST emptyScope
@@ -130,17 +130,17 @@ getReg read ref = case ref of
                                 return regi
 
                         usingRef ref reg 
---                        when (read) $ do
---                            op <- buildRef ref
---                            tell $ DS.singleton (Lw reg op)
+                        when (read) $ do
+                            op <- buildRef ref
+                            tell $ DS.singleton (Lw reg op)
                         return reg
             return reg
 
---buildRef :: Tac.Reference -> MipsMonad (Register)
---buildRef ref = case ref of 
---    Tac.Address s r -> do buildRef r
---    Tac.Constant (Tac.ValInt i) -> do return $ Const i
---    _ -> error "asd"
+buildRef :: Tac.Reference -> MipsMonad (Register)
+buildRef ref = case ref of 
+    Tac.Address s r -> do buildRef r
+    Tac.Constant (Tac.ValInt i) -> do return $ Const i
+    _ -> error "asd"
 
 makeSpill:: Int -> MipsMonad (Register)
 makeSpill count = do
