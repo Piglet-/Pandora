@@ -85,6 +85,7 @@ data MInstruction = Comment String
 				| Blt Register Register String
 				| Bge Register Register String
 				| Ble Register Register String
+				| Preamble String
 
 instance Show MInstruction where
 	show ins = case ins of
@@ -116,3 +117,4 @@ instance Show MInstruction where
 		Blt r1 r2 s ->		"blt   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
 		Bge r1 r2 s ->		"bge   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
 		Ble r1 r2 s ->		"ble   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
+		Preamble s -> 		s

@@ -45,6 +45,7 @@ data Ins =
 	| Block
 	| Prologue 	Int
 	| Epilogue 	Int
+	| Preamble
 	deriving (Eq)
 
 instance Show Ins where
