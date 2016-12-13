@@ -156,7 +156,7 @@ makeT4 t = liftM4 t Bin.get Bin.get Bin.get Bin.get
 newtype Label = Label String deriving (Eq)
 
 instance Show Label where
-	show (Label i) = i 
+	show (Label i) = ('_' : i) 
 
 instance Binary Label where
 	put (Label l) = put l
@@ -359,7 +359,7 @@ instance Binary Relation where
 			38 -> return Le		
 
 newLabel :: Int -> Label
-newLabel i = Label ('L':show i)
+newLabel i = Label ( 'L':show i)
 
 newTemp :: Int -> Reference
 newTemp i = (Temp i)

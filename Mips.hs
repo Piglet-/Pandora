@@ -58,7 +58,7 @@ instance Show Operand where
 		Indexed i r -> show i ++ "(" ++ show r ++ ")"
 
 data MInstruction = Comment String
-				| PutLabel String String
+				| PutLabel String
 				| PutDirective String
 				| Asciiz String String
 				| Add Register Register Register
@@ -90,7 +90,7 @@ data MInstruction = Comment String
 instance Show MInstruction where
 	show ins = case ins of
 		Comment s -> "# " ++ s
-		PutLabel s1 s2 -> 	s1 ++ ":" ++ "   #" ++ s2
+		PutLabel s1  -> 	"_" ++ s1 ++ ":" ++ "   #" ++ s1
 		PutDirective s -> 	s
 		Asciiz s1 s2 -> 	s1 ++ ": .asciiz " ++ s2
 		Add r1 r2 r3 -> 	"add   "  ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
@@ -111,10 +111,10 @@ instance Show MInstruction where
 		Sw r op ->			"sw    " ++ show r ++ ", " ++ show op
 		Lw r op ->			"lw    " ++ show r ++ ", " ++ show op
 		B s ->				"b     " ++ s
-		Beq r1 r2 s ->		"beq   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
-		Bne r1 r2 s ->		"bne   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
-		Bgt r1 r2 s ->		"bgt   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
-		Blt r1 r2 s ->		"blt   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
-		Bge r1 r2 s ->		"bge   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
-		Ble r1 r2 s ->		"ble   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show s
+		Beq r1 r2 s ->		"beq   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ s
+		Bne r1 r2 s ->		"bne   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ s
+		Bgt r1 r2 s ->		"bgt   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ s
+		Blt r1 r2 s ->		"blt   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ s
+		Bge r1 r2 s ->		"bge   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ s
+		Ble r1 r2 s ->		"ble   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ s
 		Preamble s -> 		s

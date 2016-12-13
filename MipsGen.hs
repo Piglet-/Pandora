@@ -89,8 +89,8 @@ buildMips ins = case ins of
         return (Comment str)
 
     Tac.PutLabel (Tac.Label str) -> do
-        tell $ DS.singleton (PutLabel "L" str)
-        return (PutLabel "L" str)
+        tell $ DS.singleton (PutLabel str)
+        return (PutLabel str)
 
     Tac.AssignU op res r1 -> do
         ry <- getReg False res
