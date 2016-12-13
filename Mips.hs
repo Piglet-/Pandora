@@ -12,11 +12,11 @@ data Register = Zero
 			| T2 | T3 | T4 | T5
 			| T6 | T7 | T8 | T9
 			| S0 | S1 | S2 | S3
-			| S4 | S5 | S6 | S7 |	Const Int
+			| S4 | S5 | S6 | S7
 			deriving(Show,Ord,Eq)
 
 data Operand = 	Register Register
---			|	Const Int 
+			|	Const Int 
 			| 	Indexed Int Register
 			deriving (Show)
 
@@ -39,6 +39,13 @@ data MInstruction = Comment String
 				| Not Register Register
 				| Negi Register Register
 				| Negf Register Register
-				| Store Register Register 
-				| Lw Register Register
+				| Sw Register Operand 
+				| Lw Register Operand
+				| B String
+				| Beq Register Register String
+				| Bne Register Register String
+				| Bgt Register Register String
+				| Blt Register Register String
+				| Bge Register Register String
+				| Ble Register Register String
 				deriving(Show)

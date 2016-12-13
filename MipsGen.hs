@@ -64,7 +64,7 @@ buildMips ins = case ins of
         rz <- getReg False res
         ry <- getReg True r2
         rx <- getReg True r1
-        let assgn = builBOp op rz rx ry
+        let assgn = buildBOp op rz rx ry
         tell $ DS.singleton assgn
         return assgn
 
@@ -79,12 +79,60 @@ buildMips ins = case ins of
     Tac.AssignU op res r1 -> do
         ry <- getReg False res
         rx <- getReg True r1
-        let assgn = builBOpU op ry rx
+        let assgn = buildBOpU op ry rx
         tell $ DS.singleton assgn
         return assgn
 
-builBOp :: Tac.BinOp -> Register -> Register -> Register -> MInstruction
-builBOp op res r1 r2 = case op of 
+    Tac.Goto label -> do
+        case label of 
+            (Just l) -> do 
+                let assgn = B (show l) 
+                tell $ DS.singleton assgn
+                return $ assgn
+            _        -> error "Label doesn't exist"
+
+    Tac.IfTrue ref label -> do
+        case label of 
+            (Just l) -> do 
+                rx <- getReg False ref 
+                let assgn = Bne rx Zero (show l) 
+                tell $ DS.singleton assgn
+                return $ assgn
+            _        -> error "Label doesn't exist"
+
+    Tac.IfFalse ref label -> do
+        case label of 
+            (Just l) -> do 
+                rx <- getReg False ref 
+                let assgn = Beq rx Zero (show l) 
+                tell $ DS.singleton assgn
+                return $ assgn
+            _        -> error "Label doesn't exist"
+
+    Tac.IfGoto rel r1 r2 label -> do
+        case label of 
+            (Just l) -> do 
+                ry <- getReg False r2
+                rx <- getReg False r1
+                let assgn = buildRel rel ry rx l
+                tell $ DS.singleton assgn
+                return $ assgn 
+            _ -> error " Label doesn't exist"
+
+    Tac.IfNotGoto rel r1 r2 label -> do
+        case label of 
+            (Just l) -> do 
+                ry <- getReg False r2
+                rx <- getReg False r1
+                let assgn = buildNotRel rel ry rx l
+                tell $ DS.singleton assgn
+                return $ assgn 
+            _ -> error " Label doesn't exist"
+
+    s -> do return $ Comment (show s)
+
+buildBOp :: Tac.BinOp -> Register -> Register -> Register -> MInstruction
+buildBOp op res r1 r2 = case op of 
     Tac.AddI -> Add res r1 r2  
     Tac.AddF -> AddS res r1 r2
     Tac.SubI -> Sub res r1 r2
@@ -97,13 +145,32 @@ builBOp op res r1 r2 = case op of
     Tac.AndT -> And res r1 r2
     Tac.OrT  -> Or res r1 r2
 
-builBOpU :: Tac.UnOp -> Register -> Register -> MInstruction
-builBOpU op res r1 = case op of
+
+buildBOpU :: Tac.UnOp -> Register -> Register -> MInstruction
+buildBOpU op res r1 = case op of
     Tac.NotT -> Not res r1
     Tac.NegI -> Negi res r1 
     Tac.NegF -> Negf res r1
-    Tac.LPoint -> Store res r1
-    Tac.RPoint -> Lw res r1
+    Tac.LPoint -> Sw res (Indexed 0 r1)
+    Tac.RPoint -> Lw res (Indexed 0 r1)
+
+buildRel :: Tac.Relation -> Register -> Register -> Tac.Label -> MInstruction
+buildRel rel r1 r2 l = case rel of
+    Tac.Eq  -> Beq r1 r2 (show l)
+    Tac.GtT -> Bgt r1 r2 (show l)
+    Tac.LtT -> Blt r1 r2 (show l)
+    Tac.Ne  -> Bne r1 r2 (show l)
+    Tac.Ge  -> Bge r1 r2 (show l)
+    Tac.Le  -> Ble r1 r2 (show l)
+
+buildNotRel :: Tac.Relation -> Register -> Register -> Tac.Label -> MInstruction
+buildRel rel r1 r2 l = case rel of
+    Tac.Eq  -> Bne r1 r2 (show l)
+    Tac.GtT -> Ble r1 r2 (show l)
+    Tac.LtT -> Bge r1 r2 (show l)
+    Tac.Ne  -> Beq r1 r2 (show l)
+    Tac.Ge  -> Blt r1 r2 (show l)
+    Tac.Le  -> Bgt r1 r2 (show l)
 
 emptyZipper :: Zipper
 emptyZipper = focus $ emptyST emptyScope
@@ -136,11 +203,21 @@ getReg read ref = case ref of
                         return reg
             return reg
 
-buildRef :: Tac.Reference -> MipsMonad (Register)
+buildRef :: Tac.Reference -> MipsMonad (Operand)
 buildRef ref = case ref of 
-    Tac.Address s r -> do buildRef r
-    Tac.Constant (Tac.ValInt i) -> do return $ Const i
-    _ -> error "asd"
+    Tac.Address s r -> do 
+        off <- offset
+        return $ Indexed off FP
+            where 
+                offset = case r of
+                    Tac.Constant (Tac.ValInt i) -> return i
+                    _ -> error "Address is not a constant"  
+    Tac.Constant value -> do 
+        case value of  
+            Tac.ValInt i -> return $ Const i
+            Tac.ValBool b -> if b then return (Const 1) else return (Const 0)
+            _ -> error (show ref) 
+    _ -> error (show ref)
 
 makeSpill:: Int -> MipsMonad (Register)
 makeSpill count = do
