@@ -19,7 +19,7 @@ data Token
     | TokenPoint 
 
     -- declaración de tipos --
-    | TokenColon
+    | TokenColon    | TokenFwd
 
 ------------------------ instrucciones ---------------------------------
     | TokenIf        | TokenThen      | TokenElse      
@@ -151,6 +151,7 @@ instance Show Token where
         TokenString   v     -> "\nToken: STRING \nValue: " ++ v
         TokenIdent    v     -> "\nToken: ID \nValue: " ++ v 
         TokenEOF            -> "\nEOF"
+        TokenFwd            -> "\nToken: FWD \nLexeme: fwd"
         TokenError    e     -> "\nUnexpected token: " ++ show e 
         TokenIntError e     -> "\nBad int error: " ++ show e ++ " (too large)"
         TokenFloatErrorO e  -> "\nBad float error: " ++ show e ++ " (overflow)"
