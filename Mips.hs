@@ -79,6 +79,8 @@ data MInstruction = Comment String
 				| Negf Register Register
 				| Sw Register Operand 
 				| Lw Register Operand
+				| La Register String
+				| Li Register Operand
 				| B String
 				| Beq Register Register String
 				| Bne Register Register String
@@ -89,13 +91,14 @@ data MInstruction = Comment String
 				| Preamble String
 				| Jal String
 				| Move Register Register
+				| Syscall
 
 instance Show MInstruction where
 	show ins = case ins of
 		Comment s -> "# " ++ s
-		PutLabel s1  -> 	"_" ++ s1 ++ ":" ++ "   #" ++ s1
+		PutLabel s1  -> 	s1 ++ ":" ++ "   #" ++ s1
 		PutDirective s -> 	s
-		Asciiz s1 s2 -> 	s1 ++ ": .asciiz " ++ s2
+		Asciiz s1 s2 -> 	s1 ++ ": .asciiz " ++ show s2
 		Add r1 r2 r3 -> 	"add   "  ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
 		Addi r1 r2 r3 -> 	"addi  "  ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
 		AddS r1 r2 r3 -> 	"add.s " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
@@ -122,5 +125,8 @@ instance Show MInstruction where
 		Bge r1 r2 s ->		"bge   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ s
 		Ble r1 r2 s ->		"ble   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ s
 		Preamble s -> 		s
-		Jal s 	->			"jal s"
+		Jal s 	->			"jal   " ++ s
 		Move r r1 ->		"move  " ++ show r ++ ", " ++ show r1
+		Syscall  -> 		"syscall" 
+		La r s 	->			"la    " ++ show r ++ ", " ++ s
+		Li r o ->			"li    " ++ show r ++ ", " ++ show o

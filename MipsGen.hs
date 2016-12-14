@@ -12,6 +12,7 @@ import qualified Data.Sequence as DS
 import qualified TAC as Tac
 import Mips
 import SymbolTable
+import Type (Entry)
 import qualified Data.Map.Strict as Map
 
 type MipsMonad = RWS MipsReader MIPS MState 
@@ -25,6 +26,8 @@ data MState = Mstate
    	, tsrt  	:: Zipper 
    	, regDesc 	:: RegDesTable
     , spillC    :: Int
+    , strHash   :: DMap.Map String String
+    , nStr      :: Int
     }
 
 data RegDescriptor = RegDescriptor 
@@ -42,6 +45,8 @@ initMIPSState sta =
         , tsrt     = srt sta
         , regDesc  = initRegDescriptors 
         , spillC   = 0
+        , strHash  = DMap.empty
+        , nStr     = 0 
         } 
 
 type RegDesTable = DMap.Map Register RegDescriptor
@@ -72,9 +77,11 @@ buildMips :: Tac.Ins -> MipsMonad MInstruction
 buildMips ins = case ins of
 
     Tac.TPreamble -> do
+        fillStringHash
+        tell $ DS.singleton (Preamble ".data")
+        putString
         tell $ DS.singleton (Preamble ".text")
         tell $ DS.singleton (Preamble ".align 2")
-        tell $ DS.singleton (Preamble ".globl main")
         return $ Preamble ".text"
 
     Tac.AssignB op res r1 r2 -> do 
@@ -89,7 +96,7 @@ buildMips ins = case ins of
     Tac.Call r l i -> do
         tell $ DS.singleton (Jal l)
         ret <- getReg False r
-        tell $ DS.singleton (Move  ret V0)
+        tell $ DS.singleton (Move ret V0)
         return (Comment "call")
 
     Tac.CallP l i -> do
@@ -174,7 +181,7 @@ buildMips ins = case ins of
         tell $ DS.singleton assgn3
         let assgn4 = Subu SP SP (Const i) -- espacio para variable locales
         tell $ DS.singleton assgn
-        return $ assgn4
+        return $ assgn4 
 
     Tac.Epilogue i -> do
         let assgn = (Comment "EPILOGO")
@@ -193,6 +200,47 @@ buildMips ins = case ins of
         tell $ DS.singleton (Comment "CleanUp")
         return $ Comment "Saving variables"
     
+    Tac.WriteS s -> do
+        hs <- gets strHash
+        let aux = maybe "" id (DMap.lookup s hs )
+        tell $ DS.singleton (Li V0 (Const 4))
+        let assgn = (La A0 aux)
+        tell $ DS.singleton assgn
+        tell $ DS.singleton (Syscall)
+        return $ assgn
+
+    Tac.WriteI r -> do
+        reg <- getReg False r
+        tell $ DS.singleton (Lw A0 (Indexed 0 reg))
+        tell $ DS.singleton (Li V0 (Const 1))
+        tell $ DS.singleton Syscall
+        return $ Syscall
+
+    Tac.ReadI r -> do
+        reg <- getReg True r
+        tell $ DS.singleton (Li V0 (Const 5))
+        tell $ DS.singleton (Syscall)
+        tell $ DS.singleton (Move reg V0)
+        return $ Syscall
+
+    Tac.Return mr l -> do
+        let assgn = Jal l 
+        case mr of
+            Just r -> do 
+                reg <- getReg False r
+                tell $ DS.singleton (Move A3 reg)
+                tell $ DS.singleton assgn
+                return assgn
+            _   -> do
+                tell $ DS.singleton assgn
+                return assgn
+        return assgn
+
+    Tac.Exit -> do
+        let assgn = Li V0 (Const 10) 
+        tell $ DS.singleton assgn
+        tell $ DS.singleton Syscall
+        return assgn
 
     s -> do return $ Comment (show s)
 
@@ -216,7 +264,7 @@ buildBOpU op res r1 = case op of
     Tac.NotT -> Not res r1
     Tac.NegI -> Negi res r1 
     Tac.NegF -> Negf res r1
-    Tac.LPoint -> Sw res (Indexed 0 r1)
+    Tac.LPoint -> Move res r1
     Tac.RPoint -> Lw res (Indexed 0 r1)
 
 buildRel :: Tac.Relation -> Register -> Register -> Tac.Label -> MInstruction
@@ -264,7 +312,7 @@ getReg read ref = case ref of
                         usingRef ref reg 
                         when (read) $ do
                             op <- buildRef ref
-                            tell $ DS.singleton (Lw reg op)
+                            tell $ DS.singleton (Li reg op)
                         return reg
             return reg
 
@@ -318,3 +366,38 @@ saveBlock :: MipsMonad()
 saveBlock = do
     regDescrip <- gets regDesc
     modify $ \s -> s { regDesc = initRegDescriptors, spillC = 0 }
+
+
+fillStringHash :: MipsMonad() 
+fillStringHash = do
+    st <- gets tsrt
+    let m = getMap st
+    let s = DMap.keys m
+    mapM_ doinstr s
+    return ()
+
+getMap :: Zipper -> (DMap.Map String Entry)
+getMap ((SymbolTable _ m _ ),_) = m
+
+doinstr:: String -> MipsMonad(MInstruction)
+doinstr s = do
+    st <- get
+    hs <- gets strHash
+    i <- gets nStr
+    let t = DMap.insert s ("S" ++ show i) hs
+    put st {strHash = t, nStr = (i+1)}
+    return $ (Comment "doinstr")
+
+putString:: MipsMonad(MInstruction)
+putString = do
+    hs <- gets strHash
+    let lt = DMap.assocs hs
+    mapM_ tellString lt
+    return $(Comment "putString")
+
+
+tellString:: (String, String) -> MipsMonad(MInstruction)
+tellString (s1,s2) = do
+    let assgn = Asciiz s2 s1
+    tell $ DS.singleton assgn
+    return $ assgn

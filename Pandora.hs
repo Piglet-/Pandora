@@ -13,6 +13,7 @@ import qualified Data.Sequence as DS
 import qualified Data.Foldable as FB
 import Control.Monad.RWS 
 import Data.Tree
+import System.IO
 
 main = do
     args <- getArgs
@@ -39,6 +40,8 @@ main = do
                                     putStr (unlines $ map show (FB.toList bitT))
                                     let (stateM,bitM) = execRWS (mapM_ buildMips (TPreamble :(FB.toList bitT))) "" (initMIPSState state)
                                     putStr (unlines $ map show (FB.toList bitM))
+                                    writeFile "mipsPan.asm" (unlines $ map show (FB.toList bitM))
+
                             --print $ drop 2 (show (parse lexs) ++ "Accepted") 
                 else case head (tail args) of
                     "-l" -> if any isTokenError lexs 

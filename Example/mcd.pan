@@ -1,13 +1,13 @@
-func mcd(a: int, b : int) : int
-        if (b == 0) then
-            return a;
-        end
-        return mcd(b,a mod b);
+int: func mcd(int : a, int :b)
+    if (b == 0) then
+        return a;
     end
+    return mcd(b,a mod b);
+end
 
-    begin
-        n : int;
-        m : int;
-        read n;
-        write mcd(n,m);
-    end
+begin
+    int : n;
+    int : m;
+    read n;
+    write mcd(n,m);
+end

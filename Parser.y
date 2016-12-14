@@ -147,7 +147,7 @@ Program : Declarations Main "EOF"  { % do
                                     put $ State (syt st) (srt st) (AST (snd $1))
                                     return  (fst $1, AST (snd $1)) } 
 
-Main : begin OSN Insts CSI end  { % return (fst $3, (isNoneA ((Begin $4) : reverse (snd $3)))) } 
+Main : begin OSN Insts CSI end  { % return (fst $3, (isNoneA ((Begin $4) : reverse (End:snd $3)))) } 
 
 Declaration:  FuncDec OSN Insts CSI end CSP    {% do
                                                 st <- get

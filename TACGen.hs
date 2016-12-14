@@ -30,6 +30,7 @@ data TACState =
         , tast  :: AST
         , temp  :: Int
         , label :: Int
+        , lreturn ::String
         } 
 
 initTAC :: TAC 
@@ -43,6 +44,7 @@ initTACState sta =
         , tast  = ast sta 
         , temp  = 0
         , label = 0
+        , lreturn = ""
         } 
 
 newLabel :: TACMonad Label 
@@ -243,30 +245,34 @@ getAssign ins = case ins of
         return $ put
 
     ReadL ex p -> do
-        temp0 <- getReference ex
-        let expAux = FCall (StringL "Read" p) [] p
-        temp1 <- getReference expAux
-        let assgn = Assign temp0 temp1 
-        tell $ DS.singleton assgn
+        param <- getReference ex
+        rea <- makeRead (typeExp ex) param
         return $ (Comment ("Line " ++ show (line p)))
 
     -- Creo que hay que crear el tipo del write con los diferentes en la tac mas que 
     -- llamar a la funcion pero no estoy seguro
 
     WriteL ex p -> do 
-        param <- makeParams ex
-        writ <- makeWrite $ typeExp ex 
-        return $ (Comment ("Line " ++ show (line p)))
+        case typeExp ex of
+            StringT -> do
+                        makeWriteS ex
+                        return $ (Comment ("Line " ++ show (line p))) 
+            _       -> do
+                        param <- getReference ex
+                        writ <- makeWrite (typeExp ex) param
+                        return $ (Comment ("Line " ++ show (line p)))
         
 
     ReturnL ex p -> do
+        la <- gets lreturn
         temp0 <- getReference ex 
-        let assgn = Return (Just temp0)
+        let assgn = Return (Just temp0) la
         tell $ DS.singleton assgn
         return $ assgn 
 
     DecFun ex@(IdL s e p) -> do
         st <- get
+        put st {lreturn = s}
         let (ast, lt) = astEntry e
         let assgn = PutLabel (Label s)
         tell $ DS.singleton Block
@@ -276,16 +282,22 @@ getAssign ins = case ins of
         tell $ DS.singleton assgn1
         mapM_ getAssign (listTAC $ filterI ast)
         let assgn2 = Epilogue tam 
+        tell $ DS.singleton (PutLabel (Label (s ++ "_ep")))
         tell $ DS.singleton assgn2
         return assgn2
 
     Begin i -> do
-        let assgn = PutLabel (Label "Main")
+        let assgn = PutLabel (Label "main")
         tell $ DS.singleton Block
         tell $ DS.singleton assgn
         let assgn1 = Prologue i
         tell $ DS.singleton assgn1
         return assgn1
+
+    End -> do
+        let assgn = Exit 
+        tell $ DS.singleton assgn
+        return assgn
 
     FCallI ex exs p ->
         case ex of
@@ -647,82 +659,53 @@ getNdimention (ArrayT d ty)                 = [(IntL d (Position (0,0)))]
 
 
 -- Falta las CFunc
-makeWrite :: Type -> TACMonad Ins
-makeWrite t = 
+makeWrite :: Type -> Reference -> TACMonad Ins
+makeWrite t r = 
     case t of 
         IntT -> do
-            let assgn = WriteI 0 -- aqui numero ue es
+            let assgn = WriteI r -- aqui numero ue es
             tell $ DS.singleton assgn
-            let assgn2 = CleanUp 4
-            tell $ DS.singleton assgn2
             return $ assgn
         FloatT -> do
-            let assgn = WriteF 0 -- aqui numero ue es
+            let assgn = WriteF r -- aqui numero ue es
             tell $ DS.singleton assgn
-            let assgn2 = CleanUp 8
-            tell $ DS.singleton assgn2
             return $ assgn
         BoolT -> do 
-            let assgn = WriteB 0 -- aqui numero ue es
+            let assgn = WriteB r -- aqui numero ue es
             tell $ DS.singleton assgn
-            let assgn2 = CleanUp 2
-            tell $ DS.singleton assgn2
             return $ assgn
         CharT -> do
-            let assgn = WriteC 0 -- aqui numero ue es
+            let assgn = WriteC r -- aqui numero ue es
             tell $ DS.singleton assgn
-            let assgn2 = CleanUp 2
-            tell $ DS.singleton assgn2
-            return $ assgn
-        StringT -> do
-            let assgn = WriteS 0 -- aqui numero ue es
-            tell $ DS.singleton assgn
-            let assgn2 = CleanUp 4
-            tell $ DS.singleton assgn2
             return $ assgn
         (FuncT t _ _ _) -> do 
-            makeWrite t
+            makeWrite t r
+
+makeWriteS:: Expression -> TACMonad Ins
+makeWriteS (StringL s p) = do
+    let assgn = WriteS s 
+    tell $ DS.singleton assgn
+    let assgn2 = CleanUp 0
+    tell $ DS.singleton assgn2
+    return $ assgn
 
 
 getIntFun :: Entry -> Int
 getIntFun (Entry (ProcT _ _ i _) _ _ _) = i
 getIntFun (Entry (FuncT _ _ i _) _ _ _) = i
 --falta el reference
-{-}
-makeRead :: Type -> TACMonad Ins
-makeRead t = 
+
+makeRead :: Type -> Reference -> TACMonad Ins
+makeRead t r = 
     case t of 
         IntT -> do
-            let assgn = ReadI 0 -- aqui numero ue es
+            let assgn = ReadI r -- aqui numero ue es
             tell $ DS.singleton assgn
-            let assgn2 = CleanUp 4
-            tell $ DS.singleton assgn2
             return $ assgn
-        FloatT -> do
-            let assgn = ReadF 0 -- aqui numero ue es
-            tell $ DS.singleton assgn
-            let assgn2 = CleanUp 8
-            tell $ DS.singleton assgn2
-            return $ assgn
-        BoolT -> do 
-            let assgn = ReadB 0 -- aqui numero ue es
-            tell $ DS.singleton assgn
-            let assgn2 = CleanUp 2
-            tell $ DS.singleton assgn2
-            return $ assgn
-        CharT -> do
-            let assgn = ReadC 0 -- aqui numero ue es
-            tell $ DS.singleton assgn
-            let assgn2 = CleanUp 2
-            tell $ DS.singleton assgn2
-            return $ assgn
-        StringT -> do
-            let assgn = ReadS 0 -- aqui numero ue es
-            tell $ DS.singleton assgn
-            let assgn2 = CleanUp 4
-            tell $ DS.singleton assgn2
-            return $ assgn
--}
+
+        (FuncT t _ _ _) -> do 
+            makeRead t r        
+
 emptyTACState = TACState emptyZipper emptyZipper (AST []) 0 0
 
 listTAC :: AST -> [Instructions]

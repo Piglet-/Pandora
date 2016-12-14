@@ -31,12 +31,12 @@ data Ins =
 	| Call 		Reference String Int 
 	| CallP		String Int
 	| CleanUp	Int 
-	| Return 	(Maybe Reference)
-	| WriteI	Int
-	| WriteF	Int	
-	| WriteB	Int
-	| WriteC	Int
-	| WriteS	Int
+	| Return 	(Maybe Reference) String
+	| WriteI	Reference
+	| WriteF	Reference	
+	| WriteB	Reference
+	| WriteC	Reference
+	| WriteS 	String
 	| ReadI		Reference
 	| ReadF		Reference
 	| ReadB		Reference
@@ -46,6 +46,7 @@ data Ins =
 	| Prologue 	Int
 	| Epilogue 	Int
 	| TPreamble
+	| Exit
 	deriving (Eq)
 
 instance Show Ins where
@@ -65,7 +66,7 @@ instance Show Ins where
 		Call r s i			-> show r ++ " := " ++ "call " ++ s ++ ", " ++ show i 
 		CallP s i			-> "Call " ++ s ++ ", " ++ show i
 		CleanUp i 			-> "CleanUp " ++ show i 
-		Return r 			-> "Return " ++ showR r
+		Return r i			-> "Return " ++ showR r
 		WriteI i 			-> "WriteI " ++ show i 
 		WriteF i 			-> "WriteF " ++ show i 		
 		WriteB i 			-> "WriteB " ++ show i 
@@ -80,6 +81,7 @@ instance Show Ins where
 		Prologue i 			-> "PROLOGUE " ++ show i 
 		Epilogue i 			-> "EPILOGUE " ++ show i
 		TPreamble 			-> ""
+		Exit				-> "EXIT"
 
 instance Binary Ins where
 	put (Comment s) 			= putWord8 0 >> put s
@@ -96,7 +98,7 @@ instance Binary Ins where
 	put (Call r s i) 			= putWord8 8 >> put r >> put s >> put i
 	put (CallP s i)				= putWord8 41 >> put s >> put i
 	put (CleanUp i)				= putWord8 53 >> put i
-	put (Return r)				= putWord8 42 >> put r 
+	--put (Return r i)			= putWord8 42 >> put r 
 	put (WriteI i) 				= putWord8 9 >> put i
 	put (WriteF i) 				= putWord8 56 >> put i	
 	put (WriteB i) 				= putWord8 57 >> put i
@@ -128,7 +130,7 @@ instance Binary Ins where
 		    	41 ->  makeT2 CallP
 		    	53 ->  Bin.get >>= return . CleanUp
 		    	39 ->  Bin.get >>= return . Param
-		    	42 ->  Bin.get >>= return . Return
+		    	--42 ->  Bin.get >>= return . Return
 		    	9  ->  Bin.get >>= return . WriteI
 		    	56  ->  Bin.get >>= return . WriteF
 		    	57  ->  Bin.get >>= return . WriteB 
@@ -156,7 +158,7 @@ makeT4 t = liftM4 t Bin.get Bin.get Bin.get Bin.get
 newtype Label = Label String deriving (Eq)
 
 instance Show Label where
-	show (Label i) = ('_' : i) 
+	show (Label i) = (i) 
 
 instance Binary Label where
 	put (Label l) = put l

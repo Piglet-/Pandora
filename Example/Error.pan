@@ -1,4 +1,7 @@
 begin
     int : a;
-    a = 1+2;        
+    int : b;
+    b = 5;
+    a = b+2;
+    b = a +b;
 end

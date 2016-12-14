@@ -226,6 +226,7 @@ data Instructions
 	| None
 	| DecL 
 	| Begin Int
+	| End
 	deriving(Show, Eq)
 
 data AST = AST [Instructions] deriving (Eq, Show)
@@ -260,7 +261,8 @@ treeIns (DecFun exp)
     = Node ("Function ") [treeExp exp]
 treeIns (FCallI e es p)
 	= Node ("Function " ++ show p) ((treeExp  e):(map treeExp (reverse es)))
-treeIns (Begin i) = Node ("Begin " ++ show i ) []
+treeIns (Begin i) = Node "" []
+treeIns End = Node "" []
 treeIns None = Node "" []
 treeIns DecL = Node "" []
 

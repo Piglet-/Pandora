@@ -1,4 +1,4 @@
-bool : func impar(int:n);
+fwd bool : func impar(int:n);
 
 bool : func par(int: n)
 	if (n == 0) then 
@@ -29,12 +29,13 @@ bool : func impar(int:n)
 end
 
 begin
-	char : c;
-	c = 'j';
-	while (c == 'j') do
-		write "jugar(j) o salir(s) ?";
+	int : c;
+	c = 1;
+	bool : b1;
+	while (b1) do
+		write "jugar(1) o salir(2) ?";
 		read c;
-		if (c == 'j') then
+		if (c == 1) then
 			int : i;
 			bool : b;
 			write "inserte un número entero:";
@@ -47,6 +48,9 @@ begin
 				write "El numero es impar";
 			end
 		end
+		else
+			b1 = false;
+			write "fin del juego.";
+		end
 	end
-	write "fin del juego.";
 end
