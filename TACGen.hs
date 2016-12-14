@@ -293,9 +293,10 @@ getAssign ins = case ins of
                 st <- get
                 mapM_ makeParams exs
                 temp <- newTemp
-                let assgn = CallP s 0 -- aqui numero que es
+                let assgn = CallP s (length exs) -- aqui numero que es
                 tell $ DS.singleton assgn
-                let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
+                let tam = getIntFun e
+                let assgn2 = CleanUp tam
                 tell $ DS.singleton assgn2
                 return $ assgn2
 
@@ -303,7 +304,7 @@ getAssign ins = case ins of
                 st <- get
                 mapM_ makeParams exs
                 temp <- newTemp
-                let assgn = CallP s 0 -- aqui numero que es
+                let assgn = CallP s 1 -- aqui numero que es
                 tell $ DS.singleton assgn
                 let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
                 tell $ DS.singleton assgn2
@@ -369,7 +370,7 @@ getReference exp = case exp of
                 st <- get
                 mapM_ makeParams exs
                 temp <- newTemp
-                let assgn = Call temp s 0 -- aqui numero que es
+                let assgn = Call temp s (length exs) -- aqui numero que es
                 tell $ DS.singleton assgn
                 let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
                 tell $ DS.singleton assgn2
@@ -379,7 +380,7 @@ getReference exp = case exp of
                 st <- get
                 mapM_ makeParams exs
                 temp <- newTemp
-                let assgn = Call temp s 0 -- aqui numero que es
+                let assgn = Call temp s 1 -- aqui numero que es
                 tell $ DS.singleton assgn
                 let assgn2 = CleanUp (sum $ sizeCal (tsyt st) exs)
                 tell $ DS.singleton assgn2

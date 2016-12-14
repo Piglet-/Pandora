@@ -62,9 +62,10 @@ data MInstruction = Comment String
 				| PutDirective String
 				| Asciiz String String
 				| Add Register Register Register
-				| Addi Register Register Register
+				| Addi Register Register Operand
 				| AddS Register Register Register
 				| Sub Register Register Register
+				| Subu Register Register Operand
 				| SubS Register Register Register
 				| Mul Register Register Register
 				| MulS Register Register Register
@@ -85,8 +86,9 @@ data MInstruction = Comment String
 				| Blt Register Register String
 				| Bge Register Register String
 				| Ble Register Register String
-				| PushParam Register
 				| Preamble String
+				| Jal String
+				| Move Register Register
 
 instance Show MInstruction where
 	show ins = case ins of
@@ -98,6 +100,7 @@ instance Show MInstruction where
 		Addi r1 r2 r3 -> 	"addi  "  ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
 		AddS r1 r2 r3 -> 	"add.s " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
 		Sub r1 r2 r3 ->  	"sub   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
+		Subu r1 r2 r3 ->  	"sub   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
 		SubS r1 r2 r3 -> 	"sub.s " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
 		Mul r1 r2 r3 -> 	"mul   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
 		MulS r1 r2 r3 -> 	"mul.s " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ show r3
@@ -119,3 +122,5 @@ instance Show MInstruction where
 		Bge r1 r2 s ->		"bge   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ s
 		Ble r1 r2 s ->		"ble   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ s
 		Preamble s -> 		s
+		Jal s 	->			"jal s"
+		Move r r1 ->		"move  " ++ show r ++ ", " ++ show r1

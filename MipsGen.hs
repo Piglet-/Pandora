@@ -78,12 +78,23 @@ buildMips ins = case ins of
         return $ Preamble ".text"
 
     Tac.AssignB op res r1 r2 -> do 
+        tell $ DS.singleton (Comment (show r1))
         rz <- getReg False res
         ry <- getReg True r2
         rx <- getReg True r1
         let assgn = buildBOp op rz rx ry
         tell $ DS.singleton assgn
         return assgn
+
+    Tac.Call r l i -> do
+        tell $ DS.singleton (Jal l)
+        ret <- getReg False r
+        tell $ DS.singleton (Move  ret V0)
+        return (Comment "call")
+
+    Tac.CallP l i -> do
+        tell $ DS.singleton (Jal l)
+        return (Comment "calp")
 
     Tac.Comment str -> do
         tell $ DS.singleton (Comment str)
@@ -152,16 +163,31 @@ buildMips ins = case ins of
         return $ Comment "Saving variables"
 
     Tac.Prologue i -> do
-        tell $ DS.singleton (Comment "prologo aqui")
-        return $ Comment "Saving variables"
+        return (Comment "PROLOGO")
+        let assgn = Subu SP SP (Const 8) --espacio ra y fp en la pila 
+        tell $ DS.singleton assgn
+        let assgn1 = Sw FP (Indexed 8 SP) -- guarda fp
+        tell $ DS.singleton assgn1
+        let assgn2 = Sw RA (Indexed 4 SP) -- guarda ra
+        tell $ DS.singleton assgn2
+        let assgn3 = Addi FP SP (Const 8) -- nuevo fp
+        tell $ DS.singleton assgn3
+        let assgn4 = Subu SP SP (Const i) -- espacio para variable locales
+        tell $ DS.singleton assgn
+        return $ assgn4
 
     Tac.Epilogue i -> do
-        tell $ DS.singleton (Comment "epilogo aqui")
-        return $ Comment "Saving variables"
+        let assgn = (Comment "EPILOGO")
+        tell $ DS.singleton assgn
+        return $ assgn
 
     Tac.Param r -> do
-        tell $ DS.singleton (Comment "push param")
-        return $ Comment "Saving variables"
+        tell $ DS.singleton (Comment "PUSH")
+        tell $ DS.singleton (Subu SP SP (Const 4)) -- decrementar la pila para hacer espacio
+        reg <- getReg True r
+        let assgn = (Sw reg (Indexed 4 SP))
+        tell $ DS.singleton assgn
+        return $ assgn
 
     Tac.CleanUp i -> do
         tell $ DS.singleton (Comment "CleanUp")
