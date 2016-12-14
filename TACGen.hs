@@ -60,6 +60,7 @@ newTemp = do
 -- NO DEBE LLAMARSE ASI
 getAssign :: Instructions -> TACMonad Ins
 getAssign ins = case ins of
+
     AsngL ex@(IdL s e ps) e2 p -> if (isBool e2) 
         then do
             add <- getAddr ex
@@ -272,11 +273,19 @@ getAssign ins = case ins of
         tell $ DS.singleton assgn
         let tam = getIntFun e
         let assgn1 = Prologue tam
+        tell $ DS.singleton assgn1
         mapM_ getAssign (listTAC $ filterI ast)
         let assgn2 = Epilogue tam 
-        tell $ DS.singleton assgn1
         tell $ DS.singleton assgn2
         return assgn2
+
+    Begin i -> do
+        let assgn = PutLabel (Label "Main")
+        tell $ DS.singleton Block
+        tell $ DS.singleton assgn
+        let assgn1 = Prologue i
+        tell $ DS.singleton assgn1
+        return assgn1
 
     FCallI ex exs p ->
         case ex of

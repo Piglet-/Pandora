@@ -68,7 +68,6 @@ instance Show Type where
 		 	TypeError 		-> "TypeError"
 		 	FWD	t			-> "Forward D " ++ show t
 
-
 -- convierten lexemas en tipos del lenguaje
 makeBtype :: Lexeme t -> Type
 makeBtype l = case (token l) of
@@ -226,6 +225,7 @@ data Instructions
     | FCallI	Expression  	[Expression]    Position
 	| None
 	| DecL 
+	| Begin Int
 	deriving(Show, Eq)
 
 data AST = AST [Instructions] deriving (Eq, Show)
@@ -260,6 +260,7 @@ treeIns (DecFun exp)
     = Node ("Function ") [treeExp exp]
 treeIns (FCallI e es p)
 	= Node ("Function " ++ show p) ((treeExp  e):(map treeExp (reverse es)))
+treeIns (Begin i) = Node ("Begin " ++ show i ) []
 treeIns None = Node "" []
 treeIns DecL = Node "" []
 
