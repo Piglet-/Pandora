@@ -4,6 +4,7 @@ module Type
 	, Binnacle(..)
 	, makeBtype
 	, makeObj
+	, makeFwdObj
 	, makePointer
 	, makeArray
 	, typeSize
@@ -44,6 +45,7 @@ data Type = IntT
 		| ArrayT 	Int  Type 
 		| TypeT 	String 
 		| TypeError
+		| FWD Type
 		deriving(Eq)
 
 instance Show Type where
@@ -64,6 +66,7 @@ instance Show Type where
 		 	ArrayT d t 		-> "Array of "  ++ show t 
 		 	TypeT s 		-> "TypeT " ++ s ++ " "
 		 	TypeError 		-> "TypeError"
+		 	FWD	t			-> "Forward D " ++ show t
 
 
 -- convierten lexemas en tipos del lenguaje
@@ -88,6 +91,11 @@ makeObj :: Lexeme t -> Type -> [(Type, Bool)]-> Type
 makeObj l bt lt = case (token l) of
 	TokenProc		-> ProcT bt lt (AST [])
 	TokenFunc		-> FuncT bt lt (AST [])
+
+makeFwdObj :: Lexeme t -> Type -> [(Type, Bool)]-> Type
+makeFwdObj l bt lt = case (token l) of
+	TokenProc		-> FWD (ProcT bt lt (AST []))
+	TokenFunc		-> FWD (FuncT bt lt (AST []))
 
 makePointer :: Int -> Type -> Type 
 makePointer 0 ty 	= ty

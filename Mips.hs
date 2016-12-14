@@ -90,7 +90,6 @@ data MInstruction = Comment String
 instance Show MInstruction where
 	show ins = case ins of
 		Comment s -> "# " ++ s
-		PutLabel s1 -> 		s1 ++ ":" ++ "   #" ++ s1
 		PutLabel s1  -> 	"_" ++ s1 ++ ":" ++ "   #" ++ s1
 		PutDirective s -> 	s
 		Asciiz s1 s2 -> 	s1 ++ ": .asciiz " ++ s2

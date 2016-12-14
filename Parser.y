@@ -108,6 +108,7 @@ import qualified Data.Sequence as DS
     div         { Lexeme TokenDivInt _ }
     mod         { Lexeme TokenMod    _ }
     "^"         { Lexeme TokenCircum _ }
+    "fwd"       { Lexeme TokenFwd   _  }
 
     -- unarios --
     not       { Lexeme TokenNot   _ }
@@ -164,7 +165,10 @@ Declaration:  FuncDec OS Insts CS end CS    {% do
                                                         return (VoidT, DecL)  }
             | Dec                                       { % return (fst $1, DecL) }
             | Assign                                    { % return (fst $1, DecL) } 
-            | FuncDec ";"                               { % return (snd $ fst $1,DecL ) }
+            | FFuncDec ";"  CS              { % do
+                                                st <- get
+                                                put $ State (insertInsF (snd $ snd $1) [] (syt st)) (srt st) (ast st)
+                                                return (VoidT, decFun (snd $ snd $1) [] (syt st)) }
 
 StructObjs : StructOb                   { $1 }
             | StructObjs ";" StructOb   { $1 ++ $3 }
@@ -172,6 +176,12 @@ StructObjs : StructOb                   { $1 }
 StructOb : Type ":" ListId { [(x,y) | x <- $3,  y <- [(makeBtype $1)]] }
             | array of Type Dimen ":" ListId { [(x,y) | x <- $6,  y <- [(makeArray $4 (makeBtype $3))] ] }
             | Type Astk id {[($3, (makePointer $2 (makeBtype $1)))]}
+
+FFuncDec : "fwd" TypeFunc OS "(" Param ")" {% do 
+                                        st <- get
+                                        tell (snd (doInsertFun (makeFwdObj (fst(fst $2)) (snd(fst $2)) $5) ((syt st),DS.empty) (snd $2)))
+                                        put $ State (fst (doInsertFun (makeFwdObj (fst(fst $2)) (snd(fst $2)) $5) ((syt st),DS.empty) (snd $2))) (srt st) (ast st)
+                                        return (fst $2,($5,snd $2)) }
 
 FuncDec : TypeFunc OS "(" Param ")"  {% do 
                                         st <- get
@@ -444,7 +454,9 @@ Insts : Inst            { % return (instrucS (fst $1), [snd $1]) }
         | Insts Inst    { % return (instruc ((fst $2):[fst $1]), (snd $2):(snd $1)) }
 
 
-InstA : read Exp ";"    { % return (fst $2, isRead (fst $2) (snd $2) (pos $1)) } 
+InstA : read Exp ";"    { % do
+                            tell ( snd (readInst $1 (fst $2)))
+                            return (fst (readInst $1 (fst $2)), isRead (fst (readInst $1 (fst $2))) (snd $2) (pos $1)) } 
 
 Inst : InstA            { % return $1  }
     | Assign            { % return $1 } 
@@ -547,6 +559,7 @@ doInsert (TypeT t) (z,_) l@(Lexeme (TokenIdent s) p) =
 doInsert t (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
         Nothing -> (insertS s (Entry t p (typeSize' t z) (padding t (offScope z))) z, DS.singleton(Right $ ""))
+        Just (Entry (FWD typ) pos sz o) -> (insertS s (Entry t p (typeSize' t z) (padding t (offScope z))) z, DS.singleton(Right $ ""))
         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                       " already declared " ++ show pos)))
 
@@ -564,18 +577,18 @@ doInsert' (TypeT t) (z,_) l@(Lexeme (TokenIdent s) p) =
             case st of
                 StructT _ ->  
                     case lookupS' s z of
-                        Nothing -> (insertS s (Entry (TypeT t) p sz (-(padding (TypeT t) (offScope z)) - sz)) z, DS.singleton(Right $ ""))
+                        Nothing -> (insertS s (Entry (TypeT t) p sz (padding (TypeT t) (offScope z))) z, DS.singleton(Right $ ""))
                         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                       " already declared " ++ show pos)))
                 UnionT _ -> case lookupS' s z of
-                        Nothing -> (insertS s (Entry (TypeT t) p sz (-(padding (TypeT t) (offScope z)) - sz)) z, DS.singleton(Right $ ""))
+                        Nothing -> (insertS s (Entry (TypeT t) p sz (padding (TypeT t) (offScope z))) z, DS.singleton(Right $ ""))
                         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                       " already declared " ++ show pos)))
                 _ -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " " ++ show p ++
                                       " not declared ")))
 doInsert' t (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
-        Nothing -> (insertS s (Entry t p (typeSize' t z) (-(padding t (offScope z) - (typeSize' t z)))) z, DS.singleton(Right $ ""))
+        Nothing -> (insertS s (Entry t p (typeSize' t z) (padding t (offScope z))) z, DS.singleton(Right $ ""))
         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                       " already declared " ++ show pos)))
 
@@ -585,6 +598,7 @@ doInsertF:: Type -> (Zipper,DS.Seq(Binnacle)) -> Lexeme Token -> (Zipper, DS.Seq
 doInsertF t (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
         Nothing -> (insertS s (Entry t p (typeSize' t z) 0) z, DS.singleton(Right $ ""))
+        Just (Entry (FWD typ) pos sz o) -> (insertS s (Entry t p (typeSize' t z) 0) z, DS.singleton(Right $ ""))
         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                       " already declared " ++ show pos)))
 
@@ -826,6 +840,14 @@ writeInst l BoolT = (VoidT, DS.singleton (Right $ ""))
 writeInst l TypeError = (TypeError, DS.singleton(Right $""))
 writeInst l t = (TypeError, DS.singleton (Left $ "Type Error in write instruction " ++ show (pos l)))
 
+readInst :: Lexeme Token -> Type ->(Type, DS.Seq(Binnacle))
+readInst l IntT = (VoidT,DS.singleton (Right $ "") )
+readInst l FloatT = (VoidT, DS.singleton (Right $ ""))
+readInst l StringT = (VoidT, DS.singleton (Right $ ""))
+readInst l BoolT = (VoidT, DS.singleton (Right $ ""))
+readInst l TypeError = (TypeError, DS.singleton(Right $""))
+readInst l t = (TypeError, DS.singleton (Left $ "Type Error in read instruction " ++ show (pos l)))
+
 isTypeT :: Lexeme Token -> Type -> [Lexeme Token] -> Zipper-> (Type, DS.Seq(Binnacle))
 isTypeT l t ls z = case t of
     TypeT s     -> case lookupS s z of
@@ -951,11 +973,15 @@ insertInsF :: Lexeme Token -> [Instructions] -> Zipper -> Zipper
 insertInsF (Lexeme (TokenIdent s) p) l z = case (lookupS s z) of
         Just (Entry (FuncT t lt _) pos i1 i2, sc) -> insertS s (Entry (FuncT t lt (AST l)) pos i1 i2) z
         Just (Entry (ProcT t lt _) pos i1 i2, sc) -> insertS s (Entry (ProcT t lt (AST l)) pos i1 i2) z
+        Just (Entry (FWD (FuncT t lt _)) pos i1 i2, sc) -> insertS s (Entry (FWD (FuncT t lt (AST l))) pos i1 i2) z
+        Just (Entry (FWD (ProcT t lt _)) pos i1 i2, sc) -> insertS s (Entry (FWD(ProcT t lt (AST l))) pos i1 i2) z
 
 decFun :: Lexeme Token -> [Instructions] -> Zipper -> Instructions
 decFun t@(Lexeme (TokenIdent s) p) l z = case (lookupS s z) of
     Just (Entry (FuncT t lt _) pos i1 i2, sc) -> DecFun (IdL s (Entry (FuncT t lt (AST l)) pos i1 i2) pos)
     Just (Entry (ProcT t lt _) pos i1 i2, sc) -> DecFun (IdL s (Entry (ProcT t lt (AST l)) pos i1 i2) pos)
+    Just (Entry (FWD (FuncT t lt _)) pos i1 i2, sc)-> DecFun (IdL s (Entry (FuncT t lt (AST l)) pos i1 i2) pos)
+    Just (Entry (FWD (ProcT t lt _)) pos i1 i2, sc) -> DecFun (IdL s (Entry (ProcT t lt (AST l)) pos i1 i2) pos)
 
 isReturn :: Type -> Expression -> Position -> Instructions
 isReturn t e p  = case t of
@@ -1019,6 +1045,7 @@ isNoneA l =
     case isNone l of
         Nothing -> l
         _       -> [None]
+
 
 createTree :: Zipper -> String -> [Lexeme Token] -> [Expression]
 createTree z s1 [typ@(Lexeme (TokenIdent s2) p)] = 

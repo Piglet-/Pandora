@@ -53,7 +53,7 @@ instance Show SymbolTable where
 showTable :: SymbolTable -> String
 showTable (SymbolTable (Scope t o s) maps childrens) = 
     (tabs t) ++ "Level: " ++ show t ++ "\n" ++
-    (tabs t) ++ "Scope:\n" ++
+    (tabs t) ++ "Scope:\n" ++ show o ++ "\n" ++
     (showAux (DMap.keys maps) (DMap.elems maps) t) ++ concat (toList (fmap showTable (DS.reverse childrens))) 
         where tabs t = concat $ replicate t "\t"
 

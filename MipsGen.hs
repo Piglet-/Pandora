@@ -186,7 +186,7 @@ buildRel rel r1 r2 l = case rel of
     Tac.Le  -> Ble r1 r2 (show l)
 
 buildNotRel :: Tac.Relation -> Register -> Register -> Tac.Label -> MInstruction
-buildRel rel r1 r2 l = case rel of
+buildNotRel rel r1 r2 l = case rel of
     Tac.Eq  -> Bne r1 r2 (show l)
     Tac.GtT -> Ble r1 r2 (show l)
     Tac.LtT -> Bge r1 r2 (show l)
