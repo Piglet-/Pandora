@@ -17,6 +17,7 @@ module SymbolTable
     , openScope
     , closeScope
     , offScope
+    , childOff
     ) where
 
 import Position
@@ -53,7 +54,7 @@ instance Show SymbolTable where
 showTable :: SymbolTable -> String
 showTable (SymbolTable (Scope t o s) maps childrens) = 
     (tabs t) ++ "Level: " ++ show t ++ "\n" ++
-    (tabs t) ++ "Scope:\n" ++ show o ++ "\n" ++
+    (tabs t) ++ "Scope: " ++ show o ++ "\n" ++
     (showAux (DMap.keys maps) (DMap.elems maps) t) ++ concat (toList (fmap showTable (DS.reverse childrens))) 
         where tabs t = concat $ replicate t "\t"
 
@@ -92,6 +93,12 @@ goBack :: Zipper -> Maybe (Zipper)
 goBack (fcs, []) = Nothing
 goBack (st, (Breadcrumbs i p ls rs): bs) = Just (SymbolTable i p ((ls DS.|> st) DS.>< rs) , bs)
 
+goBack' :: Zipper -> Int -> Maybe (Zipper)
+goBack' (fcs, []) off = Nothing
+goBack' (st, (Breadcrumbs (Scope l o pos) p ls rs): bs) off = 
+    if off > o 
+        then Just (SymbolTable (Scope l off pos) p ((ls DS.|> st) DS.>< rs) , bs)
+        else Just (SymbolTable (Scope l o pos) p ((ls DS.|> st) DS.>< rs) , bs)
 -- ir a la tabla principal
 tothetop :: Zipper -> Zipper
 tothetop (fcs, []) = (fcs, []) 
@@ -116,9 +123,9 @@ insertS k (Entry t pos s o) (SymbolTable (Scope n off p) m sts, bs) =
     (SymbolTable (Scope n (o+s) p) (DMap.insert k (Entry t pos s o) m) sts, bs) 
 
 -- inserta una nueva tabla
-insertT :: Zipper -> Zipper
-insertT (SymbolTable (Scope i o p) m sts, bs) = (SymbolTable (Scope i o p) m (st DS.<| sts), bs)
-	where st = (SymbolTable (Scope (succ i) 0 p) DMap.empty (DS.empty))
+insertT :: Zipper -> Int -> Zipper
+insertT (SymbolTable (Scope i o p) m sts, bs) ni = (SymbolTable (Scope i o p) m (st DS.<| sts), bs)
+	where st = (SymbolTable (Scope (succ i) ni p) DMap.empty (DS.empty))
 
 -- coloca una tabla en el zipper
 focus :: SymbolTable -> Zipper
@@ -133,8 +140,8 @@ emptyST :: Scope -> SymbolTable
 emptyST i = SymbolTable i (DMap.empty) (DS.empty)
 
 -- habrir un nuevo alcance
-openScope:: Zipper -> Zipper
-openScope z = fromJust $ goDown $ insertT z
+openScope:: Zipper -> Int -> Zipper
+openScope z i = fromJust $ goDown $ insertT z i
 
 -- cerrar el alcance actual, si no se puede porque es root
 -- no hace nada.. debería dar un error??
@@ -147,3 +154,5 @@ offScope ((SymbolTable (Scope _ o _) _ _), _) = o
 emptyScope :: Scope
 emptyScope = Scope 0 0 (Position (0,0), Position (0,0))
 
+childOff :: Zipper -> Zipper
+childOff z =maybe z id (goBack' z (offScope z))

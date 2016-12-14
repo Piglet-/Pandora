@@ -1,7 +1,7 @@
 fwd int : func factorialr(int: n, int:j, int: a);
 
 int : func factoriali(int: n) 
-    int : f, g, h; 
+    int : f, g, h, l, d, e; 
     f = 1;
     for(i from 1 to n with i+1) do 
         f = f * i;

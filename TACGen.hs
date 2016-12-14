@@ -270,11 +270,11 @@ getAssign ins = case ins of
         let assgn = PutLabel (Label s)
         tell $ DS.singleton Block
         tell $ DS.singleton assgn
-        let tam = sum (sizeCal' (tsyt st) lt)
+        let tam = getIntFun e
         let assgn1 = Prologue tam
-        tell $ DS.singleton assgn1
         mapM_ getAssign (listTAC $ filterI ast)
         let assgn2 = Epilogue tam 
+        tell $ DS.singleton assgn1
         tell $ DS.singleton assgn2
         return assgn2
 
@@ -504,8 +504,8 @@ makeDimArray' (n1:ns) r = do
     tell $ DS.singleton assgn
     makeDimArray' ns temp2
 
-typeSize' (FuncT t ts ast) z    = typeSize' t z
-typeSize' (ProcT t ts ast) z    = typeSize' t z
+typeSize' (FuncT t ts i ast) z    = typeSize' t z
+typeSize' (ProcT t ts i ast) z    = typeSize' t z
 typeSize' (TypeT s) z           = sm
     where (Entry t p sm o)      = fst $ fromJust $ lookupS s z
 typeSize' (StructT m) z         = structSize m z
@@ -628,8 +628,8 @@ makeParams' e b = case b of
             return $ temp
 
 astEntry :: Entry -> (AST, [(Type,Bool)])
-astEntry e@(Entry t@(FuncT _ l ast) _ _ _ ) = (ast, l)
-astEntry e@(Entry t@(ProcT _ l ast) _ _ _ ) = (ast, l)
+astEntry e@(Entry t@(FuncT _ l _ ast) _ _ _ ) = (ast, l)
+astEntry e@(Entry t@(ProcT _ l _ ast) _ _ _ ) = (ast, l)
 
 getNdimention :: Type -> [Expression]
 getNdimention (ArrayT d t@(ArrayT d' t'))   = (IntL d (Position (0,0))):(getNdimention t)
@@ -670,9 +670,13 @@ makeWrite t =
             let assgn2 = CleanUp 4
             tell $ DS.singleton assgn2
             return $ assgn
-        (FuncT t _ _) -> do 
+        (FuncT t _ _ _) -> do 
             makeWrite t
 
+
+getIntFun :: Entry -> Int
+getIntFun (Entry (ProcT _ _ i _) _ _ _) = i
+getIntFun (Entry (FuncT _ _ i _) _ _ _) = i
 --falta el reference
 {-}
 makeRead :: Type -> TACMonad Ins

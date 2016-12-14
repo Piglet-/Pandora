@@ -151,6 +151,23 @@ buildMips ins = case ins of
         tell $ DS.singleton (Comment "Saving variables")
         return $ Comment "Saving variables"
 
+    Tac.Prologue i -> do
+        tell $ DS.singleton (Comment "prologo aqui")
+        return $ Comment "Saving variables"
+
+    Tac.Epilogue i -> do
+        tell $ DS.singleton (Comment "epilogo aqui")
+        return $ Comment "Saving variables"
+
+    Tac.Param r -> do
+        tell $ DS.singleton (Comment "push param")
+        return $ Comment "Saving variables"
+
+    Tac.CleanUp i -> do
+        tell $ DS.singleton (Comment "CleanUp")
+        return $ Comment "Saving variables"
+    
+
     s -> do return $ Comment (show s)
 
 buildBOp :: Tac.BinOp -> Register -> Register -> Register -> MInstruction

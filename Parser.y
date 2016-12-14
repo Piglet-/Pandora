@@ -147,12 +147,12 @@ Program : Declarations Main "EOF"  { % do
                                     put $ State (syt st) (srt st) (AST (snd $1))
                                     return  (fst $1, AST (snd $1)) } 
 
-Main : begin OS Insts CS end  { % return (fst $3, (isNoneA (reverse (snd $3)))) } 
+Main : begin OSN Insts CS end  { % return (fst $3, (isNoneA (reverse (snd $3)))) } 
 
-Declaration:  FuncDec OS Insts CS end CS    {% do
+Declaration:  FuncDec OSN Insts CSI end CSP    {% do
                                                 st <- get
-                                                put $ State (insertInsF (snd $ snd $1) (isNoneA (reverse(snd $3))) (syt st)) (srt st) (ast st)
-                                                return (fst $3, decFun (snd $ snd $1) (isNoneA (reverse(snd $3))) (syt st) ) } 
+                                                put $ State (insertInsF (snd $ snd $1) (isNoneA (reverse(snd $3))) $4 (syt st)) (srt st) (ast st)
+                                                return (fst $3, decFun (snd $ snd $1) (isNoneA (reverse(snd $3))) $4 (syt st) ) } 
             | struct id has StructObjs ";" end         { % do 
                                                         st <- get
                                                         tell (snd (doInsertS (makeStruct $1 $4 (syt st)) ((syt st),DS.empty) $2))
@@ -165,10 +165,10 @@ Declaration:  FuncDec OS Insts CS end CS    {% do
                                                         return (VoidT, DecL)  }
             | Dec                                       { % return (fst $1, DecL) }
             | Assign                                    { % return (fst $1, DecL) } 
-            | FFuncDec ";"  CS              { % do
+            | FFuncDec ";"  CSP              { % do
                                                 st <- get
-                                                put $ State (insertInsF (snd $ snd $1) [] (syt st)) (srt st) (ast st)
-                                                return (VoidT, decFun (snd $ snd $1) [] (syt st)) }
+                                                put $ State (insertInsF (snd $ snd $1) [] 0 (syt st)) (srt st) (ast st)
+                                                return (VoidT, decFun (snd $ snd $1) [] 0 (syt st)) }
 
 StructObjs : StructOb                   { $1 }
             | StructObjs ";" StructOb   { $1 ++ $3 }
@@ -179,36 +179,53 @@ StructOb : Type ":" ListId { [(x,y) | x <- $3,  y <- [(makeBtype $1)]] }
 
 FFuncDec : "fwd" TypeFunc OS "(" Param ")" {% do 
                                         st <- get
-                                        tell (snd (doInsertFun (makeFwdObj (fst(fst $2)) (snd(fst $2)) $5) ((syt st),DS.empty) (snd $2)))
-                                        put $ State (fst (doInsertFun (makeFwdObj (fst(fst $2)) (snd(fst $2)) $5) ((syt st),DS.empty) (snd $2))) (srt st) (ast st)
+                                        tell (snd (doInsertFun (makeFwdObj (fst(fst $2)) (snd(fst $2)) $5 0) ((syt st),DS.empty) (snd $2)))
+                                        put $ State (fst (doInsertFun (makeFwdObj (fst(fst $2)) (snd(fst $2)) $5 0) ((syt st),DS.empty) (snd $2))) (srt st) (ast st)
                                         return (fst $2,($5,snd $2)) }
 
-FuncDec : TypeFunc OS "(" Param ")"  {% do 
+FuncDec : TypeFunc OSN "(" Param ")"  {% do 
                                         st <- get
-                                        tell (snd (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) $4) ((syt st),DS.empty) (snd $1)))
-                                        put $ State (fst (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) $4) ((syt st),DS.empty) (snd $1))) (srt st) (ast st)
+                                        tell (snd (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) $4 0) ((syt st),DS.empty) (snd $1)))
+                                        put $ State (fst (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) $4 0) ((syt st),DS.empty) (snd $1))) (srt st) (ast st)
                                         return (fst $1,($4,snd $1)) }
         
 TypeFunc :  Type ":" func id    {% do 
                                    st <- get
-                                   tell( snd (doInsertF (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4))
-                                   put $ State (fst (doInsertF (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4)) (srt st) (ast st)
+                                   tell( snd (doInsertF (makeObj $3 (makeBtype $1) [] 0) ((syt st),DS.empty) $4))
+                                   put $ State (fst (doInsertF (makeObj $3 (makeBtype $1) [] 0) ((syt st),DS.empty) $4)) (srt st) (ast st)
                                    return (($3,makeBtype $1),$4) } 
         | Type ":" proc id {% do 
                               st <- get
-                              tell( snd (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4))
-                              put $ State (fst (doInsert (makeObj $3 (makeBtype $1) []) ((syt st),DS.empty) $4)) (srt st) (ast st)
+                              tell( snd (doInsert (makeObj $3 (makeBtype $1) [] 0) ((syt st),DS.empty) $4))
+                              put $ State (fst (doInsert (makeObj $3 (makeBtype $1) [] 0) ((syt st),DS.empty) $4)) (srt st) (ast st)
                               return (($3,makeBtype $1), $4)} 
 
 OS: {- Lambda -} { % do 
                      st <- get 
-                     put $ State (openScope (syt st)) (srt st) (ast st)
+                     put $ State (openScope (syt st) (offScope (syt st))) (srt st) (ast st)
                  }
 
-CS: {- Lambda -} { % do 
+OSN: {-Lambda-}{ % do
+                    st <- get
+                    put $ State (openScope (syt st) 0) (srt st) (ast st)                    
+                }
+
+CSP: {- Lambda -} { % do 
                      st <- get 
                      put $ State (closeScope (syt st)) (srt st) (ast st)
                  }
+
+CSI: {-Lambda-}{ % do
+                    st <- get
+                    let v = offScope (syt st)
+                    put $ State (childOff (syt st)) (srt st) (ast st)
+                    return v
+                } 
+
+CS: {- Lambda -}{ % do
+                    st <- get
+                    put $ State (childOff (syt st)) (srt st) (ast st)
+                } 
 
 Declarations : Declaration { % return (instrucS (fst $1), [snd $1]) }
     | Declarations Declaration  { % return (instruc (fst $2:[fst $1]), (snd $2:snd $1)) }
@@ -611,8 +628,8 @@ doInsertS (t, i) (z,_) l@(Lexeme (TokenIdent s) p) =
                                       " already declared " ++ show pos)))
 
 typeSize' (ArrayT d t) z = d * typeSize' t z
-typeSize' (FuncT t ts ast) z = typeSize' t z
-typeSize' (ProcT t ts ast) z = typeSize' t z
+typeSize' (FuncT t ts i ast) z = typeSize' t z
+typeSize' (ProcT t ts i ast) z = typeSize' t z
 typeSize' (TypeT s) z    = sm
     where (Entry t p sm o) = fst $ fromJust $ lookupS s z
 typeSize' t z = typeSize t 
@@ -659,7 +676,7 @@ findFunc :: Lexeme Token -> [Type] -> Zipper -> (Type, DS.Seq(Binnacle))
 findFunc l@(Lexeme (TokenIdent s) p) ts z =  case lookupS s z of
                 Nothing                 -> (TypeError, DS.singleton (Left $ ("Variable " ++ show s ++ " " 
                                             ++ show p ++ " is not defined")))
-                Just ((Entry t@(FuncT ty lts ast) pos sz o),scp)  -> 
+                Just ((Entry t@(FuncT ty lts i ast) pos sz o),scp)  -> 
                                             case matchType t ts of
                                                 TypeError -> (TypeError, DS.singleton (Left $ ("TypeError " ++ show s ++ " " 
                                                             ++ show p ++ " expecting " ++ show (reverse lts) ++ 
@@ -810,7 +827,7 @@ freeInst t1 (Lexeme t p)    = (TypeError, DS.singleton(Left $ "Type Error free "
                                 ++ show p ++ " given " ++ show t1 ++ " expecting Pointer"))
 
 matchType :: Type -> [Type] -> Type
-matchType (FuncT t ts ast) lts = if (map fst ts) == lts
+matchType (FuncT t ts i ast) lts = if (map fst ts) == lts
                                 then t
                                 else TypeError
 
@@ -969,19 +986,19 @@ makeEntry z (l,n) (Lexeme (TokenIdent s) p, t) = ((s,(Entry t p (typeSize' t z) 
 makeUnion :: Zipper -> ([(String, Entry)], Int) -> (Lexeme Token, Type) -> ([(String, Entry)],Int)
 makeUnion z (l,n) (Lexeme (TokenIdent s) p, t) = ((s,(Entry t p (typeSize' t z) 0 )): l,if n > (typeSize' t z) then n else (typeSize' t z))
 
-insertInsF :: Lexeme Token -> [Instructions] -> Zipper -> Zipper
-insertInsF (Lexeme (TokenIdent s) p) l z = case (lookupS s z) of
-        Just (Entry (FuncT t lt _) pos i1 i2, sc) -> insertS s (Entry (FuncT t lt (AST l)) pos i1 i2) z
-        Just (Entry (ProcT t lt _) pos i1 i2, sc) -> insertS s (Entry (ProcT t lt (AST l)) pos i1 i2) z
-        Just (Entry (FWD (FuncT t lt _)) pos i1 i2, sc) -> insertS s (Entry (FWD (FuncT t lt (AST l))) pos i1 i2) z
-        Just (Entry (FWD (ProcT t lt _)) pos i1 i2, sc) -> insertS s (Entry (FWD(ProcT t lt (AST l))) pos i1 i2) z
+insertInsF :: Lexeme Token -> [Instructions] -> Int -> Zipper -> Zipper
+insertInsF (Lexeme (TokenIdent s) p) l sz z = case (lookupS s z) of
+        Just (Entry (FuncT t lt i _) pos i1 i2, sc) -> insertS s (Entry (FuncT t lt sz (AST l)) pos i1 i2) z
+        Just (Entry (ProcT t lt i _) pos i1 i2, sc) -> insertS s (Entry (ProcT t lt sz (AST l)) pos i1 i2) z
+        Just (Entry (FWD (FuncT t lt i _)) pos i1 i2, sc) -> insertS s (Entry (FWD (FuncT t lt sz (AST l))) pos i1 i2) z
+        Just (Entry (FWD (ProcT t lt i _)) pos i1 i2, sc) -> insertS s (Entry (FWD(ProcT t lt sz (AST l))) pos i1 i2) z
 
-decFun :: Lexeme Token -> [Instructions] -> Zipper -> Instructions
-decFun t@(Lexeme (TokenIdent s) p) l z = case (lookupS s z) of
-    Just (Entry (FuncT t lt _) pos i1 i2, sc) -> DecFun (IdL s (Entry (FuncT t lt (AST l)) pos i1 i2) pos)
-    Just (Entry (ProcT t lt _) pos i1 i2, sc) -> DecFun (IdL s (Entry (ProcT t lt (AST l)) pos i1 i2) pos)
-    Just (Entry (FWD (FuncT t lt _)) pos i1 i2, sc)-> DecFun (IdL s (Entry (FuncT t lt (AST l)) pos i1 i2) pos)
-    Just (Entry (FWD (ProcT t lt _)) pos i1 i2, sc) -> DecFun (IdL s (Entry (ProcT t lt (AST l)) pos i1 i2) pos)
+decFun :: Lexeme Token -> [Instructions] -> Int -> Zipper -> Instructions
+decFun t@(Lexeme (TokenIdent s) p) l sz z = case (lookupS s z) of
+    Just (Entry (FuncT t lt i _) pos i1 i2, sc) -> DecFun (IdL s (Entry (FuncT t lt sz (AST l)) pos i1 i2) pos)
+    Just (Entry (ProcT t lt i _) pos i1 i2, sc) -> DecFun (IdL s (Entry (ProcT t lt sz (AST l)) pos i1 i2) pos)
+    Just (Entry (FWD (FuncT t lt i _)) pos i1 i2, sc)-> None--DecFun (IdL s (Entry (FuncT t lt (AST l)) pos i1 i2) pos)
+    Just (Entry (FWD (ProcT t lt i _)) pos i1 i2, sc) -> None--DecFun (IdL s (Entry (ProcT t lt (AST l)) pos i1 i2) pos)
 
 isReturn :: Type -> Expression -> Position -> Instructions
 isReturn t e p  = case t of

@@ -40,8 +40,8 @@ data Type = IntT
 		| UnionT 	(DMap.Map String Entry)
 		| StringT
 		| IteratorT
-		| FuncT 	Type [(Type,Bool)]	AST
-		| ProcT 	Type [(Type, Bool)]	AST
+		| FuncT 	Type [(Type,Bool)]	Int AST
+		| ProcT 	Type [(Type, Bool)]	Int AST
 		| ArrayT 	Int  Type 
 		| TypeT 	String 
 		| TypeError
@@ -61,8 +61,8 @@ instance Show Type where
 		 	UnionT 	l		-> "Union " ++ show l
 		 	StringT 		-> "String "
 		 	IteratorT 		-> "Iterator "
-		 	FuncT t	l ast	-> "Function "  ++ show t ++ show (reverse (map fst l)) ++ "\n" ++ drawTree (treeAST (filterDec ast))
-		 	ProcT t l ast 	-> "Procedure " ++ show t ++ show (reverse (map fst l)) ++ "\n" ++ drawTree (treeAST (filterDec ast))
+		 	FuncT t	l i ast	-> "Function "  ++ show t ++ show (reverse (map fst l)) ++"\n"++ show i++ "\n" ++ drawTree (treeAST (filterDec ast))
+		 	ProcT t l i ast -> "Procedure " ++ show t ++ show (reverse (map fst l)) ++ "\n" ++ show i ++"\n" ++ drawTree (treeAST (filterDec ast))
 		 	ArrayT d t 		-> "Array of "  ++ show t 
 		 	TypeT s 		-> "TypeT " ++ s ++ " "
 		 	TypeError 		-> "TypeError"
@@ -87,15 +87,15 @@ aux (((Lexeme (TokenIdent s) _),t):ls) =  (s,t):(aux ls)
 toMap :: [(Lexeme Token, Type)] -> DMap.Map String Type
 toMap l = DMap.fromList (aux l)
 
-makeObj :: Lexeme t -> Type -> [(Type, Bool)]-> Type
-makeObj l bt lt = case (token l) of
-	TokenProc		-> ProcT bt lt (AST [])
-	TokenFunc		-> FuncT bt lt (AST [])
+makeObj :: Lexeme t -> Type -> [(Type, Bool)] -> Int-> Type
+makeObj l bt lt i = case (token l) of
+	TokenProc		-> ProcT bt lt i (AST [])
+	TokenFunc		-> FuncT bt lt i (AST [])
 
-makeFwdObj :: Lexeme t -> Type -> [(Type, Bool)]-> Type
-makeFwdObj l bt lt = case (token l) of
-	TokenProc		-> FWD (ProcT bt lt (AST []))
-	TokenFunc		-> FWD (FuncT bt lt (AST []))
+makeFwdObj :: Lexeme t -> Type -> [(Type, Bool)]-> Int -> Type
+makeFwdObj l bt lt i = case (token l) of
+	TokenProc		-> FWD (ProcT bt lt i (AST []))
+	TokenFunc		-> FWD (FuncT bt lt i (AST []))
 
 makePointer :: Int -> Type -> Type 
 makePointer 0 ty 	= ty
@@ -120,8 +120,8 @@ typeSize StringT  		= 4
 typeSize CharT 			= 2
 typeSize (PointerT _) 	= 4
 typeSize IteratorT 		= 4
-typeSize (FuncT t _ _) 	= typeSize t
-typeSize (ProcT t _ _) 	= typeSize t
+typeSize (FuncT t _ _ _) = typeSize t
+typeSize (ProcT t _ _ _) = typeSize t
 typeSize VoidT 			= 0
 typeSize TypeError 		= 0
 
@@ -131,8 +131,8 @@ padding (ArrayT d t) i 			= padding t i
 padding (StructT m) i  			= padStruct i
 padding (UnionT m) i   			= padStruct i
 padding (TypeT s) i 			= padStruct i
-padding (FuncT (TypeT s) _ _) i = padStruct i
-padding (ProcT (TypeT s) _ _) i = padStruct i
+padding (FuncT (TypeT s) _ _ _) i = padStruct i
+padding (ProcT (TypeT s) _ _ _) i = padStruct i
 padding t i 					= i + (i `mod` (typeSize t))
 
 padStruct :: Int -> Int

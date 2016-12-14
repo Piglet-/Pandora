@@ -85,6 +85,7 @@ data MInstruction = Comment String
 				| Blt Register Register String
 				| Bge Register Register String
 				| Ble Register Register String
+				| PushParam Register
 				| Preamble String
 
 instance Show MInstruction where
