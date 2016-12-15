@@ -154,8 +154,20 @@ buildMips ins = case ins of
     Tac.IfGoto rel r1 r2 label -> do
         case label of 
             (Just l) -> do 
-                ry <- getReg False r2
-                rx <- getReg False r1
+                ry <- case r2 of 
+                    Tac.Constant v -> do 
+                        ry2 <- getReg True r2
+                        rx2 <- buildRef r2
+                        let assgn = Li ry2 rx2
+                        return ry2
+                    _              -> getReg False r2
+                rx <- case r1 of 
+                    Tac.Constant v -> do 
+                        ry1 <- getReg True r1
+                        rx1 <- buildRef r1
+                        let assgn = Li ry1 rx1
+                        return ry1
+                    _              -> getReg False r1
                 let assgn = buildRel rel ry rx l
                 tell $ DS.singleton assgn
                 return $ assgn 
