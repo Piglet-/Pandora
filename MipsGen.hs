@@ -118,6 +118,13 @@ buildMips ins = case ins of
         tell $ DS.singleton assgn
         return assgn
 
+    Tac.Assign res r1 -> do
+        ry <- getReg False res
+        rx <- getReg True r1
+        let assgn = Move ry rx
+        tell $ DS.singleton assgn
+        return assgn
+
     Tac.Goto label -> do
         case label of 
             (Just l) -> do 
@@ -211,7 +218,7 @@ buildMips ins = case ins of
 
     Tac.WriteI r -> do
         reg <- getReg False r
-        tell $ DS.singleton (Lw A0 (Indexed 0 reg))
+        tell $ DS.singleton (Move A0 reg)
         tell $ DS.singleton (Li V0 (Const 1))
         tell $ DS.singleton Syscall
         return $ Syscall
@@ -264,7 +271,7 @@ buildBOpU op res r1 = case op of
     Tac.NotT -> Not res r1
     Tac.NegI -> Negi res r1 
     Tac.NegF -> Negf res r1
-    Tac.LPoint -> Move res r1
+    Tac.LPoint -> Sw r1 (Indexed 0 res) 
     Tac.RPoint -> Lw res (Indexed 0 r1)
 
 buildRel :: Tac.Relation -> Register -> Register -> Tac.Label -> MInstruction

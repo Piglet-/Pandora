@@ -258,10 +258,19 @@ getAssign ins = case ins of
                         makeWriteS ex
                         return $ (Comment ("Line " ++ show (line p))) 
             _       -> do
-                        param <- getReference ex
-                        writ <- makeWrite (typeExp ex) param
-                        return $ (Comment ("Line " ++ show (line p)))
-        
+                        case ex of 
+                            IntL i pos -> do
+                                param <- getReference ex
+                                temp <- newTemp
+                                let assgn = Assign temp (Constant (ValInt i))
+                                tell $ DS.singleton assgn  
+                                writ <- makeWrite (typeExp ex) temp
+                                return $ (Comment ("Line " ++ show (line p)))
+                            _ -> do
+                                param <- getReference ex
+                                writ <- makeWrite (typeExp ex) param
+                                return $ (Comment ("Line " ++ show (line p)))
+                
 
     ReturnL ex p -> do
         la <- gets lreturn
