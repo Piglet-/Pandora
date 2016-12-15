@@ -245,7 +245,7 @@ getAssign ins = case ins of
         return $ put
 
     ReadL ex p -> do
-        param <- getReference ex
+        param <- getAddr ex
         rea <- makeRead (typeExp ex) param
         return $ (Comment ("Line " ++ show (line p)))
 

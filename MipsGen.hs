@@ -227,7 +227,7 @@ buildMips ins = case ins of
         reg <- getReg True r
         tell $ DS.singleton (Li V0 (Const 5))
         tell $ DS.singleton (Syscall)
-        tell $ DS.singleton (Move reg V0)
+        tell $ DS.singleton (Sw V0 (Indexed 0 reg))
         return $ Syscall
 
     Tac.Return mr l -> do
