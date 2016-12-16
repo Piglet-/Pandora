@@ -288,7 +288,7 @@ getAssign ins = case ins of
         tell $ DS.singleton assgn
         let tam = getIntFun e
         -- -4 para que funcione con enteros problemas con los offset
-        let assgn1 = Prologue (tam - 4)
+        let assgn1 = Prologue (if tam <= 4 then tam else tam - 4)
         tell $ DS.singleton assgn1
         mapM_ getAssign (listTAC $ filterI ast)
         let assgn2 = Epilogue tam 
@@ -301,7 +301,7 @@ getAssign ins = case ins of
         tell $ DS.singleton Block
         tell $ DS.singleton assgn
         -- -4 para que funcione con enteros problemas con los offset
-        let assgn1 = Prologue (i-4)
+        let assgn1 = Prologue (if i <= 4 then i else i - 4)
         tell $ DS.singleton assgn1
         return assgn1
 

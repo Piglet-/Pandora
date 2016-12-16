@@ -691,6 +691,12 @@ findFunc l@(Lexeme (TokenIdent s) p) ts z =  case lookupS s z of
                                                             ++ show p ++ " expecting " ++ show (reverse lts) ++ 
                                                             " but have " ++ show (reverse ts))))
                                                 v         -> (v,DS.singleton (Right $ ""))
+                Just ((Entry (FWD t@(FuncT ty lts i ast)) pos sz o),scp)  -> 
+                                            case matchType t ts of
+                                                TypeError -> (TypeError, DS.singleton (Left $ ("TypeError " ++ show s ++ " " 
+                                                            ++ show p ++ " expecting " ++ show (reverse lts) ++ 
+                                                            " but have " ++ show (reverse ts))))
+                                                v         -> (v,DS.singleton (Right $ ""))
 
 typeToken :: Lexeme Token -> Zipper -> Type
 typeToken (Lexeme (TokenIdent s) _) z = case lookupS s z of

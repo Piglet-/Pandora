@@ -114,9 +114,9 @@ type Binnacle = Either String String
 typeSize :: Type -> Int
 typeSize IntT 			= 4
 typeSize FloatT 		= 4
-typeSize BoolT 			= 2
+typeSize BoolT 			= 4
 typeSize StringT  		= 4
-typeSize CharT 			= 2
+typeSize CharT 			= 4
 typeSize (PointerT _) 	= 4
 typeSize IteratorT 		= 4
 typeSize (FuncT t _ _ _) = typeSize t
