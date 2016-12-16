@@ -183,7 +183,7 @@ FFuncDec : "fwd" TypeFunc OS "(" Param ")" {% do
                                         put $ State (fst (doInsertFun (makeFwdObj (fst(fst $2)) (snd(fst $2)) $5 0) ((syt st),DS.empty) (snd $2))) (srt st) (ast st)
                                         return (fst $2,($5,snd $2)) }
 
-FuncDec : TypeFunc OSN "(" Param ")"  {% do 
+FuncDec : TypeFunc OSF "(" Param ")"  {% do 
                                         st <- get
                                         tell (snd (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) $4 0) ((syt st),DS.empty) (snd $1)))
                                         put $ State (fst (doInsertFun (makeObj (fst(fst $1)) (snd(fst $1)) $4 0) ((syt st),DS.empty) (snd $1))) (srt st) (ast st)
@@ -208,6 +208,11 @@ OS: {- Lambda -} { % do
 OSN: {-Lambda-}{ % do
                     st <- get
                     put $ State (openScope (syt st) 0) (srt st) (ast st)                    
+                }
+
+OSF: {-Lambda-}{ % do
+                    st <- get
+                    put $ State (openScope (syt st) 8) (srt st) (ast st)                    
                 }
 
 CSP: {- Lambda -} { % do 
@@ -564,19 +569,23 @@ doInsert (TypeT t) (z,_) l@(Lexeme (TokenIdent s) p) =
             case st of
                 StructT _ ->  
                     case lookupS' s z of
-                        Nothing -> (insertS s (Entry (TypeT t) p sz (padding (TypeT t) (offScope z))) z, DS.singleton(Right $ ""))
+                        Nothing -> (insertS s (Entry (TypeT t) p sz (-(padding (TypeT t) (offScope z)) - size)) z, DS.singleton(Right $ ""))
+                            where size = if ((offScope z) == 0) then sz else 0
                         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                       " already declared " ++ show pos)))
                 UnionT _ -> case lookupS' s z of
-                        Nothing -> (insertS s (Entry (TypeT t) p sz (padding (TypeT t) (offScope z))) z, DS.singleton(Right $ ""))
+                        Nothing -> (insertS s (Entry (TypeT t) p sz (-(padding (TypeT t) (offScope z)) - size)) z, DS.singleton(Right $ ""))
+                            where size = if ((offScope z) == 0) then sz else 0
                         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                       " already declared " ++ show pos)))
                 _ -> (z, DS.singleton (Left $ ("Type " ++ show t ++ " " ++ show p ++
                                       " not declared ")))
 doInsert t (z,_) l@(Lexeme (TokenIdent s) p) = 
     case lookupS' s z of
-        Nothing -> (insertS s (Entry t p (typeSize' t z) (padding t (offScope z))) z, DS.singleton(Right $ ""))
-        Just (Entry (FWD typ) pos sz o) -> (insertS s (Entry t p (typeSize' t z) (padding t (offScope z))) z, DS.singleton(Right $ ""))
+        Nothing -> (insertS s (Entry t p (typeSize' t z) (-(padding t (offScope z)) - size)) z, DS.singleton(Right $ ""))
+            where size = if ((offScope z) == 0) then (typeSize' t z) else 0
+        Just (Entry (FWD typ) pos sz o) -> (insertS s (Entry t p (typeSize' t z) (-(padding t (offScope z)) - size)) z, DS.singleton(Right $ ""))
+            where size = if ((offScope z) == 0) then (typeSize' t z) else 0
         Just (Entry typ pos sz o) -> (z, DS.singleton (Left $ ("Variable " ++ show s ++ " " ++ show p ++
                                       " already declared " ++ show pos)))
 

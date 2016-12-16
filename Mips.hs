@@ -91,6 +91,7 @@ data MInstruction = Comment String
 				| Preamble String
 				| Jal String
 				| Move Register Register
+				| Jr Register
 				| Syscall
 
 instance Show MInstruction where
@@ -126,7 +127,8 @@ instance Show MInstruction where
 		Ble r1 r2 s ->		"ble   " ++ show r1 ++ ", " ++ show r2 ++ ", " ++ s
 		Preamble s -> 		s
 		Jal s 	->			"jal   " ++ s
-		Move r r1 ->		"move  " ++ show r ++ ", " ++ show r1
+		Jr r    -> 			"jr    " ++ show r
+ 		Move r r1 ->		"move  " ++ show r ++ ", " ++ show r1
 		Syscall  -> 		"syscall" 
 		La r s 	->			"la    " ++ show r ++ ", " ++ s
 		Li r o ->			"li    " ++ show r ++ ", " ++ show o

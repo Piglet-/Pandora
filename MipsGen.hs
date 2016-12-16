@@ -96,7 +96,7 @@ buildMips ins = case ins of
     Tac.Call r l i -> do
         tell $ DS.singleton (Jal l)
         ret <- getReg False r
-        tell $ DS.singleton (Move ret V0)
+        tell $ DS.singleton (Move ret A3)
         return (Comment "call")
 
     Tac.CallP l i -> do
@@ -176,8 +176,20 @@ buildMips ins = case ins of
     Tac.IfNotGoto rel r1 r2 label -> do
         case label of 
             (Just l) -> do 
-                ry <- getReg False r2
-                rx <- getReg False r1
+                ry <- case r2 of 
+                    Tac.Constant v -> do 
+                        ry2 <- getReg True r2
+                        rx2 <- buildRef r2
+                        let assgn = Li ry2 rx2
+                        return ry2
+                    _              -> getReg False r2
+                rx <- case r1 of 
+                    Tac.Constant v -> do 
+                        ry1 <- getReg True r1
+                        rx1 <- buildRef r1
+                        let assgn = Li ry1 rx1
+                        return ry1
+                    _              -> getReg False r1
                 let assgn = buildNotRel rel ry rx l
                 tell $ DS.singleton assgn
                 return $ assgn 
@@ -189,29 +201,34 @@ buildMips ins = case ins of
         return $ Comment "Saving variables"
 
     Tac.Prologue i -> do
-        return (Comment "PROLOGO")
-        let assgn = Subu SP SP (Const 8) --espacio ra y fp en la pila 
+        let assgn = Subu SP SP (Const 8) --espacio ra y fp en la pila
         tell $ DS.singleton assgn
-        let assgn1 = Sw FP (Indexed 8 SP) -- guarda fp
+        let assgn1 = Sw RA (Indexed 4 SP) -- guarda ra
         tell $ DS.singleton assgn1
-        let assgn2 = Sw RA (Indexed 4 SP) -- guarda ra
+        let assgn2 = Sw FP (Indexed 0 SP) -- guarda fp
         tell $ DS.singleton assgn2
-        let assgn3 = Addi FP SP (Const 8) -- nuevo fp
+        let assgn3 = Move FP SP -- nuevo fp
         tell $ DS.singleton assgn3
         let assgn4 = Subu SP SP (Const i) -- espacio para variable locales
-        tell $ DS.singleton assgn
+        tell $ DS.singleton assgn4
         return $ assgn4 
 
     Tac.Epilogue i -> do
         let assgn = (Comment "EPILOGO")
+        let assgn1 = Lw RA (Indexed 4 FP)
+        let assgn2 = Lw FP (Indexed 0 FP)
+        let assgn3 = Jr RA
         tell $ DS.singleton assgn
+        tell $ DS.singleton assgn1
+        tell $ DS.singleton assgn2
+        tell $ DS.singleton assgn3
         return $ assgn
 
     Tac.Param r -> do
         tell $ DS.singleton (Comment "PUSH")
         tell $ DS.singleton (Subu SP SP (Const 4)) -- decrementar la pila para hacer espacio
         reg <- getReg True r
-        let assgn = (Sw reg (Indexed 4 SP))
+        let assgn = (Sw reg (Indexed 0 SP))
         tell $ DS.singleton assgn
         return $ assgn
 
@@ -246,7 +263,13 @@ buildMips ins = case ins of
         let assgn = Jal l 
         case mr of
             Just r -> do 
-                reg <- getReg False r
+                reg <- case r of 
+                    Tac.Constant v -> do 
+                        ry2 <- getReg True r
+                        rx2 <- buildRef r
+                        let assgn = Li ry2 rx2
+                        return ry2
+                    _ -> getReg False r
                 tell $ DS.singleton (Move A3 reg)
                 tell $ DS.singleton assgn
                 return assgn
@@ -286,8 +309,9 @@ buildBOpU op res r1 = case op of
     Tac.LPoint -> Sw r1 (Indexed 0 res) 
     Tac.RPoint -> Lw res (Indexed 0 r1)
 
+--Acomodar r1 y r2 en las funciones que usan esta funcion
 buildRel :: Tac.Relation -> Register -> Register -> Tac.Label -> MInstruction
-buildRel rel r1 r2 l = case rel of
+buildRel rel r2 r1 l = case rel of
     Tac.Eq  -> Beq r1 r2 (show l)
     Tac.GtT -> Bgt r1 r2 (show l)
     Tac.LtT -> Blt r1 r2 (show l)
@@ -295,8 +319,9 @@ buildRel rel r1 r2 l = case rel of
     Tac.Ge  -> Bge r1 r2 (show l)
     Tac.Le  -> Ble r1 r2 (show l)
 
+--Acomodar r1 y r2 en las funciones que usan esta funcion
 buildNotRel :: Tac.Relation -> Register -> Register -> Tac.Label -> MInstruction
-buildNotRel rel r1 r2 l = case rel of
+buildNotRel rel r2 r1 l = case rel of
     Tac.Eq  -> Bne r1 r2 (show l)
     Tac.GtT -> Ble r1 r2 (show l)
     Tac.LtT -> Bge r1 r2 (show l)

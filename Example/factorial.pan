@@ -1,51 +1,57 @@
-fwd int : func factorialr(int: n, int:j, int: a);
+fwd int : func factorialr(int: n);
 
 int : func factoriali(int: n) 
-    int : f, g, h, l, d, e; 
+    int : f;
+    int : i;
+    i = 1;
     f = 1;
-    for(i from 1 to n with i+1) do 
+    while(i <= n) do 
         f = f * i;
+        i = i + 1;
     end
     return f;
 end
 
-int : func factorialr(int: n, int: j, int: a)
+int : func factorialr(int: n)
     int : i;
     if( n == 0 ) then 
-        return a;
+        return 1;
     end
-    return factorialr(n-1, 1, n * a);
+    i = factorialr(n-1);
+    return n * i;
 end
 
 begin
     int : c;
     c = 1;
-    bool : b;
-    b = true;
-    while (b) do
-        write "recursivo(1), iterativo(2) o salir(3) ?";
+    int : b;
+    b = 1;
+    while (b == 1) do
+        write "recursivo(1), iterativo(2) o salir(3) ? \n";
         read c;
         if (c == 1) then
             int : i;
             int : f;
-            write "inserte un número entero:";
+            write "inserte un numero entero: \n";
             read i;
-            f = factorialr(i,1,2);
+            f = factorialr(i);
             write "el factorial es: ";
             write f;
+            write "\n";
         end
         if (c == 2) then
             int : i;
             int : f;
-            write "inserte un numero entero:";
+            write "inserte un numero entero: \n";
             read i;
             f = factoriali(i);
             write "el factorial es: ";
             write f;
+            write "\n";
         end
         if (c==3) then
             write "fin del juego.";
-            b = false;
+            b = 2;
         end
     end
     

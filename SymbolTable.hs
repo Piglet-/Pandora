@@ -120,7 +120,7 @@ lookupS' k (SymbolTable i m sts, bs) = DMap.lookup k m
 -- inserta un nuevo simbolo
 insertS :: String -> Entry -> Zipper -> Zipper 
 insertS k (Entry t pos s o) (SymbolTable (Scope n off p) m sts, bs) = 
-    (SymbolTable (Scope n (o+s) p) (DMap.insert k (Entry t pos s o) m) sts, bs) 
+    (SymbolTable (Scope n (abs(o)+s) p) (DMap.insert k (Entry t pos s o) m) sts, bs) 
 
 -- inserta una nueva tabla
 insertT :: Zipper -> Int -> Zipper

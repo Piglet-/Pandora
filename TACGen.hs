@@ -281,13 +281,14 @@ getAssign ins = case ins of
 
     DecFun ex@(IdL s e p) -> do
         st <- get
-        put st {lreturn = s}
+        put st {lreturn = s ++ "_ep"}
         let (ast, lt) = astEntry e
         let assgn = PutLabel (Label s)
         tell $ DS.singleton Block
         tell $ DS.singleton assgn
         let tam = getIntFun e
-        let assgn1 = Prologue tam
+        -- -4 para que funcione con enteros problemas con los offset
+        let assgn1 = Prologue (tam - 4)
         tell $ DS.singleton assgn1
         mapM_ getAssign (listTAC $ filterI ast)
         let assgn2 = Epilogue tam 
@@ -299,7 +300,8 @@ getAssign ins = case ins of
         let assgn = PutLabel (Label "main")
         tell $ DS.singleton Block
         tell $ DS.singleton assgn
-        let assgn1 = Prologue i
+        -- -4 para que funcione con enteros problemas con los offset
+        let assgn1 = Prologue (i-4)
         tell $ DS.singleton assgn1
         return assgn1
 
